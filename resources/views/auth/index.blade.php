@@ -128,9 +128,9 @@ License: For each use you must have a valid license purchased only from above li
                                         class="form-control bg-transparent @error('email') is-invalid @enderror"
                                         required />
                                     <!--end::Email-->
-                                    @error('email')
+                                    {{-- @error('email')
                                         <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
+                                    @enderror --}}
                                 </div>
                                 <!--end::Input group=-->
                                 <div class="fv-row mb-3">
@@ -139,9 +139,9 @@ License: For each use you must have a valid license purchased only from above li
                                         class="form-control bg-transparent @error('password') is-invalid @enderror"
                                         required />
                                     <!--end::Password-->
-                                    @error('password')
+                                    {{-- @error('password')
                                         <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
+                                    @enderror --}}
                                 </div>
                                 <!--end::Input group=-->
                                 <!--begin::Wrapper-->
@@ -184,13 +184,114 @@ License: For each use you must have a valid license purchased only from above li
     <!--begin::Javascript-->
     <script>
         var hostUrl = "assets/";
+        // Simple email validation - add this to your existing JavaScript file
+        // or create new file and include it in your HTML
+
+        // document.addEventListener('DOMContentLoaded', function() {
+        //     const emailInput = document.querySelector('input[name="email"]');
+        //     const passwordInput = document.querySelector('input[name="password"]');
+        //     const form = document.getElementById('kt_sign_in_form');
+
+        //     // Simple email regex
+        //     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        //     // Email validation on blur (when user leaves the field)
+        //     if (emailInput) {
+        //         emailInput.addEventListener('blur', function() {
+        //             validateEmail();
+        //         });
+        //     }
+
+        //     // Password validation on blur
+        //     if (passwordInput) {
+        //         passwordInput.addEventListener('blur', function() {
+        //             validatePassword();
+        //         });
+        //     }
+
+        //     function validateEmail() {
+        //         const email = emailInput.value.trim();
+
+        //         if (email && !emailRegex.test(email)) {
+        //             emailInput.classList.add('is-invalid');
+        //             showError(emailInput, 'Format email tidak valid');
+        //             return false;
+        //         } else {
+        //             emailInput.classList.remove('is-invalid');
+        //             removeError(emailInput);
+        //             return true;
+        //         }
+        //     }
+
+        //     function validatePassword() {
+        //         const password = passwordInput.value;
+
+        //         if (password && password.length < 6) {
+        //             passwordInput.classList.add('is-invalid');
+        //             showError(passwordInput, 'Password minimal 6 karakter');
+        //             return false;
+        //         } else {
+        //             passwordInput.classList.remove('is-invalid');
+        //             removeError(passwordInput);
+        //             return true;
+        //         }
+        //     }
+
+        //     function showError(input, message) {
+        //         // Remove existing error
+        //         removeError(input);
+
+        //         // Add new error message
+        //         const errorDiv = document.createElement('div');
+        //         errorDiv.className = 'invalid-feedback';
+        //         errorDiv.textContent = message;
+        //         errorDiv.style.display = 'block';
+
+        //         input.parentNode.appendChild(errorDiv);
+        //     }
+
+        //     function removeError(input) {
+        //         const errorDiv = input.parentNode.querySelector('.invalid-feedback');
+        //         if (errorDiv) {
+        //             errorDiv.remove();
+        //         }
+        //     }
+
+        //     // Final validation before form submit
+        //     if (form) {
+        //         form.addEventListener('submit', function(e) {
+        //             const isEmailValid = validateEmail();
+        //             const isPasswordValid = validatePassword();
+
+        //             // Check required fields
+        //             if (!emailInput.value.trim()) {
+        //                 emailInput.classList.add('is-invalid');
+        //                 showError(emailInput, 'Email wajib diisi');
+        //                 e.preventDefault();
+        //                 return false;
+        //             }
+
+        //             if (!passwordInput.value) {
+        //                 passwordInput.classList.add('is-invalid');
+        //                 showError(passwordInput, 'Password wajib diisi');
+        //                 e.preventDefault();
+        //                 return false;
+        //             }
+
+        //             if (!isEmailValid || !isPasswordValid) {
+        //                 e.preventDefault();
+        //                 return false;
+        //             }
+        //         });
+        //     }
+        // });
     </script>
     <!--begin::Global Javascript Bundle(mandatory for all pages)-->
     <script src="assets/plugins/global/plugins.bundle.js"></script>
     <script src="assets/js/scripts.bundle.js"></script>
     <!--end::Global Javascript Bundle-->
     <!--begin::Custom Javascript(used for this page only)-->
-    <script src="assets/js/custom/authentication/sign-in/general.js"></script>
+    {{-- <script src="assets/js/custom/authentication/sign-in/general.js"></script> --}}
     <!--end::Javascript-->
 </body>
 <!--end::Body-->

@@ -5,14 +5,12 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 
 class AuthController extends Controller
 {
     public function index()
     {
-        // Redirect to dashboard if already logged in
         if (Auth::check()) {
             return redirect()->route('admin.dashboard');
         }
@@ -22,7 +20,6 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        // Validate input
         $request->validate([
             'email' => 'required|email',
             'password' => 'required|min:6'
@@ -32,7 +29,9 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
-            return redirect()->intended(route('admin.dashboard'));
+
+            // Simple redirect without any fancy stuff
+            return redirect()->route('admin.dashboard')->with('success', 'Login berhasil!');
         }
 
         return back()->withErrors([
