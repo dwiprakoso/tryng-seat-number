@@ -519,7 +519,7 @@
                 <!--begin:Menu item-->
                 <div data-kt-menu-trigger="click" class="menu-item here show menu-accordion">
                     <!--begin:Menu link-->
-                    <a class="menu-link" href="{{ route('admin.ticket.index') }}">
+                    <a class="menu-link" href="{{ route('admin.tickets.index') }}">
                         <span class="menu-icon">
                             <i class="ki-outline ki-element-11 fs-2"></i>
                         </span>
@@ -763,7 +763,7 @@
                 <!--begin:Menu item-->
                 <div data-kt-menu-trigger="click" class="menu-item here show menu-accordion">
                     <!--begin:Menu link-->
-                    <a class="menu-link" href="{{ route('admin.diskon.index') }}">
+                    <a class="menu-link" href="{{ route('admin.discounts.index') }}">
                         <span class="menu-icon">
                             <i class="ki-outline ki-element-11 fs-2"></i>
                         </span>
