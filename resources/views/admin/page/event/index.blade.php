@@ -171,6 +171,23 @@
                                         </div>
                                         <!--end::Input group-->
                                         <!--begin::Input group-->
+                                        <div class="mb-10 fv-row">
+                                            <!--begin::Label-->
+                                            <label class="form-label">Location</label>
+                                            <!--end::Label-->
+                                            <!--begin::Input-->
+                                            <input type="text" name="location" class="form-control mb-2"
+                                                placeholder="Location of the event"
+                                                value="{{ $product ? $product->location : '' }}" />
+                                            <!--end::Input-->
+                                            <!--begin::Description-->
+                                            <div class="text-muted fs-7">Provide the event location (e.g., city, venue).
+                                            </div>
+                                            <!--end::Description-->
+                                        </div>
+                                        <!--end::Input group-->
+
+                                        <!--begin::Input group-->
                                         <div>
                                             <!--begin::Label-->
                                             <label class="form-label">Description</label>

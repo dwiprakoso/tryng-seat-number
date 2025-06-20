@@ -20,6 +20,7 @@ class ProductController extends Controller
             'product_name' => 'required|string|max:255',
             'product_description' => 'nullable|string',
             'event_date' => 'required|date',
+            'location' => 'nullable|string|max:255', // ✅ Tambahkan validasi location
             'avatar' => 'nullable|image|mimes:png,jpg,jpeg|max:2048'
         ]);
 
@@ -27,6 +28,7 @@ class ProductController extends Controller
         $product->product_name = $request->product_name;
         $product->product_description = $request->product_description;
         $product->event_date = $request->event_date;
+        $product->location = $request->location; // ✅ Simpan location
 
         if ($request->hasFile('avatar')) {
             $avatarPath = $request->file('avatar')->store('products', 'public');
@@ -38,18 +40,21 @@ class ProductController extends Controller
         return redirect()->back()->with('success', 'Product created successfully!');
     }
 
+
     public function update(Request $request, Product $product)
     {
         $request->validate([
             'product_name' => 'required|string|max:255',
             'product_description' => 'nullable|string',
             'event_date' => 'required|date',
+            'location' => 'nullable|string|max:255', // ✅ Validasi lokasi
             'avatar' => 'nullable|image|mimes:png,jpg,jpeg|max:2048'
         ]);
 
         $product->product_name = $request->product_name;
         $product->product_description = $request->product_description;
         $product->event_date = $request->event_date;
+        $product->location = $request->location; // ✅ Simpan lokasi
 
         if ($request->hasFile('avatar')) {
             $avatarPath = $request->file('avatar')->store('products', 'public');
