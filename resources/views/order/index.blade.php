@@ -42,6 +42,24 @@
             line-height: 1.6;
         }
 
+        .poster-wrapper {
+            width: 100%;
+            height: 100%;
+            max-height: 300px;
+            /* Ubah sesuai kebutuhan */
+            border-radius: 0.5rem;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .poster-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
         /* Navbar Styling */
         .navbar-custom {
             background: linear-gradient(90deg, var(--kt-primary) 0%, #7239ea 100%);
@@ -204,34 +222,29 @@
                 <div class="row">
                     <!-- Event Poster -->
                     <div class="col-lg-5 mb-4">
-                        <img src="https://via.placeholder.com/400x300/009ef7/ffffff?text=Slow+Move+Bazaar+VOL.9"
-                            alt="Event Poster" class="img-fluid event-poster w-100">
+                        <div class="poster-wrapper">
+                            <img src="{{ $product->avatar ? Storage::url($product->avatar) : 'https://via.placeholder.com/400x300?text=No+Image' }}"
+                                alt="Event Poster">
+                        </div>
                     </div>
+
 
                     <!-- Event Info -->
                     <div class="col-lg-7">
-                        <h1 class="event-title">Slow Move Bazaar VOL.9</h1>
+                        <h1 class="event-title">{{ $product->product_name }}</h1>
 
                         <div class="event-meta">
                             <i class="fas fa-calendar"></i>
-                            <strong>20 Jun 2025 - 22 Jun 2025</strong>
+                            <strong>{{ \Carbon\Carbon::parse($product->event_date)->translatedFormat('d M Y') }}</strong>
                         </div>
-
                         <div class="event-meta">
-                            <i class="fas fa-clock"></i>
-                            <strong>10:00 - 21:00 WIB</strong>
-                        </div>
-
-                        <div class="event-meta mb-3">
                             <i class="fas fa-map-marker-alt"></i>
-                            <strong>The Brickhall @ FCC, DKI Jakarta</strong>
+                            <strong>{{ $product->location }}</strong>
                         </div>
                         <div class="mb-4">
                             <h5 class="mb-3">Deskripsi Event</h5>
                             <p class="text-muted">
-                                The hottest bazaar in town is back! Join us at Slow Move Bazaar VOL.9 and get ready to
-                                dive into a world of Indonesian slow fashion brands, sustainable lifestyle products, and
-                                creative communities. More than 100+ Fashion & FnB Tenants will be waiting for you!
+                                {{ $product->product_description }}
                             </p>
                         </div>
                     </div>
@@ -246,37 +259,32 @@
                         </h3>
                     </div>
 
-                    <div class="col-md-6 mb-3">
-                        <div class="ticket-category">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h5 class="mb-1">Test Tiket Update</h5>
-                                    <p class="text-muted mb-0">Tiket reguler untuk akses umum</p>
-                                    <small class="text-muted">Qty: 10 tiket tersisa</small>
-                                </div>
-                                <div class="text-end">
-                                    <div class="ticket-price">Rp 50.000</div>
-                                    <small class="text-muted">per tiket</small>
+                    @foreach ($tickets as $ticket)
+                        <div class="col-md-6 mb-3">
+                            <div class="ticket-category">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h5 class="mb-1">{{ $ticket->name }}</h5>
+                                        <p class="text-muted mb-0">Tiket reguler untuk akses umum</p>
+                                        <small class="text-muted">Qty: {{ $ticket->qty }} tiket tersisa</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="ticket-price">Rp {{ number_format($ticket->price, 0, ',', '.') }}
+                                        </div>
+                                        <small class="text-muted">per tiket</small>
+                                        <div class="mt-2">
+                                            <a href="{{ route('order.create', ['ticket_id' => $ticket->id]) }}"
+                                                class="btn btn-primary-custom btn-sm">
+                                                <i class="fas fa-shopping-cart me-1"></i>
+                                                Pesan Sekarang
+                                            </a>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    @endforeach
 
-                    <div class="col-md-6 mb-3">
-                        <div class="ticket-category">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h5 class="mb-1">Tambah Tiket</h5>
-                                    <p class="text-muted mb-0">Tiket premium dengan benefit tambahan</p>
-                                    <small class="text-muted">Qty: 2310 tiket tersisa</small>
-                                </div>
-                                <div class="text-end">
-                                    <div class="ticket-price">Rp 10.000.000</div>
-                                    <small class="text-muted">per tiket</small>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>

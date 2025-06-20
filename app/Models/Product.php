@@ -20,4 +20,8 @@ class Product extends Model
     protected $casts = [
         'event_date' => 'date'
     ];
+    public function tickets()
+    {
+        return $this->hasMany(Ticket::class);
+    }
 }

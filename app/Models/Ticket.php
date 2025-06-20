@@ -20,4 +20,8 @@ class Ticket extends Model
         'price' => 'decimal:2',
         'qty' => 'integer'
     ];
+    public function product()
+    {
+        return $this->belongsTo(Product::class);
+    }
 }

@@ -15,6 +15,15 @@ Route::get('/sign-in', [AuthController::class, 'index'])->name('sign-in');
 Route::post('/sign-in', [AuthController::class, 'login'])->name('login');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/order', [OrderController::class, 'index'])->name('order.index');
+Route::get('/order/create/{ticket_id}', [OrderController::class, 'create'])->name('order.create');
+Route::post('/order/store', [OrderController::class, 'store'])->name('order.store');
+Route::get('/payment/success', function () {
+    return view('payment.success');
+})->name('payment.success');
+
+Route::get('/payment/failed', function () {
+    return view('payment.failed');
+})->name('payment.failed');
 
 
 // Protected admin routes
