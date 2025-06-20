@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\OrderController;
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\BuyerController;
 use App\Http\Controllers\Admin\EventController;
@@ -13,6 +14,8 @@ use App\Http\Controllers\Admin\DashboardController;
 Route::get('/sign-in', [AuthController::class, 'index'])->name('sign-in');
 Route::post('/sign-in', [AuthController::class, 'login'])->name('login');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::get('/order', [OrderController::class, 'index'])->name('order.index');
+
 
 // Protected admin routes
 Route::middleware('auth')->group(function () {
