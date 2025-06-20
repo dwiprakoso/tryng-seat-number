@@ -21,6 +21,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/event', [ProductController::class, 'index'])->name('admin.event.index');
     Route::put('/products/{product}', [ProductController::class, 'update'])->name('admin.products.update');
 
+    Route::get('tickets', [TicketController::class, 'index'])->name('admin.tickets.index');
+    Route::post('tickets', [TicketController::class, 'store'])->name('admin.tickets.store');
+    Route::put('tickets/{id}', [TicketController::class, 'update'])->name('admin.tickets.update');
+    Route::delete('tickets/{id}', [TicketController::class, 'destroy'])->name('admin.tickets.destroy');
 
     Route::post('/products', [ProductController::class, 'store'])->name('admin.products.store');
     Route::get('/ticket', [TicketController::class, 'index'])->name('admin.ticket.index');
