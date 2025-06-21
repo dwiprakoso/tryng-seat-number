@@ -21,6 +21,8 @@ class Buyer extends Model
         'xendit_invoice_id',    // Tambah ini
         'xendit_invoice_url',   // Tambah ini
         'payment_status',       // Tambah ini
+        'ticket_price',     // Tambahan
+        'admin_fee',        // Tambahan
     ];
 
     protected $casts = [

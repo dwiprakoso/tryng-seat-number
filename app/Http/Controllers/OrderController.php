@@ -45,6 +45,11 @@ class OrderController extends Controller
         // Get ticket data untuk harga
         $ticket = Ticket::find($request->ticket_id);
 
+        // Hitung biaya admin (5%)
+        $ticket_price = $ticket->price;
+        $admin_fee = $ticket_price * 0.05; // 5% dari harga tiket
+        $total_amount = $ticket_price + $admin_fee;
+
         // Simpan ke database buyers
         $buyer = new Buyer();
         $buyer->nama_lengkap = $request->nama_lengkap;
@@ -54,7 +59,9 @@ class OrderController extends Controller
         $buyer->kode_pos = $request->kode_pos;
         $buyer->ukuran_jersey = $request->ukuran_jersey;
         $buyer->ticket_id = $request->ticket_id;
-        $buyer->total_amount = $ticket->price;
+        $buyer->ticket_price = $ticket_price; // Simpan harga tiket terpisah
+        $buyer->admin_fee = $admin_fee; // Simpan biaya admin terpisah
+        $buyer->total_amount = $total_amount; // Total keseluruhan
         $buyer->save();
 
         // Debug: Cek konfigurasi Xendit
@@ -69,7 +76,9 @@ class OrderController extends Controller
         Log::info('Creating Xendit Invoice', [
             'buyer_id' => $buyer->id,
             'ticket_id' => $ticket->id,
-            'amount' => $ticket->price,
+            'ticket_price' => $ticket_price,
+            'admin_fee' => $admin_fee,
+            'total_amount' => $total_amount,
             'customer_name' => $request->nama_lengkap
         ]);
 
@@ -79,9 +88,24 @@ class OrderController extends Controller
             $invoiceData = [
                 'external_id' => 'TKT-' . date('Ymd') . '-' . str_pad($buyer->id, 6, '0', STR_PAD_LEFT),
                 'description' => 'Pembelian Tiket: ' . $ticket->name . ' - Jersey ' . $request->ukuran_jersey,
-                'amount' => $ticket->price,
+                'amount' => $total_amount, // Kirim total amount (harga tiket + biaya admin)
                 'success_url' => route('payment.success'),
                 'failure_url' => route('payment.failed'),
+                // Tambahkan item details untuk breakdown biaya
+                'items' => [
+                    [
+                        'name' => $ticket->name . ' - Jersey ' . $request->ukuran_jersey,
+                        'quantity' => 1,
+                        'price' => $ticket_price,
+                        'category' => 'Tiket'
+                    ],
+                    [
+                        'name' => 'Biaya Admin (5%)',
+                        'quantity' => 1,
+                        'price' => $admin_fee,
+                        'category' => 'Admin Fee'
+                    ]
+                ],
                 'customer' => [
                     'given_names' => $request->nama_lengkap,
                     'mobile_number' => $request->no_handphone,
