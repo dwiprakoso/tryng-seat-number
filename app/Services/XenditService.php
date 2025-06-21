@@ -8,11 +8,12 @@ use Illuminate\Support\Facades\Log;
 class XenditService
 {
     private $apiKey;
-    private $baseUrl = 'https://api.xendit.co';
+    private $baseUrl;
 
     public function __construct()
     {
         $this->apiKey = config('services.xendit.secret_key');
+        $this->baseUrl = config('services.xendit.base_url', 'https://api.xendit.co');
 
         if (!$this->apiKey) {
             throw new Exception('Xendit API key is not configured. Please check your .env file.');
@@ -23,6 +24,9 @@ class XenditService
     {
         $curl = curl_init();
 
+        // Generate webhook URL menggunakan route name
+        $webhookUrl = route('webhook.xendit.invoice');
+
         $postData = [
             'external_id' => $data['external_id'],
             'payer_email' => $data['email'] ?? 'customer@example.com',
@@ -31,8 +35,7 @@ class XenditService
             'invoice_duration' => 86400, // 24 jam
             'success_redirect_url' => $data['success_url'] ?? null,
             'failure_redirect_url' => $data['failure_url'] ?? null,
-            // Tambah webhook URL
-            'notification_url' => url('/webhook/xendit/invoice'),
+            'notification_url' => $webhookUrl, // Menggunakan route helper
         ];
 
         // Optional: tambah customer data
@@ -45,9 +48,10 @@ class XenditService
             $postData['items'] = $data['items'];
         }
 
-        // Debug: Log request data (tanpa API key)
+        // Debug: Log request data dengan webhook URL
         Log::info('Sending request to Xendit', [
             'url' => $this->baseUrl . '/v2/invoices',
+            'webhook_url' => $webhookUrl, // Log webhook URL untuk debugging
             'data' => $postData
         ]);
 
@@ -60,7 +64,6 @@ class XenditService
                 'Authorization: Basic ' . base64_encode($this->apiKey . ':'),
                 'Content-Type: application/json',
             ],
-            // Tambah ini untuk debugging SSL
             CURLOPT_SSL_VERIFYPEER => true,
             CURLOPT_SSL_VERIFYHOST => 2,
             CURLOPT_TIMEOUT => 30,
