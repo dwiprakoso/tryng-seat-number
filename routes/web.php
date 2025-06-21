@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\EventController;
 use App\Http\Controllers\Admin\DiskonController;
 use App\Http\Controllers\Admin\TicketController;
 use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\PaymentWebhookController;
 use App\Http\Controllers\Admin\DashboardController;
 
 // Default route mengarah ke order.index
@@ -22,7 +23,13 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/orders', [OrderController::class, 'index'])->name('order.list');
 Route::get('/order/create/{ticket_id}', [OrderController::class, 'create'])->name('order.create');
 Route::post('/order/store', [OrderController::class, 'store'])->name('order.store');
+// Webhook routes (tanpa middleware auth)
+Route::post('/webhook/xendit/invoice', [PaymentWebhookController::class, 'xenditInvoiceCallback'])
+    ->name('webhook.xendit.invoice');
 
+// Test webhook untuk development
+Route::post('/webhook/test', [PaymentWebhookController::class, 'testWebhook'])
+    ->name('webhook.test');
 // Payment routes
 Route::get('/payment/success', function () {
     return view('payment.success');

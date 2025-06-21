@@ -31,11 +31,18 @@ class XenditService
             'invoice_duration' => 86400, // 24 jam
             'success_redirect_url' => $data['success_url'] ?? null,
             'failure_redirect_url' => $data['failure_url'] ?? null,
+            // Tambah webhook URL
+            'notification_url' => url('/webhook/xendit/invoice'),
         ];
 
         // Optional: tambah customer data
         if (isset($data['customer'])) {
             $postData['customer'] = $data['customer'];
+        }
+
+        // Tambah items untuk breakdown biaya (tiket + admin fee)
+        if (isset($data['items'])) {
+            $postData['items'] = $data['items'];
         }
 
         // Debug: Log request data (tanpa API key)
