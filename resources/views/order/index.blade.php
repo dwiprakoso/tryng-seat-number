@@ -15,16 +15,27 @@
 
     <style>
         :root {
-            --primary: #009ef7;
-            --success: #50cd89;
-            --dark: #181c32;
+            --primary: #D4A574;
+            /* Gold color */
+            --primary-dark: #B8935F;
+            /* Darker gold for hover */
+            --success: #D4A574;
+            /* Gold for price */
+            --dark: #2C2C2C;
+            /* Dark gray */
             --white: #ffffff;
-            --gray-100: #f8f9fa;
-            --gray-200: #e9ecef;
-            --gray-300: #dee2e6;
-            --gray-600: #6c757d;
-            --gray-700: #495057;
-            --gray-900: #212529;
+            --gray-100: #F5F5F5;
+            /* Light gray background */
+            --gray-200: #E8E8E8;
+            /* Light border */
+            --gray-300: #D1D1D1;
+            /* Medium border */
+            --gray-600: #666666;
+            /* Medium gray text */
+            --gray-700: #4A4A4A;
+            /* Darker gray text */
+            --gray-900: #2C2C2C;
+            /* Very dark gray */
         }
 
         * {
@@ -43,9 +54,9 @@
 
         /* Minimal Navbar */
         .navbar {
-            background: var(--white);
-            border-bottom: 1px solid var(--gray-200);
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            background: var(--dark);
+            border-bottom: 1px solid var(--gray-600);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
             padding: 1rem 0;
             position: fixed;
             top: 0;
@@ -56,7 +67,7 @@
         .navbar-brand {
             font-weight: 700;
             font-size: 1.5rem;
-            color: var(--dark);
+            color: var(--primary);
             text-decoration: none;
             margin: 0 auto;
             display: flex;
@@ -77,9 +88,9 @@
         /* Cards */
         .card {
             background: var(--white);
-            border: none;
+            border: 1px solid var(--gray-200);
             border-radius: 8px;
-            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
             margin-bottom: 1.5rem;
         }
 
@@ -94,6 +105,7 @@
             border-radius: 8px;
             object-fit: cover;
             background: var(--gray-200);
+            border: 2px solid var(--gray-200);
         }
 
         .event-title {
@@ -123,6 +135,10 @@
             margin-top: 1.5rem;
         }
 
+        .event-description h5 {
+            color: var(--dark) !important;
+        }
+
         /* Section Title */
         .section-title {
             font-size: 1.5rem;
@@ -141,16 +157,17 @@
         /* Ticket Cards */
         .ticket-item {
             background: var(--white);
-            border: 1px solid var(--gray-200);
+            border: 2px solid var(--gray-200);
             border-radius: 8px;
             padding: 1.5rem;
             margin-bottom: 1rem;
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
         }
 
         .ticket-item:hover {
             border-color: var(--primary);
-            box-shadow: 0 4px 12px rgba(0, 158, 247, 0.1);
+            box-shadow: 0 6px 20px rgba(212, 165, 116, 0.15);
+            transform: translateY(-2px);
         }
 
         .ticket-name {
@@ -175,12 +192,13 @@
 
         .ticket-qty i {
             margin-right: 0.25rem;
+            color: var(--primary);
         }
 
         .ticket-price {
             font-size: 1.5rem;
             font-weight: 700;
-            color: var(--success);
+            color: var(--primary);
             margin-bottom: 0.25rem;
         }
 
@@ -192,22 +210,24 @@
 
         /* Button */
         .btn-primary {
-            background-color: var(--primary);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
             border: none;
             color: var(--white);
             font-weight: 600;
             padding: 0.75rem 1.5rem;
             border-radius: 6px;
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
             text-decoration: none;
             display: inline-flex;
             align-items: center;
+            box-shadow: 0 4px 12px rgba(212, 165, 116, 0.3);
         }
 
         .btn-primary:hover {
-            background-color: #0095e8;
-            transform: translateY(-1px);
+            background: linear-gradient(135deg, var(--primary-dark) 0%, #A67C52 100%);
+            transform: translateY(-2px);
             color: var(--white);
+            box-shadow: 0 6px 20px rgba(212, 165, 116, 0.4);
         }
 
         .btn-primary i {
@@ -220,10 +240,11 @@
             color: var(--gray-600);
             padding: 2rem 0;
             margin-top: 3rem;
+            border-top: 3px solid var(--primary);
         }
 
-        .footer h6 {
-            color: var(--white);
+        .footer h4 {
+            color: var(--primary);
             font-weight: 600;
             margin-bottom: 0.5rem;
         }
@@ -254,9 +275,9 @@
     <!-- Minimal Navbar with Centered Logo -->
     <nav class="navbar">
         <div class="container">
-            <a class="navbar-brand" href="#">
-                <i class="fas fa-calendar-alt"></i>
-                Ticketify
+            <a href="#">
+                <img src="{{ asset('assets/media/logos/logo.png') }}" alt="Ticketify" class="navbar-brand"
+                    height="50">
             </a>
         </div>
     </nav>
@@ -300,7 +321,7 @@
         <div class="card">
             <div class="card-body">
                 <h3 class="section-title">
-                    <i class="fas fa-ticket-alt"></i>
+                    {{-- <i class="fas fa-ticket-alt"></i> --}}
                     Kategori Tiket
                 </h3>
 
@@ -312,10 +333,10 @@
                                     <div class="flex-grow-1">
                                         <h5 class="ticket-name">{{ $ticket->name }}</h5>
                                         <p class="ticket-description">Tiket reguler untuk akses umum</p>
-                                        <div class="ticket-qty">
+                                        {{-- <div class="ticket-qty">
                                             <i class="fas fa-users"></i>
                                             {{ $ticket->qty }} tiket tersisa
-                                        </div>
+                                        </div> --}}
                                     </div>
                                     <div class="text-end">
                                         <div class="ticket-price">Rp {{ number_format($ticket->price, 0, ',', '.') }}
@@ -341,11 +362,11 @@
         <div class="container">
             <div class="row">
                 <div class="col-md-6">
-                    <h6>EventHub</h6>
+                    <h4>Ticketify</h4>
                     <p>Platform terpercaya untuk booking tiket event di Indonesia</p>
                 </div>
                 <div class="col-md-6 text-md-end">
-                    <p>&copy; 2025 EventHub. All rights reserved.</p>
+                    <p>&copy; 2025 Tciketify. All rights reserved.</p>
                 </div>
             </div>
         </div>
