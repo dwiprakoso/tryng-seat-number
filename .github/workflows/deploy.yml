@@ -1,0 +1,26 @@
+name: 🚀 Auto Deploy Laravel ke Niagahoster
+
+on:
+  push:
+    branches:
+      - prod
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🚪 SSH ke Server Niagahoster & Deploy
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: 65002
+          script: |
+            cd /home/u860904040/domains/ticketify.id/public_html/dev
+            git pull origin prod
+            composer install --no-dev --prefer-dist
+            php artisan migrate --force
+            php artisan config:cache
+            php artisan route:cache
