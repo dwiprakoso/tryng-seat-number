@@ -15,68 +15,83 @@
 
     <style>
         :root {
-            --kt-primary: #009ef7;
-            --kt-primary-light: #f1faff;
-            --kt-primary-active: #0095e8;
-            --kt-secondary: #e4e6ea;
-            --kt-success: #50cd89;
-            --kt-info: #7239ea;
-            --kt-warning: #ffc700;
-            --kt-danger: #f1416c;
-            --kt-light: #f5f8fa;
-            --kt-dark: #181c32;
-            --kt-white: #ffffff;
-            --kt-gray-100: #f5f8fa;
-            --kt-gray-200: #eff2f5;
-            --kt-gray-300: #e4e6ea;
-            --kt-gray-400: #b5b5c3;
-            --kt-gray-500: #a1a5b7;
-            --kt-gray-600: #7e8299;
-            --kt-gray-700: #5e6278;
-            --kt-gray-800: #3f4254;
-            --kt-gray-900: #181c32;
+            --primary: #D4A574;
+            /* Gold color */
+            --primary-dark: #B8935F;
+            /* Darker gold for hover */
+            --success: #D4A574;
+            /* Gold for price */
+            --dark: #2C2C2C;
+            /* Dark gray */
+            --white: #ffffff;
+            --gray-100: #F5F5F5;
+            /* Light gray background */
+            --gray-200: #E8E8E8;
+            /* Light border */
+            --gray-300: #D1D1D1;
+            /* Medium border */
+            --gray-600: #666666;
+            /* Medium gray text */
+            --gray-700: #4A4A4A;
+            /* Darker gray text */
+            --gray-900: #2C2C2C;
+            /* Very dark gray */
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
         body {
             font-family: 'Inter', sans-serif;
-            background-color: var(--kt-gray-100);
-            color: var(--kt-gray-700);
-            line-height: 1.6;
-            font-size: 13px;
+            background-color: var(--gray-100);
+            color: var(--gray-700);
+            font-size: 14px;
+            line-height: 1.5;
         }
 
-        /* Metronic Navbar */
-        .navbar-custom {
-            background-color: var(--kt-white);
-            border-bottom: 1px solid var(--kt-gray-200);
-            box-shadow: 0 0.1rem 1rem 0.25rem rgba(0, 0, 0, 0.05);
-            padding: 0;
-            min-height: 70px;
+        /* Minimal Navbar */
+        .navbar {
+            background: var(--dark);
+            border-bottom: 1px solid var(--gray-600);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            padding: 1rem 0;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
         }
 
         .navbar-brand {
             font-weight: 700;
             font-size: 1.5rem;
-            color: var(--kt-gray-900) !important;
-            padding: 1.25rem 0;
+            color: var(--primary);
+            text-decoration: none;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .navbar-brand i {
-            color: var(--kt-primary);
+            color: var(--primary);
+            margin-right: 0.5rem;
         }
 
-        /* Metronic Cards */
+        .navbar .container {
+            display: flex;
+            justify-content: center;
+        }
+
+        /* Cards */
         .card {
-            border: none;
-            border-radius: 0.625rem;
-            box-shadow: 0 0.5rem 1.5rem 0.5rem rgba(0, 0, 0, 0.075);
-            background-color: var(--kt-white);
-        }
-
-        .card-header {
-            background-color: var(--kt-white);
-            border-bottom: 1px solid var(--kt-gray-200);
-            padding: 1.5rem 2rem;
+            background: var(--white);
+            border: 1px solid var(--gray-200);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            margin-bottom: 1.5rem;
         }
 
         .card-body {
@@ -84,89 +99,17 @@
         }
 
         .card-title {
-            font-size: 1.25rem;
+            font-size: 1.5rem;
             font-weight: 700;
-            color: var(--kt-gray-900);
-            margin-bottom: 0;
+            color: var(--dark);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
         }
 
-        /* Form Controls */
-        .form-label {
-            font-weight: 600;
-            color: var(--kt-gray-800);
-            margin-bottom: 0.5rem;
-            font-size: 13px;
-        }
-
-        .form-control,
-        .form-select {
-            border: 1px solid var(--kt-gray-300);
-            border-radius: 0.625rem;
-            padding: 0.75rem 1rem;
-            font-size: 13px;
-            transition: all 0.15s ease;
-            background-color: var(--kt-white);
-        }
-
-        .form-control:focus,
-        .form-select:focus {
-            border-color: var(--kt-primary);
-            box-shadow: 0 0 0 0.25rem rgba(0, 158, 247, 0.1);
-            background-color: var(--kt-white);
-        }
-
-        .form-control.is-invalid {
-            border-color: var(--kt-danger);
-        }
-
-        .text-danger {
-            color: var(--kt-danger) !important;
-            font-size: 12px;
-            margin-top: 0.25rem;
-        }
-
-        /* Input Groups */
-        .input-group-text {
-            background-color: var(--kt-gray-200);
-            border-color: var(--kt-gray-300);
-            color: var(--kt-gray-600);
-            font-size: 13px;
-        }
-
-        /* Buttons */
-        .btn-primary {
-            background-color: var(--kt-primary);
-            border-color: var(--kt-primary);
-            color: var(--kt-white);
-            font-weight: 600;
-            font-size: 13px;
-            padding: 0.75rem 1.5rem;
-            border-radius: 0.625rem;
-            transition: all 0.15s ease;
-        }
-
-        .btn-primary:hover {
-            background-color: var(--kt-primary-active);
-            border-color: var(--kt-primary-active);
-            color: var(--kt-white);
-            transform: translateY(-1px);
-        }
-
-        .btn-secondary {
-            background-color: var(--kt-gray-200);
-            border-color: var(--kt-gray-200);
-            color: var(--kt-gray-700);
-            font-weight: 600;
-            font-size: 13px;
-            padding: 0.75rem 1.5rem;
-            border-radius: 0.625rem;
-            transition: all 0.15s ease;
-        }
-
-        .btn-secondary:hover {
-            background-color: var(--kt-gray-300);
-            border-color: var(--kt-gray-300);
-            color: var(--kt-gray-800);
+        .card-title i {
+            color: var(--primary);
+            margin-right: 0.75rem;
         }
 
         /* Breadcrumb */
@@ -174,63 +117,157 @@
             background-color: transparent;
             padding: 0;
             margin-bottom: 2rem;
-            font-size: 13px;
+            font-size: 14px;
         }
 
         .breadcrumb-item {
-            color: var(--kt-gray-600);
+            color: var(--gray-600);
         }
 
         .breadcrumb-item.active {
-            color: var(--kt-gray-800);
+            color: var(--gray-700);
             font-weight: 600;
         }
 
         .breadcrumb-item a {
-            color: var(--kt-primary);
+            color: var(--primary);
             text-decoration: none;
         }
 
         .breadcrumb-item a:hover {
-            color: var(--kt-primary-active);
+            color: var(--primary-dark);
+        }
+
+        /* Form Controls */
+        .form-label {
+            font-weight: 600;
+            color: var(--gray-700);
+            margin-bottom: 0.5rem;
+            font-size: 14px;
+        }
+
+        .form-control,
+        .form-select {
+            border: 1px solid var(--gray-300);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background-color: var(--white);
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 0.25rem rgba(212, 165, 116, 0.15);
+            background-color: var(--white);
+        }
+
+        .form-control.is-invalid {
+            border-color: #f1416c;
+        }
+
+        .text-danger {
+            color: #f1416c !important;
+            font-size: 12px;
+            margin-top: 0.25rem;
+        }
+
+        /* Input Groups */
+        .input-group-text {
+            background-color: var(--gray-200);
+            border-color: var(--gray-300);
+            color: var(--gray-600);
+            font-size: 14px;
+        }
+
+        /* Buttons */
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            border: none;
+            color: var(--white);
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(212, 165, 116, 0.3);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, #A67C52 100%);
+            transform: translateY(-2px);
+            color: var(--white);
+            box-shadow: 0 6px 20px rgba(212, 165, 116, 0.4);
+        }
+
+        .btn-primary i {
+            margin-right: 0.5rem;
+        }
+
+        .btn-secondary {
+            background-color: var(--gray-200);
+            border: 1px solid var(--gray-300);
+            color: var(--gray-700);
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            text-decoration: none;
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--gray-300);
+            border-color: var(--gray-700);
+            color: var(--gray-700);
+        }
+
+        .btn-secondary i {
+            margin-right: 0.5rem;
         }
 
         /* Event Info Card */
         .event-info {
-            background-color: var(--kt-gray-100);
-            border: 1px solid var(--kt-gray-200);
-            border-radius: 0.625rem;
+            background-color: var(--white);
+            border: 1px solid var(--gray-200);
+            border-radius: 8px;
             padding: 1.5rem;
             margin-bottom: 2rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
         }
 
         .event-info img {
-            border-radius: 0.625rem;
+            border-radius: 8px;
         }
 
         .event-info h5 {
-            color: var(--kt-gray-900);
+            color: var(--dark);
             font-weight: 700;
             margin-bottom: 0.75rem;
             font-size: 1.125rem;
         }
 
         .event-info .text-muted {
-            color: var(--kt-gray-600) !important;
-            font-size: 13px;
+            color: var(--gray-600) !important;
+            font-size: 14px;
         }
 
         /* Ticket Selection */
         .ticket-selection {
-            background-color: var(--kt-gray-100);
-            border: 1px solid var(--kt-gray-200);
-            border-radius: 0.625rem;
+            background-color: var(--white);
+            border: 1px solid var(--gray-200);
+            border-radius: 8px;
             padding: 1.5rem;
             margin-bottom: 2rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
         }
 
         .ticket-selection h6 {
-            color: var(--kt-gray-900);
+            color: var(--dark);
             font-weight: 600;
             margin-bottom: 0.5rem;
         }
@@ -238,7 +275,7 @@
         .price-display {
             font-size: 1.25rem;
             font-weight: 700;
-            color: var(--kt-success);
+            color: var(--primary);
         }
 
         /* Section Headers */
@@ -248,11 +285,11 @@
             margin-bottom: 1.5rem;
             font-size: 1.125rem;
             font-weight: 700;
-            color: var(--kt-gray-900);
+            color: var(--dark);
         }
 
         .section-header i {
-            color: var(--kt-primary);
+            color: var(--primary);
             margin-right: 0.5rem;
         }
 
@@ -268,24 +305,24 @@
             position: relative;
             text-align: center;
             padding: 1rem 0.5rem;
-            border: 1px solid var(--kt-gray-300);
-            border-radius: 0.625rem;
+            border: 1px solid var(--gray-300);
+            border-radius: 8px;
             cursor: pointer;
-            transition: all 0.15s ease;
-            background-color: var(--kt-white);
+            transition: all 0.3s ease;
+            background-color: var(--white);
             font-weight: 600;
-            font-size: 13px;
+            font-size: 14px;
         }
 
         .jersey-size-option:hover {
-            border-color: var(--kt-primary);
-            background-color: var(--kt-primary-light);
+            border-color: var(--primary);
+            background-color: rgba(212, 165, 116, 0.1);
         }
 
         .jersey-size-option.selected {
-            border-color: var(--kt-primary);
-            background-color: var(--kt-primary);
-            color: var(--kt-white);
+            border-color: var(--primary);
+            background-color: var(--primary);
+            color: var(--white);
         }
 
         .jersey-size-option input[type="radio"] {
@@ -294,16 +331,17 @@
 
         /* Order Summary */
         .order-summary {
-            background-color: var(--kt-white);
-            border: 1px solid var(--kt-gray-200);
-            border-radius: 0.625rem;
+            background-color: var(--white);
+            border: 1px solid var(--gray-200);
+            border-radius: 8px;
             padding: 2rem;
             position: sticky;
             top: 90px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
         }
 
         .order-summary h5 {
-            color: var(--kt-gray-900);
+            color: var(--dark);
             font-weight: 700;
             margin-bottom: 1.5rem;
             font-size: 1.125rem;
@@ -311,10 +349,10 @@
 
         .summary-item {
             display: flex;
-            justify-content: between;
+            justify-content: space-between;
             align-items: center;
             padding: 0.75rem 0;
-            border-bottom: 1px solid var(--kt-gray-200);
+            border-bottom: 1px solid var(--gray-200);
         }
 
         .summary-item:last-child {
@@ -322,19 +360,19 @@
         }
 
         .summary-item span:first-child {
-            color: var(--kt-gray-600);
-            font-size: 13px;
+            color: var(--gray-600);
+            font-size: 14px;
         }
 
         .summary-item span:last-child {
             font-weight: 600;
-            color: var(--kt-gray-900);
-            font-size: 13px;
+            color: var(--dark);
+            font-size: 14px;
         }
 
         .total-section {
-            background-color: var(--kt-gray-100);
-            border-radius: 0.625rem;
+            background-color: var(--gray-100);
+            border-radius: 8px;
             padding: 1rem;
             margin: 1rem 0;
         }
@@ -342,37 +380,40 @@
         .total-price {
             font-size: 1.5rem;
             font-weight: 700;
-            color: var(--kt-primary);
+            color: var(--primary);
         }
 
         /* Alerts */
         .alert {
             border: none;
-            border-radius: 0.625rem;
+            border-radius: 8px;
             font-size: 12px;
             padding: 1rem;
         }
 
         .alert-info {
-            background-color: var(--kt-primary-light);
-            color: var(--kt-primary);
+            background-color: rgba(212, 165, 116, 0.1);
+            color: var(--primary);
+            border: 1px solid rgba(212, 165, 116, 0.2);
         }
 
         .alert-warning {
             background-color: #fff8dd;
-            color: var(--kt-warning);
+            color: #ffc700;
+            border: 1px solid #ffeaa7;
         }
 
         /* Footer */
         .footer {
-            background-color: var(--kt-gray-900);
-            color: var(--kt-gray-400);
+            background: var(--dark);
+            color: var(--gray-600);
             padding: 2rem 0;
             margin-top: 3rem;
+            border-top: 3px solid var(--primary);
         }
 
         .footer h6 {
-            color: var(--kt-white);
+            color: var(--primary);
             font-weight: 600;
             margin-bottom: 1rem;
         }
@@ -419,17 +460,16 @@
 
 <body>
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-custom fixed-top">
+    <nav class="navbar">
         <div class="container">
-            <a class="navbar-brand" href="#">
-                <i class="fas fa-calendar-alt me-2"></i>
-                EventHub
+            <a href="#" class="navbar-brand">
+                <img src="{{ asset('assets/media/logos/logo.png') }}" alt="Ticketify" height="50">
             </a>
         </div>
     </nav>
 
     <!-- Main Content -->
-    <div class="container-custom" style="margin-top: 90px;">
+    <div class="container-custom" style="margin-top: 100px;">
 
         <!-- Breadcrumb -->
         <nav aria-label="breadcrumb">
@@ -447,13 +487,11 @@
             <!-- Order Form -->
             <div class="col-lg-8">
                 <div class="card">
-                    <div class="card-header">
+                    <div class="card-body">
                         <h3 class="card-title">
-                            <i class="fas fa-shopping-cart me-2"></i>
+                            <i class="fas fa-shopping-cart"></i>
                             Form Pemesanan Tiket
                         </h3>
-                    </div>
-                    <div class="card-body">
 
                         <!-- Event Info -->
                         <div class="event-info">
@@ -487,7 +525,7 @@
                                     <div class="d-flex justify-content-between align-items-center">
                                         <div>
                                             <h6>{{ $ticket->name }}</h6>
-                                            <small class="text-muted">{{ $ticket->qty }} tiket tersisa</small>
+                                            {{-- <small class="text-muted">{{ $ticket->qty }} tiket tersisa</small> --}}
                                         </div>
                                         <div class="price-display">
                                             Rp {{ number_format($ticket->price, 0, ',', '.') }}
@@ -560,9 +598,17 @@
                             <!-- Jersey Size Selection -->
                             <div class="mb-4">
                                 <label class="form-label">Ukuran Jersey <span class="text-danger">*</span></label>
+
+                                <!-- Size Chart Image -->
+                                <div class="mb-3 text-left">
+                                    <img src="{{ asset('assets/media/illustrations/size_chart.jpg') }}"
+                                        alt="Size Chart" class="img-fluid rounded border" style="max-height: 400px;">
+                                    <small class="d-block text-muted mt-1">Panduan Ukuran Jersey</small>
+                                </div>
+
                                 <div class="jersey-size-grid">
                                     @php
-                                        $sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
+                                        $sizes = ['S', 'M', 'L', 'XL', 'XXL'];
                                     @endphp
                                     @foreach ($sizes as $size)
                                         <div class="jersey-size-option" onclick="selectSize('{{ $size }}')">
@@ -581,11 +627,11 @@
                             <!-- Form Actions -->
                             <div class="d-flex gap-3 mt-4">
                                 <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-credit-card me-2"></i>
+                                    <i class="fas fa-credit-card"></i>
                                     Lanjut ke Pembayaran
                                 </button>
                                 <a href="{{ route('order.index') }}" class="btn btn-secondary">
-                                    <i class="fas fa-arrow-left me-2"></i>
+                                    <i class="fas fa-arrow-left"></i>
                                     Kembali
                                 </a>
                             </div>
@@ -612,16 +658,21 @@
                         <span>Rp {{ number_format($ticket->price, 0, ',', '.') }}</span>
                     </div>
 
+                    @php
+                        $adminFee = $ticket->price * 0.05; // 5% dari harga tiket
+                        $totalPrice = $ticket->price + $adminFee;
+                    @endphp
+
                     <div class="summary-item">
-                        <span>Biaya Admin:</span>
-                        <span>Rp 5.000</span>
+                        <span>Biaya Admin (5%):</span>
+                        <span>Rp {{ number_format($adminFee, 0, ',', '.') }}</span>
                     </div>
 
                     <div class="total-section">
                         <div class="d-flex justify-content-between align-items-center">
                             <span class="fw-bold">Total:</span>
                             <span class="total-price">
-                                Rp {{ number_format($ticket->price + 5000, 0, ',', '.') }}
+                                Rp {{ number_format($totalPrice, 0, ',', '.') }}
                             </span>
                         </div>
                     </div>
@@ -646,11 +697,11 @@
         <div class="container">
             <div class="row">
                 <div class="col-md-6">
-                    <h6>EventHub</h6>
+                    <h6>Ticketify</h6>
                     <p class="mb-0">Platform terpercaya untuk booking tiket event di Indonesia</p>
                 </div>
                 <div class="col-md-6 text-md-end">
-                    <p class="mb-0">&copy; 2025 EventHub. All rights reserved.</p>
+                    <p class="mb-0">&copy; 2025 Ticketify. All rights reserved.</p>
                 </div>
             </div>
         </div>
