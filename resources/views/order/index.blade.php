@@ -256,7 +256,7 @@
         <div class="container">
             <a class="navbar-brand" href="#">
                 <i class="fas fa-calendar-alt"></i>
-                EventHub
+                Ticketify
             </a>
         </div>
     </nav>
