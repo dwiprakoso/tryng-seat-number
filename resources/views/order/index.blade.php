@@ -15,324 +15,264 @@
 
     <style>
         :root {
-            --kt-primary: #009ef7;
-            --kt-primary-light: #f1faff;
-            --kt-primary-active: #0095e8;
-            --kt-secondary: #e4e6ea;
-            --kt-success: #50cd89;
-            --kt-info: #7239ea;
-            --kt-warning: #ffc700;
-            --kt-danger: #f1416c;
-            --kt-light: #f5f8fa;
-            --kt-dark: #181c32;
-            --kt-white: #ffffff;
-            --kt-gray-100: #f5f8fa;
-            --kt-gray-200: #eff2f5;
-            --kt-gray-300: #e4e6ea;
-            --kt-gray-400: #b5b5c3;
-            --kt-gray-500: #a1a5b7;
-            --kt-gray-600: #7e8299;
-            --kt-gray-700: #5e6278;
-            --kt-gray-800: #3f4254;
-            --kt-gray-900: #181c32;
+            --primary: #009ef7;
+            --success: #50cd89;
+            --dark: #181c32;
+            --white: #ffffff;
+            --gray-100: #f8f9fa;
+            --gray-200: #e9ecef;
+            --gray-300: #dee2e6;
+            --gray-600: #6c757d;
+            --gray-700: #495057;
+            --gray-900: #212529;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
         body {
             font-family: 'Inter', sans-serif;
-            background-color: var(--kt-gray-100);
-            color: var(--kt-gray-700);
-            line-height: 1.6;
-            font-size: 13px;
+            background-color: var(--gray-100);
+            color: var(--gray-700);
+            font-size: 14px;
+            line-height: 1.5;
         }
 
-        /* Metronic Navbar */
-        .navbar-custom {
-            background-color: var(--kt-white);
-            border-bottom: 1px solid var(--kt-gray-200);
-            box-shadow: 0 0.1rem 1rem 0.25rem rgba(0, 0, 0, 0.05);
-            padding: 0;
-            min-height: 70px;
+        /* Minimal Navbar */
+        .navbar {
+            background: var(--white);
+            border-bottom: 1px solid var(--gray-200);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            padding: 1rem 0;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
         }
 
         .navbar-brand {
             font-weight: 700;
             font-size: 1.5rem;
-            color: var(--kt-gray-900) !important;
-            padding: 1.25rem 0;
+            color: var(--dark);
+            text-decoration: none;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .navbar-brand i {
-            color: var(--kt-primary);
+            color: var(--primary);
+            margin-right: 0.5rem;
         }
 
-        /* Metronic Card */
+        .navbar .container {
+            display: flex;
+            justify-content: center;
+        }
+
+        /* Cards */
         .card {
+            background: var(--white);
             border: none;
-            border-radius: 0.625rem;
-            box-shadow: 0 0.5rem 1.5rem 0.5rem rgba(0, 0, 0, 0.075);
-            background-color: var(--kt-white);
-        }
-
-        .card-header {
-            background-color: transparent;
-            border-bottom: 1px solid var(--kt-gray-200);
-            padding: 1.5rem 2rem;
+            border-radius: 8px;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+            margin-bottom: 1.5rem;
         }
 
         .card-body {
             padding: 2rem;
         }
 
-        /* Event Poster */
-        .poster-wrapper {
+        /* Event Section */
+        .event-poster {
             width: 100%;
-            height: 350px;
-            border-radius: 0.625rem;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background-color: var(--kt-gray-200);
-        }
-
-        .poster-wrapper img {
-            width: 100%;
-            height: 100%;
+            height: 300px;
+            border-radius: 8px;
             object-fit: cover;
+            background: var(--gray-200);
         }
 
-        /* Typography */
         .event-title {
             font-size: 2rem;
             font-weight: 700;
-            color: var(--kt-gray-900);
-            margin-bottom: 1.5rem;
-            line-height: 1.2;
+            color: var(--dark);
+            margin-bottom: 1rem;
         }
 
         .event-meta {
             display: flex;
             align-items: center;
-            color: var(--kt-gray-600);
+            color: var(--gray-600);
+            margin-bottom: 0.75rem;
             font-size: 14px;
-            margin-bottom: 1rem;
-            font-weight: 500;
         }
 
         .event-meta i {
-            color: var(--kt-primary);
-            width: 20px;
+            color: var(--primary);
+            width: 18px;
             margin-right: 0.75rem;
-            font-size: 16px;
         }
 
         .event-description {
-            color: var(--kt-gray-600);
-            font-size: 14px;
+            color: var(--gray-600);
             line-height: 1.6;
+            margin-top: 1.5rem;
         }
 
-        /* Section Headers */
+        /* Section Title */
         .section-title {
             font-size: 1.5rem;
             font-weight: 700;
-            color: var(--kt-gray-900);
-            margin-bottom: 2rem;
+            color: var(--dark);
+            margin-bottom: 1.5rem;
             display: flex;
             align-items: center;
         }
 
         .section-title i {
-            color: var(--kt-primary);
+            color: var(--primary);
             margin-right: 0.75rem;
         }
 
-        /* Ticket Category Cards */
-        .ticket-card {
-            background-color: var(--kt-white);
-            border: 1px solid var(--kt-gray-200);
-            border-radius: 0.625rem;
+        /* Ticket Cards */
+        .ticket-item {
+            background: var(--white);
+            border: 1px solid var(--gray-200);
+            border-radius: 8px;
             padding: 1.5rem;
             margin-bottom: 1rem;
             transition: all 0.2s ease;
-            position: relative;
-            overflow: hidden;
         }
 
-        .ticket-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 4px;
-            height: 100%;
-            background-color: var(--kt-primary);
-        }
-
-        .ticket-card:hover {
-            border-color: var(--kt-primary);
-            box-shadow: 0 0.5rem 1.5rem 0.5rem rgba(0, 158, 247, 0.1);
-            transform: translateY(-2px);
+        .ticket-item:hover {
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(0, 158, 247, 0.1);
         }
 
         .ticket-name {
             font-size: 1.125rem;
             font-weight: 600;
-            color: var(--kt-gray-900);
+            color: var(--dark);
             margin-bottom: 0.5rem;
         }
 
         .ticket-description {
-            color: var(--kt-gray-600);
+            color: var(--gray-600);
             font-size: 13px;
             margin-bottom: 0.5rem;
         }
 
         .ticket-qty {
-            color: var(--kt-gray-500);
+            color: var(--gray-600);
             font-size: 12px;
-            font-weight: 500;
+            display: flex;
+            align-items: center;
+        }
+
+        .ticket-qty i {
+            margin-right: 0.25rem;
         }
 
         .ticket-price {
             font-size: 1.5rem;
             font-weight: 700;
-            color: var(--kt-success);
+            color: var(--success);
             margin-bottom: 0.25rem;
         }
 
         .price-label {
-            color: var(--kt-gray-500);
+            color: var(--gray-600);
             font-size: 12px;
+            margin-bottom: 1rem;
         }
 
-        /* Metronic Buttons */
+        /* Button */
         .btn-primary {
-            background-color: var(--kt-primary);
-            border-color: var(--kt-primary);
-            color: var(--kt-white);
+            background-color: var(--primary);
+            border: none;
+            color: var(--white);
             font-weight: 600;
-            font-size: 13px;
             padding: 0.75rem 1.5rem;
-            border-radius: 0.625rem;
+            border-radius: 6px;
             transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
         }
 
         .btn-primary:hover {
-            background-color: var(--kt-primary-active);
-            border-color: var(--kt-primary-active);
-            color: var(--kt-white);
+            background-color: #0095e8;
             transform: translateY(-1px);
+            color: var(--white);
         }
 
-        .btn-primary:focus {
-            box-shadow: 0 0 0 0.25rem rgba(0, 158, 247, 0.25);
-        }
-
-        /* Separator */
-        .separator {
-            height: 1px;
-            background-color: var(--kt-gray-200);
-            margin: 2rem 0;
+        .btn-primary i {
+            margin-right: 0.5rem;
         }
 
         /* Footer */
         .footer {
-            background-color: var(--kt-gray-900);
-            color: var(--kt-gray-400);
+            background: var(--dark);
+            color: var(--gray-600);
             padding: 2rem 0;
             margin-top: 3rem;
         }
 
         .footer h6 {
-            color: var(--kt-white);
+            color: var(--white);
             font-weight: 600;
-            margin-bottom: 1rem;
-        }
-
-        /* Container */
-        .container-custom {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 2rem 1rem;
-        }
-
-        /* Badge */
-        .badge-status {
-            background-color: var(--kt-success);
-            color: var(--kt-white);
-            padding: 0.375rem 0.75rem;
-            border-radius: 0.375rem;
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05rem;
+            margin-bottom: 0.5rem;
         }
 
         /* Responsive */
-        @media (max-width: 992px) {
-            .poster-wrapper {
-                height: 250px;
-                margin-bottom: 2rem;
-            }
-
-            .event-title {
-                font-size: 1.75rem;
-            }
-
-            .container-custom {
-                padding: 1rem;
-            }
-
+        @media (max-width: 768px) {
             .card-body {
                 padding: 1.5rem;
             }
-        }
 
-        @media (max-width: 768px) {
             .event-title {
                 font-size: 1.5rem;
             }
 
-            .ticket-card {
-                padding: 1rem;
+            .event-poster {
+                height: 200px;
+                margin-bottom: 1.5rem;
             }
 
-            .section-title {
-                font-size: 1.25rem;
+            .ticket-item {
+                padding: 1rem;
             }
         }
     </style>
 </head>
 
 <body>
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-custom fixed-top">
+    <!-- Minimal Navbar with Centered Logo -->
+    <nav class="navbar">
         <div class="container">
             <a class="navbar-brand" href="#">
-                <i class="fas fa-calendar-alt me-2"></i>
+                <i class="fas fa-calendar-alt"></i>
                 EventHub
             </a>
         </div>
     </nav>
 
     <!-- Main Content -->
-    <div class="container-custom" style="margin-top: 90px;">
-        <!-- Event Details Card -->
+    <div class="container" style="margin-top: 100px; max-width: 1200px;">
+
+        <!-- Event Details -->
         <div class="card">
             <div class="card-body">
                 <div class="row">
-                    <!-- Event Poster -->
                     <div class="col-lg-5">
-                        <div class="poster-wrapper">
-                            <img src="{{ $product->avatar ? Storage::url($product->avatar) : 'https://via.placeholder.com/400x350?text=No+Image' }}"
-                                alt="Event Poster">
-                        </div>
+                        <img src="{{ $product->avatar ? Storage::url($product->avatar) : 'https://via.placeholder.com/400x300?text=No+Image' }}"
+                            alt="Event Poster" class="event-poster">
                     </div>
-
-                    <!-- Event Information -->
                     <div class="col-lg-7">
-
                         <h1 class="event-title">{{ $product->product_name }}</h1>
 
                         <div class="event-meta">
@@ -345,48 +285,44 @@
                             <span>{{ $product->location }}</span>
                         </div>
 
-                        <div class="separator"></div>
-
-                        <div>
-                            <h5 class="fw-bold text-gray-900 mb-3">Deskripsi Event</h5>
-                            <p class="event-description">
-                                {{ $product->product_description }}
-                            </p>
+                        <div class="event-description">
+                            <h5 style="font-weight: 600; color: var(--dark); margin-bottom: 0.75rem;">Deskripsi Event
+                            </h5>
+                            <p>{{ $product->product_description }}</p>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Ticket Categories Card -->
-        <div class="card mt-4">
-            <div class="card-header">
-                <h3 class="section-title mb-0">
+        <!-- Ticket Categories -->
+        <div class="card">
+            <div class="card-body">
+                <h3 class="section-title">
                     <i class="fas fa-ticket-alt"></i>
                     Kategori Tiket
                 </h3>
-            </div>
-            <div class="card-body">
+
                 <div class="row">
                     @foreach ($tickets as $ticket)
                         <div class="col-md-6">
-                            <div class="ticket-card">
-                                <div class="d-flex justify-content-between align-items-start">
+                            <div class="ticket-item">
+                                <div class="d-flex justify-content-between">
                                     <div class="flex-grow-1">
                                         <h5 class="ticket-name">{{ $ticket->name }}</h5>
-                                        <p class="ticket-description mb-2">Tiket reguler untuk akses umum</p>
+                                        <p class="ticket-description">Tiket reguler untuk akses umum</p>
                                         <div class="ticket-qty">
-                                            <i class="fas fa-users me-1"></i>
+                                            <i class="fas fa-users"></i>
                                             {{ $ticket->qty }} tiket tersisa
                                         </div>
                                     </div>
-                                    <div class="text-end ms-4">
+                                    <div class="text-end">
                                         <div class="ticket-price">Rp {{ number_format($ticket->price, 0, ',', '.') }}
                                         </div>
-                                        <div class="price-label mb-3">per tiket</div>
+                                        <div class="price-label">per tiket</div>
                                         <a href="{{ route('order.create', ['ticket_id' => $ticket->id]) }}"
                                             class="btn btn-primary">
-                                            <i class="fas fa-shopping-cart me-2"></i>
+                                            <i class="fas fa-shopping-cart"></i>
                                             Pesan Sekarang
                                         </a>
                                     </div>
@@ -405,17 +341,17 @@
             <div class="row">
                 <div class="col-md-6">
                     <h6>EventHub</h6>
-                    <p class="mb-0">Platform terpercaya untuk booking tiket event di Indonesia</p>
+                    <p>Platform terpercaya untuk booking tiket event di Indonesia</p>
                 </div>
                 <div class="col-md-6 text-md-end">
-                    <p class="mb-0">&copy; 2025 EventHub. All rights reserved.</p>
+                    <p>&copy; 2025 EventHub. All rights reserved.</p>
                 </div>
             </div>
         </div>
-    </footer>
+        </div>
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+        <!-- Bootstrap JS -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>
