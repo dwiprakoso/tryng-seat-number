@@ -306,12 +306,11 @@
                             <span>{{ $product->location }}</span>
                         </div>
 
-                        <div class="event-description">
+                        {{-- <div class="event-description">
                             <h5 style="font-weight: 600; color: var(--dark); margin-bottom: 0.75rem;">Deskripsi Event
-                                Testing
                             </h5>
                             <p>{{ $product->product_description }}</p>
-                        </div>
+                        </div> --}}
                     </div>
                 </div>
             </div>
