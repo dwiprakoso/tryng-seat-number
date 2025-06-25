@@ -31,7 +31,7 @@ class AuthController extends Controller
             $request->session()->regenerate();
 
             // Simple redirect without any fancy stuff
-            return redirect()->route('admin.dashboard')->with('success', 'Login berhasil!');
+            return redirect()->route('admin.buyer.index')->with('success', 'Login berhasil!');
         }
 
         return back()->withErrors([
