@@ -64,6 +64,10 @@
                         <!--end::Search-->
                     </div>
                     <!--end::Card title-->
+                    <a href="{{ route('admin.buyer.export') }}" class="btn btn-light-primary">
+                        <i class="ki-outline ki-exit-down fs-2 me-2"></i>
+                        Export Excel
+                    </a>
                 </div>
                 <!--end::Card header-->
                 <!--begin::Card body-->

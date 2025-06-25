@@ -59,4 +59,5 @@ Route::middleware('auth')->group(function () {
     Route::put('/discounts/{discount}', [DiskonController::class, 'update'])->name('admin.discounts.update');
 
     Route::get('/buyer', [BuyerController::class, 'index'])->name('admin.buyer.index');
+    Route::get('/export-buyers', [BuyerController::class, 'export'])->name('admin.buyer.export');
 });

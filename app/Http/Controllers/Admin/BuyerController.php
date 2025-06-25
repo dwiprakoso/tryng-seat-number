@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
 use App\Models\Buyer;
+use App\Exports\BuyerExport;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Http\Controllers\Controller;
 
 class BuyerController extends Controller
 {
@@ -14,5 +16,9 @@ class BuyerController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(20);
         return view('admin.page.buyer.index', compact('buyers'));
+    }
+    public function export()
+    {
+        return Excel::download(new BuyerExport, 'data-pesanan.xlsx');
     }
 }
