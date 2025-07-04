@@ -2,16 +2,14 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Order Form - Event Management</title>
-
-    <!-- Bootstrap CSS -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Order Form - Event Management</title><!-- Bootstrap CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet" />
     <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
     <style>
         :root {
@@ -463,14 +461,11 @@
     <nav class="navbar">
         <div class="container">
             <a href="#" class="navbar-brand">
-                <img src="{{ asset('assets/media/logos/logo.png') }}" alt="Ticketify" height="50">
+                <img src="{{ asset('assets/media/logos/logo.png') }}" alt="Ticketify" height="50" />
             </a>
         </div>
-    </nav>
-
-    <!-- Main Content -->
+    </nav><!-- Main Content -->
     <div class="container-custom" style="margin-top: 100px;">
-
         <!-- Breadcrumb -->
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
@@ -489,16 +484,15 @@
                 <div class="card">
                     <div class="card-body">
                         <h3 class="card-title">
-                            <i class="fas fa-shopping-cart"></i>
-                            Form Pemesanan Tiket
+                            <i class="fas fa-shopping-cart"></i> Form Pemesanan Tiket
                         </h3>
 
                         <!-- Event Info -->
-                        <div class="event-info">
+                        <div class="event-info mb-4">
                             <div class="row align-items-center">
                                 <div class="col-md-3">
                                     <img src="{{ $product->avatar ? Storage::url($product->avatar) : 'https://via.placeholder.com/150x100?text=No+Image' }}"
-                                        alt="Event" class="img-fluid">
+                                        alt="Event" class="img-fluid rounded" />
                                 </div>
                                 <div class="col-md-9">
                                     <h5>{{ $product->product_name }}</h5>
@@ -507,134 +501,61 @@
                                         {{ \Carbon\Carbon::parse($product->event_date)->translatedFormat('d M Y') }}
                                     </p>
                                     <p class="text-muted mb-0">
-                                        <i class="fas fa-map-marker-alt me-2"></i>
-                                        {{ $product->location }}
+                                        <i class="fas fa-map-marker-alt me-2"></i> {{ $product->location }}
                                     </p>
                                 </div>
                             </div>
                         </div>
 
-                        <form action="{{ route('order.store') }}" method="POST" id="orderForm">
+                        <form action="{{ route('order.store') }}" method="POST" id="orderForm" novalidate>
                             @csrf
-                            <input type="hidden" name="ticket_id" value="{{ $ticket->id }}">
+                            <input type="hidden" name="ticket_id" value="{{ $ticket->id }}" />
 
-                            <!-- Ticket Selection -->
-                            <div class="mb-4">
-                                <label class="form-label">Kategori Tiket</label>
-                                <div class="ticket-selection">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <h6>{{ $ticket->name }}</h6>
-                                            {{-- <small class="text-muted">{{ $ticket->qty }} tiket tersisa</small> --}}
-                                        </div>
-                                        <div class="price-display">
-                                            Rp {{ number_format($ticket->price, 0, ',', '.') }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Customer Information -->
-                            <div class="section-header">
-                                <i class="fas fa-user"></i>
-                                Informasi Pemesan
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="nama_lengkap" class="form-label">Nama Lengkap <span
-                                            class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="nama_lengkap" name="nama_lengkap"
-                                        required value="{{ old('nama_lengkap') }}" placeholder="Masukkan nama lengkap">
-                                    @error('nama_lengkap')
-                                        <div class="text-danger">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="no_handphone" class="form-label">No. Handphone <span
-                                            class="text-danger">*</span></label>
-                                    <input type="tel" class="form-control" id="no_handphone" name="no_handphone"
-                                        required value="{{ old('no_handphone') }}" placeholder="08123456789">
-                                    @error('no_handphone')
-                                        <div class="text-danger">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="nama_instagram" class="form-label">Username Instagram</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text">@</span>
-                                        <input type="text" class="form-control" id="nama_instagram"
-                                            name="nama_instagram" value="{{ old('nama_instagram') }}"
-                                            placeholder="username_anda">
-                                    </div>
-                                    @error('nama_instagram')
-                                        <div class="text-danger">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="kode_pos" class="form-label">Kode Pos <span
-                                            class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="kode_pos" name="kode_pos" required
-                                        value="{{ old('kode_pos') }}" placeholder="12345">
-                                    @error('kode_pos')
-                                        <div class="text-danger">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-
-                            <div class="mb-4">
-                                <label for="alamat_lengkap" class="form-label">Alamat Lengkap <span
+                            <div class="mb-3">
+                                <label for="nama_lengkap" class="form-label">Nama Lengkap <span
                                         class="text-danger">*</span></label>
-                                <textarea class="form-control" id="alamat_lengkap" name="alamat_lengkap" rows="3" required
-                                    placeholder="Masukkan alamat lengkap untuk pengiriman jersey">{{ old('alamat_lengkap') }}</textarea>
-                                @error('alamat_lengkap')
+                                <input type="text" class="form-control" id="nama_lengkap" name="nama_lengkap"
+                                    required value="{{ old('nama_lengkap') }}" placeholder="Masukkan nama lengkap" />
+                                @error('nama_lengkap')
                                     <div class="text-danger">{{ $message }}</div>
                                 @enderror
                             </div>
 
-                            <!-- Jersey Size Selection -->
-                            <div class="mb-4">
-                                <label class="form-label">Ukuran Jersey <span class="text-danger">*</span></label>
-
-                                <!-- Size Chart Image -->
-                                <div class="mb-3 text-left">
-                                    <img src="{{ asset('assets/media/illustrations/size_chart.jpg') }}"
-                                        alt="Size Chart" class="img-fluid rounded border" style="max-height: 400px;">
-                                    <small class="d-block text-muted mt-1">Panduan Ukuran Jersey</small>
-                                </div>
-
-                                <div class="jersey-size-grid">
-                                    @php
-                                        $sizes = ['S', 'M', 'L', 'XL', 'XXL'];
-                                    @endphp
-                                    @foreach ($sizes as $size)
-                                        <div class="jersey-size-option" onclick="selectSize('{{ $size }}')">
-                                            <input type="radio" name="ukuran_jersey" value="{{ $size }}"
-                                                id="size_{{ $size }}"
-                                                {{ old('ukuran_jersey') == $size ? 'checked' : '' }}>
-                                            <label for="size_{{ $size }}">{{ $size }}</label>
-                                        </div>
-                                    @endforeach
-                                </div>
-                                @error('ukuran_jersey')
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email <span
+                                        class="text-danger">*</span></label>
+                                <input type="email" class="form-control" id="email" name="email" required
+                                    value="{{ old('email') }}" placeholder="contoh@mail.com" />
+                                @error('email')
                                     <div class="text-danger">{{ $message }}</div>
                                 @enderror
                             </div>
 
-                            <!-- Form Actions -->
-                            <div class="d-flex gap-3 mt-4">
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-credit-card"></i>
-                                    Lanjut ke Pembayaran
-                                </button>
-                                <a href="{{ route('order.index') }}" class="btn btn-secondary">
-                                    <i class="fas fa-arrow-left"></i>
-                                    Kembali
-                                </a>
+                            <div class="mb-3">
+                                <label for="no_handphone" class="form-label">No. Handphone <span
+                                        class="text-danger">*</span></label>
+                                <input type="tel" class="form-control" id="no_handphone" name="no_handphone"
+                                    required value="{{ old('no_handphone') }}" placeholder="08123456789"
+                                    pattern="^08\d{8,12}$"
+                                    title="Masukkan nomor handphone yang valid, mulai dengan 08 dan 10-14 digit" />
+                                @error('no_handphone')
+                                    <div class="text-danger">{{ $message }}</div>
+                                @enderror
                             </div>
+
+                            <div class="mb-3">
+                                <label for="quantity" class="form-label">Jumlah Tiket <span
+                                        class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="quantity" name="quantity" required
+                                    min="1" max="5" value="{{ old('quantity', 1) }}" />
+                                @error('quantity')
+                                    <div class="text-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-credit-card"></i> Lanjut ke Pembayaran
+                            </button>
                         </form>
                     </div>
                 </div>
@@ -643,10 +564,7 @@
             <!-- Order Summary -->
             <div class="col-lg-4">
                 <div class="order-summary">
-                    <h5>
-                        <i class="fas fa-receipt me-2"></i>
-                        Ringkasan Pesanan
-                    </h5>
+                    <h5><i class="fas fa-receipt me-2"></i> Ringkasan Pesanan</h5>
 
                     <div class="summary-item">
                         <span>Kategori Tiket:</span>
@@ -655,37 +573,35 @@
 
                     <div class="summary-item">
                         <span>Harga Tiket:</span>
-                        <span>Rp {{ number_format($ticket->price, 0, ',', '.') }}</span>
+                        <span id="ticketPrice" data-price="{{ $ticket->price }}">
+                            Rp {{ number_format($ticket->price, 0, ',', '.') }}
+                        </span>
                     </div>
-
-                    @php
-                        $adminFee = $ticket->price * 0.05; // 5% dari harga tiket
-                        $totalPrice = $ticket->price + $adminFee;
-                    @endphp
 
                     <div class="summary-item">
                         <span>Biaya Admin (5%):</span>
-                        <span>Rp {{ number_format($adminFee, 0, ',', '.') }}</span>
+                        <span id="adminFee">
+                            Rp {{ number_format($ticket->price * 0.05, 0, ',', '.') }}
+                        </span>
                     </div>
 
                     <div class="total-section">
                         <div class="d-flex justify-content-between align-items-center">
                             <span class="fw-bold">Total:</span>
-                            <span class="total-price">
-                                Rp {{ number_format($totalPrice, 0, ',', '.') }}
+                            <span class="total-price" id="totalPrice">
+                                Rp {{ number_format($ticket->price * 1.05, 0, ',', '.') }}
                             </span>
                         </div>
                     </div>
 
                     <div class="alert alert-info mb-3">
-                        <i class="fas fa-info-circle me-2"></i>
-                        Jersey akan dikirim melalui kurir setelah pembayaran dikonfirmasi.
+                        <i class="fas fa-info-circle me-2"></i> Jersey akan dikirim melalui kurir setelah pembayaran
+                        dikonfirmasi.
                     </div>
 
                     <div class="alert alert-warning">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        <strong>Penting:</strong> Pastikan alamat dan ukuran jersey sudah benar sebelum melanjutkan
-                        pembayaran.
+                        <i class="fas fa-exclamation-triangle me-2"></i> <strong>Penting:</strong> Pastikan alamat dan
+                        ukuran jersey sudah benar sebelum melanjutkan pembayaran.
                     </div>
                 </div>
             </div>
@@ -711,74 +627,86 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 
     <script>
-        function selectSize(size) {
-            // Remove selected class from all options
-            document.querySelectorAll('.jersey-size-option').forEach(option => {
-                option.classList.remove('selected');
-            });
-
-            // Add selected class to clicked option
-            event.currentTarget.classList.add('selected');
-
-            // Check the radio input
-            document.getElementById('size_' + size).checked = true;
+        // Fungsi format Rupiah
+        function formatRupiah(number) {
+            return 'Rp ' + number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
         }
 
-        // Set initial selected state based on old input (for validation errors)
         document.addEventListener('DOMContentLoaded', function() {
-            const checkedInput = document.querySelector('input[name="ukuran_jersey"]:checked');
-            if (checkedInput) {
-                checkedInput.closest('.jersey-size-option').classList.add('selected');
+            const qtyInput = document.getElementById('quantity');
+            const ticketPriceEl = document.getElementById('ticketPrice');
+            const adminFeeEl = document.getElementById('adminFee');
+            const totalPriceEl = document.getElementById('totalPrice');
+
+            function updatePrices() {
+                let price = parseInt(ticketPriceEl.getAttribute('data-price'), 10);
+                let qty = parseInt(qtyInput.value, 10);
+
+                if (isNaN(qty) || qty < 1) qty = 1;
+                if (qty > 5) qty = 5;
+
+                let ticketTotal = price * qty;
+                let adminFee = Math.round(ticketTotal * 0.05);
+                let total = ticketTotal + adminFee;
+
+                ticketPriceEl.textContent = formatRupiah(ticketTotal);
+                adminFeeEl.textContent = formatRupiah(adminFee);
+                totalPriceEl.textContent = formatRupiah(total);
             }
-        });
 
-        // Form validation
-        document.getElementById('orderForm').addEventListener('submit', function(e) {
-            const requiredFields = ['nama_lengkap', 'no_handphone', 'alamat_lengkap', 'kode_pos'];
-            let isValid = true;
+            // Update harga saat halaman load
+            updatePrices();
 
-            // Check text fields
-            requiredFields.forEach(function(fieldId) {
-                const field = document.getElementById(fieldId);
-                if (!field.value.trim()) {
-                    field.classList.add('is-invalid');
+            // Update harga saat quantity berubah
+            qtyInput.addEventListener('input', updatePrices);
+
+            // Validasi form (tetap jaga validasi yang sudah ada)
+            document.getElementById('orderForm').addEventListener('submit', function(e) {
+                let isValid = true;
+
+                // Nama lengkap harus diisi dan minimal 3 karakter
+                const nama = document.getElementById('nama_lengkap');
+                if (!nama.value.trim() || nama.value.trim().length < 3) {
+                    nama.classList.add('is-invalid');
                     isValid = false;
                 } else {
-                    field.classList.remove('is-invalid');
+                    nama.classList.remove('is-invalid');
+                }
+
+                // Email valid
+                const email = document.getElementById('email');
+                const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailPattern.test(email.value.trim())) {
+                    email.classList.add('is-invalid');
+                    isValid = false;
+                } else {
+                    email.classList.remove('is-invalid');
+                }
+
+                // No HP valid sesuai pattern
+                const noHp = document.getElementById('no_handphone');
+                const noHpPattern = /^08\d{8,12}$/;
+                if (!noHpPattern.test(noHp.value.trim())) {
+                    noHp.classList.add('is-invalid');
+                    isValid = false;
+                } else {
+                    noHp.classList.remove('is-invalid');
+                }
+
+                // Quantity antara 1 sampai 5
+                const qtyVal = parseInt(qtyInput.value, 10);
+                if (isNaN(qtyVal) || qtyVal < 1 || qtyVal > 5) {
+                    qtyInput.classList.add('is-invalid');
+                    isValid = false;
+                } else {
+                    qtyInput.classList.remove('is-invalid');
+                }
+
+                if (!isValid) {
+                    e.preventDefault();
+                    alert('Mohon lengkapi form dengan benar ya!');
                 }
             });
-
-            // Check jersey size selection
-            const sizeSelected = document.querySelector('input[name="ukuran_jersey"]:checked');
-            if (!sizeSelected) {
-                isValid = false;
-                alert('Mohon pilih ukuran jersey!');
-            }
-
-            if (!isValid) {
-                e.preventDefault();
-                if (!sizeSelected) return; // Alert already shown for size
-                alert('Mohon lengkapi semua field yang wajib diisi!');
-            }
-        });
-
-        // Phone number formatting
-        document.getElementById('no_handphone').addEventListener('input', function(e) {
-            let value = e.target.value.replace(/\D/g, ''); // Remove non-digits
-
-            // Add country code if not present
-            if (value.length > 0 && !value.startsWith('62') && !value.startsWith('08')) {
-                if (value.startsWith('8')) {
-                    value = '0' + value;
-                }
-            }
-
-            e.target.value = value;
-        });
-
-        // Postal code validation (numbers only)
-        document.getElementById('kode_pos').addEventListener('input', function(e) {
-            e.target.value = e.target.value.replace(/\D/g, '');
         });
     </script>
 </body>
