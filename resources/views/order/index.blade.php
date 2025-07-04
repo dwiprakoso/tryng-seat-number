@@ -289,11 +289,11 @@
         <div class="card">
             <div class="card-body">
                 <div class="row">
-                    <div class="col-lg-5">
+                    <div class="col-lg-4">
                         <img src="{{ $product->avatar ? Storage::url($product->avatar) : 'https://via.placeholder.com/400x300?text=No+Image' }}"
-                            alt="Event Poster" class="event-poster">
+                            alt="Event Poster" class="img-fluid" style="height: 400px; object-fit: contain;">
                     </div>
-                    <div class="col-lg-7">
+                    <div class="col-lg-8">
                         <h1 class="event-title">{{ $product->product_name }}</h1>
 
                         <div class="event-meta">
