@@ -2,377 +2,485 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Order Ticket - Event Management</title>
-
-    <!-- Bootstrap CSS -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
+    <meta charset="utf-8" />
+    <title>Dashboard - Event Management System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet" />
     <style>
         :root {
-            --primary: #D4A574;
-            /* Gold color */
-            --primary-dark: #B8935F;
-            /* Darker gold for hover */
-            --success: #D4A574;
-            /* Gold for price */
-            --dark: #2C2C2C;
-            /* Dark gray */
-            --white: #ffffff;
-            --gray-100: #F5F5F5;
-            /* Light gray background */
-            --gray-200: #E8E8E8;
-            /* Light border */
-            --gray-300: #D1D1D1;
-            /* Medium border */
-            --gray-600: #666666;
-            /* Medium gray text */
-            --gray-700: #4A4A4A;
-            /* Darker gray text */
-            --gray-900: #2C2C2C;
-            /* Very dark gray */
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+            --kt-primary: #009ef7;
+            --kt-success: #50cd89;
+            --kt-info: #7239ea;
+            --kt-warning: #ffc700;
+            --kt-danger: #f1416c;
+            --kt-dark: #181c32;
+            --kt-light: #f5f8fa;
+            --kt-gray-100: #f9f9f9;
+            --kt-gray-200: #eff2f5;
+            --kt-gray-300: #e4e6ea;
+            --kt-gray-400: #b5b5c3;
+            --kt-gray-500: #a1a5b7;
+            --kt-gray-600: #7e8299;
+            --kt-gray-700: #5e6278;
+            --kt-gray-800: #3f4254;
+            --kt-gray-900: #181c32;
+            --kt-white: #ffffff;
         }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--gray-100);
-            color: var(--gray-700);
-            font-size: 14px;
-            line-height: 1.5;
+            font-family: Inter, Helvetica, sans-serif;
+            background-color: var(--kt-light);
+            margin: 0;
+            padding: 20px;
         }
 
-        /* Minimal Navbar */
-        .navbar {
-            background: var(--dark);
-            border-bottom: 1px solid var(--gray-600);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-            padding: 1rem 0;
-            position: fixed;
-            top: 0;
-            width: 100%;
-            z-index: 1000;
+        .page-title {
+            margin-bottom: 2rem;
         }
 
-        .navbar-brand {
-            font-weight: 700;
-            font-size: 1.5rem;
-            color: var(--primary);
-            text-decoration: none;
-            margin: 0 auto;
+        .page-title h1 {
+            color: var(--kt-gray-900);
+            font-weight: 600;
+            font-size: 1.75rem;
+            margin: 0;
+        }
+
+        .breadcrumb {
+            background: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .breadcrumb-item {
+            color: var(--kt-gray-500);
+            font-size: 0.875rem;
+        }
+
+        .breadcrumb-item.active {
+            color: var(--kt-gray-700);
+        }
+
+        /* Stats Cards */
+        .stats-card {
+            background: var(--kt-white);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 0.5rem 1.5rem 0.5rem rgba(0, 0, 0, 0.075);
+            border: 0;
+            margin-bottom: 2rem;
+            transition: box-shadow 0.15s ease-in-out;
+        }
+
+        .stats-card:hover {
+            box-shadow: 0 1rem 3rem 1rem rgba(0, 0, 0, 0.175);
+        }
+
+        .stats-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 0.75rem;
             display: flex;
             align-items: center;
             justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+            margin-bottom: 1rem;
         }
 
-        .navbar-brand i {
-            color: var(--primary);
-            margin-right: 0.5rem;
+        .stats-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--kt-gray-900);
+            margin-bottom: 0.5rem;
         }
 
-        .navbar .container {
-            display: flex;
-            justify-content: center;
+        .stats-label {
+            color: var(--kt-gray-600);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .stats-change {
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-top: 0.5rem;
+        }
+
+        .stats-change.positive {
+            color: var(--kt-success);
+        }
+
+        .stats-change.negative {
+            color: var(--kt-danger);
         }
 
         /* Cards */
         .card {
-            background: var(--white);
-            border: 1px solid var(--gray-200);
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-            margin-bottom: 1.5rem;
+            background: var(--kt-white);
+            border-radius: 0.75rem;
+            box-shadow: 0 0.5rem 1.5rem 0.5rem rgba(0, 0, 0, 0.075);
+            border: 0;
+            margin-bottom: 2rem;
+        }
+
+        .card-header {
+            background: transparent;
+            border-bottom: 1px solid var(--kt-gray-200);
+            padding: 1.5rem 1.5rem 1rem;
+        }
+
+        .card-title {
+            color: var(--kt-gray-900);
+            font-weight: 600;
+            font-size: 1.125rem;
+            margin: 0;
         }
 
         .card-body {
-            padding: 2rem;
-        }
-
-        /* Event Section */
-        .event-poster {
-            width: 100%;
-            height: 300px;
-            border-radius: 8px;
-            object-fit: cover;
-            background: var(--gray-200);
-            border: 2px solid var(--gray-200);
-        }
-
-        .event-title {
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--dark);
-            margin-bottom: 1rem;
-        }
-
-        .event-meta {
-            display: flex;
-            align-items: center;
-            color: var(--gray-600);
-            margin-bottom: 0.75rem;
-            font-size: 14px;
-        }
-
-        .event-meta i {
-            color: var(--primary);
-            width: 18px;
-            margin-right: 0.75rem;
-        }
-
-        .event-description {
-            color: var(--gray-600);
-            line-height: 1.6;
-            margin-top: 1.5rem;
-        }
-
-        .event-description h5 {
-            color: var(--dark) !important;
-        }
-
-        /* Section Title */
-        .section-title {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--dark);
-            margin-bottom: 1.5rem;
-            display: flex;
-            align-items: center;
-        }
-
-        .section-title i {
-            color: var(--primary);
-            margin-right: 0.75rem;
-        }
-
-        /* Ticket Cards */
-        .ticket-item {
-            background: var(--white);
-            border: 2px solid var(--gray-200);
-            border-radius: 8px;
             padding: 1.5rem;
-            margin-bottom: 1rem;
-            transition: all 0.3s ease;
         }
 
-        .ticket-item:hover {
-            border-color: var(--primary);
-            box-shadow: 0 6px 20px rgba(212, 165, 116, 0.15);
-            transform: translateY(-2px);
+        /* Tables */
+        .table {
+            margin: 0;
         }
 
-        .ticket-name {
-            font-size: 1.125rem;
+        .table th {
+            border-top: 0;
+            border-bottom: 1px solid var(--kt-gray-200);
+            color: var(--kt-gray-600);
             font-weight: 600;
-            color: var(--dark);
-            margin-bottom: 0.5rem;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 1rem 0.75rem;
         }
 
-        .ticket-description {
-            color: var(--gray-600);
-            font-size: 13px;
-            margin-bottom: 0.5rem;
+        .table td {
+            border-top: 1px solid var(--kt-gray-200);
+            padding: 1rem 0.75rem;
+            vertical-align: middle;
         }
 
-        .ticket-qty {
-            color: var(--gray-600);
-            font-size: 12px;
+        /* Badges */
+        .badge {
+            font-weight: 600;
+            font-size: 0.75rem;
+            padding: 0.5rem 0.75rem;
+        }
+
+        .badge-success {
+            background-color: rgba(80, 205, 137, 0.1);
+            color: var(--kt-success);
+        }
+
+        .badge-warning {
+            background-color: rgba(255, 199, 0, 0.1);
+            color: var(--kt-warning);
+        }
+
+        .badge-danger {
+            background-color: rgba(241, 65, 108, 0.1);
+            color: var(--kt-danger);
+        }
+
+        .badge-info {
+            background-color: rgba(114, 57, 234, 0.1);
+            color: var(--kt-info);
+        }
+
+        /* Progress bars */
+        .progress {
+            height: 6px;
+            background-color: var(--kt-gray-200);
+            border-radius: 3px;
+        }
+
+        .progress-bar {
+            border-radius: 3px;
+        }
+
+        /* Avatar */
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 0.5rem;
+            background-color: var(--kt-gray-200);
             display: flex;
             align-items: center;
-        }
-
-        .ticket-qty i {
-            margin-right: 0.25rem;
-            color: var(--primary);
-        }
-
-        .ticket-price {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--primary);
-            margin-bottom: 0.25rem;
-        }
-
-        .price-label {
-            color: var(--gray-600);
-            font-size: 12px;
-            margin-bottom: 1rem;
-        }
-
-        /* Button */
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-            border: none;
-            color: var(--white);
+            justify-content: center;
             font-weight: 600;
-            padding: 0.75rem 1.5rem;
-            border-radius: 6px;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            box-shadow: 0 4px 12px rgba(212, 165, 116, 0.3);
-        }
-
-        .btn-primary:hover {
-            background: linear-gradient(135deg, var(--primary-dark) 0%, #A67C52 100%);
-            transform: translateY(-2px);
-            color: var(--white);
-            box-shadow: 0 6px 20px rgba(212, 165, 116, 0.4);
-        }
-
-        .btn-primary i {
-            margin-right: 0.5rem;
-        }
-
-        /* Footer */
-        .footer {
-            background: var(--dark);
-            color: var(--gray-600);
-            padding: 2rem 0;
-            margin-top: 3rem;
-            border-top: 3px solid var(--primary);
-        }
-
-        .footer h4 {
-            color: var(--primary);
-            font-weight: 600;
-            margin-bottom: 0.5rem;
+            color: var(--kt-gray-600);
         }
 
         /* Responsive */
         @media (max-width: 768px) {
-            .card-body {
-                padding: 1.5rem;
+            body {
+                padding: 10px;
             }
 
-            .event-title {
-                font-size: 1.5rem;
-            }
-
-            .event-poster {
-                height: 200px;
-                margin-bottom: 1.5rem;
-            }
-
-            .ticket-item {
+            .stats-card {
                 padding: 1rem;
+                margin-bottom: 1rem;
+            }
+
+            .stats-number {
+                font-size: 1.5rem;
             }
         }
     </style>
 </head>
 
 <body>
-    <!-- Minimal Navbar with Centered Logo -->
-    <nav class="navbar">
-        <div class="container">
-            <a href="#">
-                <img src="{{ asset('assets/media/logos/logo.png') }}" alt="Ticketify" class="navbar-brand"
-                    height="50">
-            </a>
+    <div class="container-fluid">
+        <!-- Page Title -->
+        <div class="page-title">
+            <h1>Dashboard</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="#">Home</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Dashboard</li>
+                </ol>
+            </nav>
         </div>
-    </nav>
 
-    <!-- Main Content -->
-    <div class="container" style="margin-top: 100px; max-width: 1200px;">
-
-        <!-- Event Details -->
-        <div class="card">
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-lg-5">
-                        <img src="{{ $product->avatar ? Storage::url($product->avatar) : 'https://via.placeholder.com/400x300?text=No+Image' }}"
-                            alt="Event Poster" class="event-poster">
+        <!-- Stats Cards Row -->
+        <div class="row">
+            <div class="col-xl-3 col-lg-6 col-md-6">
+                <div class="stats-card">
+                    <div class="stats-icon"
+                        style="background: linear-gradient(135deg, var(--kt-primary) 0%, #0570de 100%);">
+                        <i class="fas fa-calendar-alt"></i>
                     </div>
-                    <div class="col-lg-7">
-                        <h1 class="event-title">{{ $product->product_name }}</h1>
+                    <div class="stats-number">{{ $totalProducts }}</div>
+                    <div class="stats-label">Total Events</div>
+                </div>
+            </div>
 
-                        <div class="event-meta">
-                            <i class="fas fa-calendar-alt"></i>
-                            <span>{{ \Carbon\Carbon::parse($product->event_date)->translatedFormat('d M Y') }}</span>
-                        </div>
+            <div class="col-xl-3 col-lg-6 col-md-6">
+                <div class="stats-card">
+                    <div class="stats-icon"
+                        style="background: linear-gradient(135deg, var(--kt-success) 0%, #47be7d 100%);">
+                        <i class="fas fa-ticket-alt"></i>
+                    </div>
+                    <div class="stats-number">{{ $totalTickets }}</div>
+                    <div class="stats-label">Total Tickets</div>
+                </div>
+            </div>
 
-                        <div class="event-meta">
-                            <i class="fas fa-map-marker-alt"></i>
-                            <span>{{ $product->location }}</span>
-                        </div>
+            <div class="col-xl-3 col-lg-6 col-md-6">
+                <div class="stats-card">
+                    <div class="stats-icon"
+                        style="background: linear-gradient(135deg, var(--kt-warning) 0%, #f1bc00 100%);">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stats-number">{{ $totalBuyers }}</div>
+                    <div class="stats-label">Total Buyers</div>
+                    <div class="stats-change positive">
+                        <i class="fas fa-arrow-up"></i> {{ $recentBuyers }} this month
+                    </div>
+                </div>
+            </div>
 
-                        {{-- <div class="event-description">
-                            <h5 style="font-weight: 600; color: var(--dark); margin-bottom: 0.75rem;">Deskripsi Event
-                            </h5>
-                            <p>{{ $product->product_description }}</p>
-                        </div> --}}
+            <div class="col-xl-3 col-lg-6 col-md-6">
+                <div class="stats-card">
+                    <div class="stats-icon"
+                        style="background: linear-gradient(135deg, var(--kt-info) 0%, #6726d8 100%);">
+                        <i class="fas fa-money-bill-wave"></i>
+                    </div>
+                    <div class="stats-number">Rp {{ number_format($totalRevenue, 0, ',', '.') }}</div>
+                    <div class="stats-label">Total Revenue</div>
+                    <div class="stats-change positive">
+                        <i class="fas fa-arrow-up"></i> Rp {{ number_format($recentRevenue, 0, ',', '.') }} this month
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Ticket Categories -->
-        <div class="card">
-            <div class="card-body">
-                <h3 class="section-title">
-                    {{-- <i class="fas fa-ticket-alt"></i> --}}
-                    Kategori Tiket
-                </h3>
+        <div class="row">
+            <!-- Recent Orders -->
+            <div class="col-xl-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Recent Orders</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-row-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Customer</th>
+                                        <th>Event</th>
+                                        <th>Ticket Type</th>
+                                        <th>Amount</th>
+                                        <th>Status</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($recentOrders as $order)
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="avatar me-3">
+                                                        {{ strtoupper(substr($order->nama_lengkap, 0, 1)) }}
+                                                    </div>
+                                                    <div>
+                                                        <div class="fw-bold">{{ $order->nama_lengkap }}</div>
+                                                        <div class="text-muted small">{{ $order->no_handphone }}</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="fw-bold">
+                                                    {{ $order->ticket->product->product_name ?? 'N/A' }}</div>
+                                                <div class="text-muted small">
+                                                    {{ $order->ticket->product->location ?? 'N/A' }}</div>
+                                            </td>
+                                            <td>{{ $order->ticket->name ?? 'N/A' }}</td>
+                                            <td class="fw-bold">Rp
+                                                {{ number_format($order->total_amount, 0, ',', '.') }}</td>
+                                            <td>
+                                                @if ($order->payment_status == 'paid')
+                                                    <span class="badge badge-success">Paid</span>
+                                                @elseif($order->payment_status == 'pending')
+                                                    <span class="badge badge-warning">Pending</span>
+                                                @else
+                                                    <span class="badge badge-danger">Failed</span>
+                                                @endif
+                                            </td>
+                                            <td class="text-muted">{{ $order->created_at->format('d M Y') }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                <div class="row">
-                    @foreach ($tickets as $ticket)
-                        <div class="col-md-6">
-                            <div class="ticket-item">
-                                <div class="d-flex justify-content-between">
-                                    <div class="flex-grow-1">
-                                        <h5 class="ticket-name">{{ $ticket->name }}</h5>
-                                        <p class="ticket-description">Tiket reguler untuk akses umum</p>
-                                        {{-- <div class="ticket-qty">
-                                            <i class="fas fa-users"></i>
-                                            {{ $ticket->qty }} tiket tersisa
-                                        </div> --}}
-                                    </div>
-                                    <div class="text-end">
-                                        <div class="ticket-price">Rp {{ number_format($ticket->price, 0, ',', '.') }}
-                                        </div>
-                                        <div class="price-label">per tiket</div>
-                                        <a href="{{ route('order.create', ['ticket_id' => $ticket->id]) }}"
-                                            class="btn btn-primary">
-                                            <i class="fas fa-shopping-cart"></i>
-                                            Pesan Sekarang
-                                        </a>
-                                    </div>
+            <!-- Payment Status & Top Products -->
+            <div class="col-xl-4">
+                <!-- Payment Status Distribution -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Payment Status</h3>
+                    </div>
+                    <div class="card-body">
+                        @php
+                            $total = array_sum($paymentStatusData->toArray());
+                        @endphp
+                        @foreach ($paymentStatusData as $status => $count)
+                            <div class="d-flex align-items-center justify-content-between mb-3">
+                                <div class="d-flex align-items-center">
+                                    @if ($status == 'paid')
+                                        <div class="w-4px h-15px bg-success rounded me-3"></div>
+                                        <span class="fw-semibold text-gray-800">Paid</span>
+                                    @elseif($status == 'pending')
+                                        <div class="w-4px h-15px bg-warning rounded me-3"></div>
+                                        <span class="fw-semibold text-gray-800">Pending</span>
+                                    @else
+                                        <div class="w-4px h-15px bg-danger rounded me-3"></div>
+                                        <span class="fw-semibold text-gray-800">Failed</span>
+                                    @endif
+                                </div>
+                                <div class="text-end">
+                                    <span class="fw-bold">{{ $count }}</span>
+                                    <span
+                                        class="text-muted">({{ $total > 0 ? round(($count / $total) * 100, 1) : 0 }}%)</span>
                                 </div>
                             </div>
+                        @endforeach
+                    </div>
+                </div>
+
+                <!-- Top Products -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Top Selling Events</h3>
+                    </div>
+                    <div class="card-body">
+                        @foreach ($topProducts as $product)
+                            <div class="d-flex align-items-center justify-content-between mb-4">
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar me-3">
+                                        {{ strtoupper(substr($product->product_name, 0, 1)) }}
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold">{{ \Str::limit($product->product_name, 20) }}</div>
+                                        <div class="text-muted small">{{ $product->location }}</div>
+                                    </div>
+                                </div>
+                                <div class="text-end">
+                                    <div class="fw-bold">{{ $product->total_buyers }}</div>
+                                    <div class="text-muted small">sales</div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upcoming Events -->
+        <div class="row">
+            <div class="col-xl-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Upcoming Events</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-row-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Event Name</th>
+                                        <th>Location</th>
+                                        <th>Event Date</th>
+                                        <th>Available Tickets</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($upcomingEvents as $event)
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="avatar me-3">
+                                                        {{ strtoupper(substr($event->product_name, 0, 1)) }}
+                                                    </div>
+                                                    <div>
+                                                        <div class="fw-bold">{{ $event->product_name }}</div>
+                                                        <div class="text-muted small">
+                                                            {{ \Str::limit($event->product_description, 50) }}</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>{{ $event->location }}</td>
+                                            <td class="fw-bold">
+                                                {{ \Carbon\Carbon::parse($event->event_date)->format('d M Y') }}</td>
+                                            <td>{{ $event->tickets->sum('qty') }} tickets</td>
+                                            <td>
+                                                @if (\Carbon\Carbon::parse($event->event_date)->isFuture())
+                                                    <span class="badge badge-success">Active</span>
+                                                @else
+                                                    <span class="badge badge-info">Past Event</span>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
                         </div>
-                    @endforeach
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-6">
-                    <h4>Ticketify</h4>
-                    <p>Platform terpercaya untuk booking tiket event di Indonesia</p>
-                </div>
-                <div class="col-md-6 text-md-end">
-                    <p>&copy; 2025 Tciketify. All rights reserved.</p>
-                </div>
-            </div>
-        </div>
-        </div>
-
-        <!-- Bootstrap JS -->
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>

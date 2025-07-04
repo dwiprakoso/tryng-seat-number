@@ -4,7 +4,7 @@
     data-kt-drawer-direction="start" data-kt-drawer-toggle="#kt_app_sidebar_mobile_toggle">
     <div class="app-sidebar-logo flex-shrink-0 d-none d-md-flex align-items-center px-8" id="kt_app_sidebar_logo">
         <!--begin::Logo-->
-        <a href="{{ route('admin.dashboard') }}" class="d-flex align-items-center">
+        <a href="{{ route('admin.buyer.index') }}" class="d-flex align-items-center">
             <img alt="Logo" src="assets/media/logos/ticketify_logo.png"
                 class="h-60px d-none d-sm-inline app-sidebar-logo-default theme-light-show" />
             <img alt="Logo" src="assets/media/logos/ticketify_logo.png" class="h-60px theme-dark-show" />
@@ -30,7 +30,7 @@
                 data-kt-menu="true" data-kt-menu-expand="false">
 
                 <!--begin:Menu item - Dashboard-->
-                <div class="menu-item">
+                {{-- <div class="menu-item">
                     <a class="menu-link {{ Request::routeIs('admin.dashboard') ? 'active' : '' }}"
                         href="{{ route('admin.dashboard') }}">
                         <span class="menu-icon">
@@ -38,7 +38,7 @@
                         </span>
                         <span class="menu-title">Dashboard</span>
                     </a>
-                </div>
+                </div> --}}
                 <!--end:Menu item-->
 
                 <!--begin:Menu item - Event-->
@@ -158,8 +158,7 @@
                         data-kt-menu="true" data-kt-element="theme-mode-menu">
                         <!--begin::Menu item-->
                         <div class="menu-item px-3 my-0">
-                            <a href="#" class="menu-link px-3 py-2" data-kt-element="mode"
-                                data-kt-value="light">
+                            <a href="#" class="menu-link px-3 py-2" data-kt-element="mode" data-kt-value="light">
                                 <span class="menu-icon" data-kt-element="icon">
                                     <i class="ki-outline ki-night-day fs-2"></i>
                                 </span>
