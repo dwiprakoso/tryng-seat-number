@@ -17,6 +17,7 @@ class Buyer extends Model
         'kode_pos',
         'ukuran_jersey',
         'ticket_id',
+        'quantity', // Tambah ini
         'total_amount',
         'xendit_invoice_id',    // Tambah ini
         'xendit_invoice_url',   // Tambah ini

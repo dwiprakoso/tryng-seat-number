@@ -14,12 +14,21 @@ return new class extends Migration
         Schema::create('buyers', function (Blueprint $table) {
             $table->id();
             $table->string('nama_lengkap');
-            $table->string('no_handphone', 15);
-            $table->string('nama_instagram');
-            $table->text('alamat_lengkap');
-            $table->string('kode_pos', 10);
-            $table->enum('ukuran_jersey', ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL']);
+            $table->string('email');
+            $table->string('no_handphone', 20);
+            $table->string('nama_instagram')->nullable();
+            $table->text('alamat_lengkap')->nullable();
+            $table->string('kode_pos', 10)->nullable();
+            $table->string('ukuran_jersey')->nullable();
+            $table->integer('quantity')->default(1);
             $table->unsignedBigInteger('ticket_id');
+            $table->decimal('ticket_price', 10, 2)->default(0);
+            $table->decimal('admin_fee', 10, 2)->default(0);
+            $table->decimal('total_amount', 10, 2)->default(0);
+            $table->string('external_id')->unique();
+            $table->string('xendit_invoice_id')->nullable();
+            $table->string('xendit_invoice_url')->nullable();
+            $table->enum('payment_status', ['pending', 'paid', 'expired', 'failed'])->default('pending');
             $table->timestamps();
 
             // Foreign key constraint
@@ -28,6 +37,8 @@ return new class extends Migration
             // Index untuk performa yang lebih baik
             $table->index('ticket_id');
             $table->index('no_handphone');
+            $table->index('external_id');
+            $table->index('payment_status');
         });
     }
 

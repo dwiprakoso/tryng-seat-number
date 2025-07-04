@@ -12,9 +12,6 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('buyers', function (Blueprint $table) {
-            $table->decimal('ticket_price', 10, 2)->after('ticket_id')->nullable();
-            $table->decimal('admin_fee', 10, 2)->after('ticket_price')->nullable();
-            // Ubah total_amount agar tidak nullable dan posisikan setelah admin_fee
             $table->decimal('total_amount', 10, 2)->change();
         });
     }
