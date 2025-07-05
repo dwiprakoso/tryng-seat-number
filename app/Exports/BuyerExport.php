@@ -11,19 +11,19 @@ class BuyerExport implements FromCollection, WithHeadings, WithMapping
 {
     public function collection()
     {
-        return Buyer::orderBy('created_at', 'desc')->get();
+        return Buyer::with('ticket')->orderBy('created_at', 'asc')->get();
     }
 
     public function headings(): array
     {
         return [
             'No',
+            'ID Pesanan',
             'Nama',
             'No HP',
-            'Instagram',
-            'Alamat',
-            'Kode Pos',
-            'Ukuran Jersey',
+            'Email',
+            'Kategori Tiket',
+            'Jumlah',
             'Waktu Pemesanan',
         ];
     }
@@ -34,12 +34,12 @@ class BuyerExport implements FromCollection, WithHeadings, WithMapping
 
         return [
             $no++,
+            $buyer->external_id,
             $buyer->nama_lengkap,
             $buyer->no_handphone,
-            $buyer->nama_instagram,
-            $buyer->alamat_lengkap,
-            $buyer->kode_pos,
-            $buyer->ukuran_jersey,
+            $buyer->email,
+            $buyer->ticket->name,
+            $buyer->quantity,
             $buyer->created_at->translatedFormat('l, d F Y'),
         ];
     }

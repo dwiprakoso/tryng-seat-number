@@ -19,6 +19,7 @@ class BuyerController extends Controller
     }
     public function export()
     {
-        return Excel::download(new BuyerExport, 'data-pesanan.xlsx');
+        $timestamp = now()->format('Y-m-d');
+        return Excel::download(new BuyerExport, "data-pesanan_{$timestamp}.xlsx");
     }
 }
