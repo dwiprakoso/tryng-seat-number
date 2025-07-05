@@ -593,16 +593,6 @@
                             </span>
                         </div>
                     </div>
-
-                    <div class="alert alert-info mb-3">
-                        <i class="fas fa-info-circle me-2"></i> Jersey akan dikirim melalui kurir setelah pembayaran
-                        dikonfirmasi.
-                    </div>
-
-                    <div class="alert alert-warning">
-                        <i class="fas fa-exclamation-triangle me-2"></i> <strong>Penting:</strong> Pastikan alamat dan
-                        ukuran jersey sudah benar sebelum melanjutkan pembayaran.
-                    </div>
                 </div>
             </div>
         </div>
