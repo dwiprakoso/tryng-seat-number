@@ -26,5 +26,10 @@ class UserSeeder extends Seeder
             'email' => 'superadmin@admin.com',
             'password' => Hash::make('password123'),
         ]);
+        User::create([
+            'name' => 'Super Admin',
+            'email' => 'sampookong@ticketify.com',
+            'password' => Hash::make('password123'),
+        ]);
     }
 }
