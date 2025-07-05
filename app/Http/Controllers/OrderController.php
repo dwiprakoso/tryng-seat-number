@@ -18,12 +18,11 @@ class OrderController extends Controller
         // Ambil 1 produk terbaru (event)
         $product = Product::latest()->first();
 
-        // Ambil semua tiket
-        $tickets = Ticket::all();
+        // Ambil semua tiket yang statusnya published
+        $tickets = Ticket::where('status', 'published')->get();
 
         return view('order.index', compact('product', 'tickets'));
     }
-
     public function create($ticket_id)
     {
         $ticket = Ticket::findOrFail($ticket_id);
