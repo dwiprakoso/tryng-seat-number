@@ -77,12 +77,12 @@
                         <thead>
                             <tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0">
                                 <th class="text-start min-w-50px">No</th>
+                                <th class="text-start min-w-200px">ID Pesanan</th>
                                 <th class="text-start min-w-200px">Nama</th>
                                 <th class="text-start min-w-70px">No Hp</th>
-                                <th class="text-start min-w-100px">Instagram</th>
-                                <th class="text-start min-w-100px">Alamat</th>
-                                <th class="text-start min-w-70px">Kode Pos</th>
-                                <th class="text-start min-w-70px">Ukuran Jersey</th>
+                                <th class="text-start min-w-100px">Email</th>
+                                <th class="text-start min-w-100px">Kategori Tiket</th>
+                                <th class="text-start min-w-100px">Jumlah</th>
                                 <th class="text-start min-w-70px">Waktu Pemesanan</th>
                             </tr>
                         </thead>
@@ -90,12 +90,12 @@
                             @foreach ($buyers as $buyer)
                                 <tr>
                                     <td>{{ $loop->iteration }}</td>
+                                    <td>{{ $buyer->external_id }}</td>
                                     <td>{{ $buyer->nama_lengkap }}</td>
                                     <td>{{ $buyer->no_handphone }}</td>
-                                    <td>{{ $buyer->nama_instagram }}</td>
-                                    <td>{{ $buyer->alamat_lengkap }}</td>
-                                    <td>{{ $buyer->kode_pos }}</td>
-                                    <td>{{ $buyer->ukuran_jersey }}</td>
+                                    <td>{{ $buyer->email }}</td>
+                                    <td>{{ $buyer->ticket->name }}</td>
+                                    <td>{{ $buyer->quantity }}</td>
                                     <td>{{ $buyer->created_at->translatedFormat('l, d F Y') }}</td>
                                 </tr>
                             @endforeach
