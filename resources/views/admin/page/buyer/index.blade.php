@@ -83,6 +83,7 @@
                                 <th class="text-start min-w-100px">Email</th>
                                 <th class="text-start min-w-100px">Kategori Tiket</th>
                                 <th class="text-start min-w-100px">Jumlah</th>
+                                <th class="text-start min-w-100px">Status</th>
                                 <th class="text-start min-w-70px">Waktu Pemesanan</th>
                             </tr>
                         </thead>
@@ -96,6 +97,7 @@
                                     <td>{{ $buyer->email }}</td>
                                     <td>{{ $buyer->ticket->name }}</td>
                                     <td>{{ $buyer->quantity }}</td>
+                                    <td>{{ $buyer->payment_status }}</td>
                                     <td>{{ $buyer->created_at->translatedFormat('l, d F Y') }}</td>
                                 </tr>
                             @endforeach
