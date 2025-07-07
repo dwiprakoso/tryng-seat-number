@@ -39,10 +39,12 @@ Route::get('/payment/failed', function () {
     return view('payment.failed');
 })->name('payment.failed');
 
+Route::get('/ticket/verify/{external_id}', [TicketController::class, 'verify'])->name('ticket.verify');
+
 // Protected admin routes
 Route::middleware('auth')->group(function () {
     // Mengubah route dashboard admin ke /admin
-    Route::get('/admin', [DashboardController::class, 'index'])->name('admin.dashboard');
+    // Route::get('/admin', [DashboardController::class, 'index'])->name('admin.dashboard');
 
     Route::get('/event', [ProductController::class, 'index'])->name('admin.event.index');
     Route::post('/products', [ProductController::class, 'store'])->name('admin.products.store');

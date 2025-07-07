@@ -73,36 +73,53 @@
                 <!--begin::Card body-->
                 <div class="card-body pt-0">
                     <!--begin::Table-->
-                    <table class="table align-middle table-row-dashed fs-6 gy-5" id="kt_ecommerce_products_table">
-                        <thead>
-                            <tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0">
-                                <th class="text-start min-w-50px">No</th>
-                                <th class="text-start min-w-200px">ID Pesanan</th>
-                                <th class="text-start min-w-200px">Nama</th>
-                                <th class="text-start min-w-70px">No Hp</th>
-                                <th class="text-start min-w-100px">Email</th>
-                                <th class="text-start min-w-100px">Kategori Tiket</th>
-                                <th class="text-start min-w-100px">Jumlah</th>
-                                <th class="text-start min-w-100px">Status</th>
-                                <th class="text-start min-w-70px">Waktu Pemesanan</th>
-                            </tr>
-                        </thead>
-                        <tbody class="fw-semibold text-gray-600">
-                            @foreach ($buyers as $buyer)
-                                <tr>
-                                    <td>{{ $loop->iteration }}</td>
-                                    <td>{{ $buyer->external_id }}</td>
-                                    <td>{{ $buyer->nama_lengkap }}</td>
-                                    <td>{{ $buyer->no_handphone }}</td>
-                                    <td>{{ $buyer->email }}</td>
-                                    <td>{{ $buyer->ticket->name }}</td>
-                                    <td>{{ $buyer->quantity }}</td>
-                                    <td>{{ $buyer->payment_status }}</td>
-                                    <td>{{ $buyer->created_at->translatedFormat('l, d F Y') }}</td>
+                    <div class="table-responsive">
+                        <table class="table align-middle table-row-dashed fs-6 gy-5" id="kt_ecommerce_products_table">
+                            <thead>
+                                <tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0">
+                                    <th class="text-start min-w-50px">No</th>
+                                    <th class="text-start min-w-100px">ID Pesanan</th>
+                                    <th class="text-start min-w-100px">Nama</th>
+                                    <th class="text-start min-w-100px">No Hp</th>
+                                    <th class="text-start min-w-150px">Email</th>
+                                    <th class="text-start min-w-100px">Kategori Tiket</th>
+                                    <th class="text-start min-w-70px">Jumlah</th>
+                                    <th class="text-start min-w-80px">Status</th>
+                                    <th class="text-start min-w-100px">Waktu Pemesanan</th>
                                 </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody class="fw-semibold text-gray-600">
+                                @foreach ($buyers as $buyer)
+                                    <tr>
+                                        <td>{{ $loop->iteration }}</td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <span
+                                                    class="text-gray-800 text-hover-primary mb-1">{{ $buyer->external_id }}</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <span
+                                                    class="text-gray-800 text-hover-primary mb-1">{{ $buyer->nama_lengkap }}</span>
+                                            </div>
+                                        </td>
+                                        <td>{{ $buyer->no_handphone }}</td>
+                                        <td>{{ $buyer->email }}</td>
+                                        <td>{{ $buyer->ticket->name }}</td>
+                                        <td class="text-center">{{ $buyer->quantity }}</td>
+                                        <td>
+                                            <div
+                                                class="badge badge-light-{{ $buyer->payment_status == 'paid' ? 'success' : 'warning' }}">
+                                                {{ ucfirst($buyer->payment_status) }}
+                                            </div>
+                                        </td>
+                                        <td>{{ $buyer->created_at->translatedFormat('d/m/Y') }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
                     <!--end::Table-->
                 </div>
                 <!--end::Card body-->

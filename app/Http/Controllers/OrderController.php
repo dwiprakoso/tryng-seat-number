@@ -10,6 +10,8 @@ use Illuminate\Http\Request;
 use App\Services\XenditService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class OrderController extends Controller
 {
@@ -160,11 +162,97 @@ class OrderController extends Controller
                 'invoice_url' => $invoice['invoice_url']
             ]);
 
-            // Update buyer dengan data invoice
+            // Generate QR Code setelah invoice berhasil dibuat
+            try {
+                $verifyUrl = route('ticket.verify', ['external_id' => $externalId]);
+                $qrCodeFileName = 'qr_' . $externalId . '.png';
+                $qrCodePath = 'qr_codes/' . $qrCodeFileName;
+
+                // Pastikan direktori ada
+                if (!Storage::disk('public')->exists('qr_codes')) {
+                    Storage::disk('public')->makeDirectory('qr_codes');
+                }
+
+                // Coba berbagai backend secara berurutan
+                $qrCode = null;
+                $backends = ['svg', 'png'];
+                $usedBackend = null;
+
+                foreach ($backends as $format) {
+                    try {
+                        if ($format === 'svg') {
+                            $qrCode = QrCode::format('svg')
+                                ->size(300)
+                                ->margin(2)
+                                ->generate($verifyUrl);
+                            $qrCodePath = 'qr_codes/qr_' . $externalId . '.svg';
+                            $usedBackend = 'svg';
+                        } else {
+                            $qrCode = QrCode::format('png')
+                                ->size(300)
+                                ->margin(2)
+                                ->generate($verifyUrl);
+                            $qrCodePath = 'qr_codes/qr_' . $externalId . '.png';
+                            $usedBackend = 'png';
+                        }
+
+                        // Jika berhasil, keluar dari loop
+                        break;
+                    } catch (Exception $backendException) {
+                        Log::warning('QR Code backend failed', [
+                            'backend' => $format,
+                            'error' => $backendException->getMessage()
+                        ]);
+                        continue;
+                    }
+                }
+
+                // Jika tidak ada backend yang berhasil
+                if (!$qrCode) {
+                    throw new Exception('All QR code backends failed');
+                }
+
+                // Store QR code image
+                Storage::disk('public')->put($qrCodePath, $qrCode);
+
+                // Generate full URL untuk QR code
+                $qrCodeFullUrl = Storage::disk('public')->url($qrCodePath);
+
+                // Log QR code generation
+                Log::info('QR Code Generated Successfully', [
+                    'buyer_id' => $buyer->id,
+                    'external_id' => $externalId,
+                    'qr_code_path' => $qrCodeFullUrl,
+                    'qr_code_file_path' => $qrCodePath,
+                    'verify_url' => $verifyUrl,
+                    'backend_used' => $usedBackend,
+                    'file_size' => Storage::disk('public')->size($qrCodePath)
+                ]);
+
+                $qrCodePathToStore = $qrCodeFullUrl;
+            } catch (Exception $qrException) {
+                // Jika gagal generate QR code, log error tapi tetap lanjutkan proses
+                Log::error('QR Code Generation Failed', [
+                    'buyer_id' => $buyer->id,
+                    'external_id' => $externalId,
+                    'error' => $qrException->getMessage(),
+                    'trace' => $qrException->getTraceAsString(),
+                    'php_extensions' => [
+                        'gd' => extension_loaded('gd'),
+                        'imagick' => extension_loaded('imagick'),
+                        'svg' => extension_loaded('svg')
+                    ]
+                ]);
+
+                $qrCodePathToStore = null;
+            }
+
+            // Update buyer dengan data invoice dan QR code full URL
             $buyer->update([
                 'xendit_invoice_id' => $invoice['id'],
                 'xendit_invoice_url' => $invoice['invoice_url'],
-                'payment_status' => 'pending'
+                'payment_status' => 'pending',
+                'qr_code_path' => $qrCodePathToStore
             ]);
 
             // Commit transaction
@@ -188,7 +276,7 @@ class OrderController extends Controller
             ]);
 
             // Return dengan error message yang lebih detail
-            return redirect()->route('order.create')
+            return redirect()->route('order.create', ['ticket_id' => $ticket->id])
                 ->with('error', 'Gagal membuat invoice pembayaran: ' . $e->getMessage())
                 ->with('debug_info', 'Silakan cek log untuk detail error');
         }

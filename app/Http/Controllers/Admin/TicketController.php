@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
+use App\Models\Buyer;
 use App\Models\Ticket;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
 
 class TicketController extends Controller
 {
@@ -52,5 +53,10 @@ class TicketController extends Controller
 
         return redirect()->route('admin.tickets.index')
             ->with('success', 'Ticket deleted successfully.');
+    }
+    public function verify($external_id)
+    {
+        // Redirect ke https://ticketify.id untuk testing
+        return redirect('https://ticketify.id');
     }
 }

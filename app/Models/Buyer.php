@@ -2,35 +2,42 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Buyer extends Model
 {
-    use HasFactory;
-
     protected $fillable = [
         'nama_lengkap',
+        'email',
         'no_handphone',
         'nama_instagram',
         'alamat_lengkap',
         'kode_pos',
         'ukuran_jersey',
+        'quantity',
         'ticket_id',
-        'quantity', // Tambah ini
+        'ticket_price',
+        'admin_fee',
         'total_amount',
-        'xendit_invoice_id',    // Tambah ini
-        'xendit_invoice_url',   // Tambah ini
-        'payment_status',       // Tambah ini
-        'ticket_price',     // Tambahan
-        'admin_fee',        // Tambahan
+        'external_id',
+        'qr_code',
+        'qr_code_path',
+        'xendit_invoice_id',
+        'xendit_invoice_url',
+        'payment_status',
+        'paid_at',
+        'payment_updated_at',
+        'payment_method',
+        'payment_channel'
     ];
 
     protected $casts = [
-        'total_amount' => 'decimal:2',
+        'paid_at' => 'datetime',
+        'payment_updated_at' => 'datetime',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
-    // Relationship dengan Ticket
     public function ticket()
     {
         return $this->belongsTo(Ticket::class);
