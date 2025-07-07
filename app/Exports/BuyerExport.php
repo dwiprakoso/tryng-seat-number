@@ -25,6 +25,8 @@ class BuyerExport implements FromCollection, WithHeadings, WithMapping
             'Kategori Tiket',
             'Jumlah',
             'Waktu Pemesanan',
+            'Status Pembayaran',
+            'Link Pembayaran',
         ];
     }
 
@@ -41,6 +43,8 @@ class BuyerExport implements FromCollection, WithHeadings, WithMapping
             $buyer->ticket->name,
             $buyer->quantity,
             $buyer->created_at->translatedFormat('l, d F Y'),
+            $buyer->payment_status,
+            $buyer->xendit_invoice_url,
         ];
     }
 }
