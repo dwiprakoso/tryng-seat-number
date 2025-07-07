@@ -32,7 +32,7 @@ class XenditService
             'payer_email' => $data['email'] ?? 'customer@example.com',
             'description' => $data['description'],
             'amount' => $data['amount'],
-            'invoice_duration' => 86400, // 24 jam
+            'invoice_duration' => 3600, // 24 jam
             'success_redirect_url' => $data['success_url'] ?? null,
             'failure_redirect_url' => $data['failure_url'] ?? null,
             'notification_url' => $webhookUrl, // Menggunakan route helper
