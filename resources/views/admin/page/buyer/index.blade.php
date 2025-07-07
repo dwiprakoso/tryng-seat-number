@@ -91,7 +91,7 @@
                             <tbody class="fw-semibold text-gray-600">
                                 @foreach ($buyers as $buyer)
                                     <tr>
-                                        <td>{{ $loop->iteration }}</td>
+                                        <td>{{ $loop->iteration + ($buyers->currentPage() - 1) * $buyers->perPage() }}</td>
                                         <td>
                                             <div class="d-flex align-items-center">
                                                 <span
@@ -121,6 +121,22 @@
                         </table>
                     </div>
                     <!--end::Table-->
+
+                    <!--begin::Pagination-->
+                    @if ($buyers->hasPages())
+                        <div class="d-flex justify-content-between align-items-center flex-wrap mt-5">
+                            <div class="d-flex align-items-center py-3">
+                                <span class="text-gray-600">
+                                    Menampilkan {{ $buyers->firstItem() }} - {{ $buyers->lastItem() }} dari
+                                    {{ $buyers->total() }} data
+                                </span>
+                            </div>
+                            <div class="d-flex align-items-center py-3">
+                                {{ $buyers->links() }}
+                            </div>
+                        </div>
+                    @endif
+                    <!--end::Pagination-->
                 </div>
                 <!--end::Card body-->
             </div>

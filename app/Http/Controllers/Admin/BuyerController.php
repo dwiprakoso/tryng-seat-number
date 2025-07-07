@@ -14,7 +14,7 @@ class BuyerController extends Controller
     {
         $buyers = Buyer::with(['ticket'])
             ->orderBy('created_at', 'desc')
-            ->paginate(20);
+            ->paginate(25);
         return view('admin.page.buyer.index', compact('buyers'));
     }
     public function export()
