@@ -3913,6 +3913,7 @@ License: For each use you must have a valid license purchased only from above li
     <script>
         var hostUrl = "assets/";
     </script>
+    @stack('scripts')
     <!--begin::Global Javascript Bundle(mandatory for all pages)-->
     <script src="assets/plugins/global/plugins.bundle.js"></script>
     <script src="assets/js/scripts.bundle.js"></script>
@@ -3940,6 +3941,7 @@ License: For each use you must have a valid license purchased only from above li
     <script src="assets/js/custom/utilities/modals/users-search.js"></script>
     <!--end::Custom Javascript-->
     <!--end::Javascript-->
+
 </body>
 <!--end::Body-->
 
