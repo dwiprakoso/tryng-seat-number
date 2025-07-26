@@ -14,132 +14,50 @@
             }
 
             body {
-                font-family: 'Courier New', monospace !important;
-                background: white !important;
-                -webkit-print-color-adjust: exact;
-                color-adjust: exact;
-                margin: 0 !important;
-                padding: 0 !important;
-                font-size: 10px !important;
-            }
-
-            * {
-                box-sizing: border-box !important;
+                width: 58mm;
+                font-family: monospace;
+                font-size: 12px;
+                margin: 0;
+                padding: 10px;
+                background: white;
             }
 
             .print-area {
                 width: 58mm !important;
-                max-width: 58mm !important;
-                font-size: 9px !important;
-                line-height: 1.2 !important;
-                margin: 0 !important;
-                padding: 2mm !important;
-                color: black !important;
+                font-family: monospace !important;
+                font-size: 12px !important;
             }
 
-            /* Override semua styling untuk print */
-            #resultCard {
-                background: white !important;
-                border: none !important;
-                box-shadow: none !important;
-                border-radius: 0 !important;
-                padding: 0 !important;
-                margin: 0 !important;
-                width: 58mm !important;
-                max-width: 58mm !important;
+            .center {
+                text-align: center;
             }
 
-            /* Border dashed untuk thermal printer */
-            .border-dashed {
-                border-style: dashed !important;
-                border-width: 1px !important;
-                border-color: #000 !important;
+            .bold {
+                font-weight: bold;
             }
 
-            .border-t {
-                border-top: 1px dashed #000 !important;
+            .line {
+                border-top: 1px dashed black;
+                margin: 8px 0;
             }
 
-            .border-b {
-                border-bottom: 1px dashed #000 !important;
+            table {
+                width: 100%;
+                border-collapse: collapse;
             }
 
-            .border-gray-600 {
-                border-color: #000 !important;
+            td {
+                vertical-align: top;
+                padding: 1px 0;
             }
 
-            /* Text alignment */
-            .text-center {
-                text-align: center !important;
+            .right {
+                text-align: right;
             }
 
-            .text-right {
-                text-align: right !important;
-            }
-
-            /* Spacing untuk thermal printer */
-            .mb-2 {
-                margin-bottom: 2mm !important;
-            }
-
-            .py-1 {
-                padding-top: 1mm !important;
-                padding-bottom: 1mm !important;
-            }
-
-            .pt-2 {
-                padding-top: 2mm !important;
-            }
-
-            .pb-2 {
-                padding-bottom: 2mm !important;
-            }
-
-            .ml-4 {
-                margin-left: 4mm !important;
-            }
-
-            /* Font sizes */
-            .text-sm {
-                font-size: 8px !important;
-            }
-
-            .text-xs {
-                font-size: 7px !important;
-            }
-
-            .font-bold {
-                font-weight: bold !important;
-            }
-
-            .font-mono {
-                font-family: 'Courier New', monospace !important;
-            }
-
-            /* Flex untuk justify between */
-            .flex {
-                display: flex !important;
-            }
-
-            .justify-between {
-                justify-content: space-between !important;
-            }
-
-            /* Hide everything except print area */
-            body>* {
-                display: none !important;
-            }
-
-            .print-area {
-                display: block !important;
-            }
-
-            .print-area * {
-                display: block !important;
-            }
-
-            .print-area .flex {
-                display: flex !important;
+            .thankyou {
+                margin-top: 10px;
+                text-align: center;
             }
         }
 
@@ -212,42 +130,8 @@
             <!-- Alert Messages -->
             <div id="alertContainer"></div>
 
-            <!-- Result Card -->
-            <div id="resultCard" class="festival-card rounded-xl shadow-2xl p-6 hidden">
-                <div class="print-area">
-                    <!-- Print Header -->
-                    <div class="text-center pb-2 mb-2">
-                        <div class="text-sm font-bold">Ticketify ID</div>
-                    </div>
+            <!-- Removed result card since we're redirecting to receipt page -->
 
-                    <div class="border-t border-b border-dashed border-gray-600 py-1 mb-2">
-                        <div class="text-xs text-center">.</div>
-                    </div>
-
-                    <!-- Buyer Details -->
-                    <div id="buyerDetails" class="font-mono text-xs mb-3">
-                        <!-- Details will be populated here -->
-                    </div>
-
-                    <!-- Print Footer -->
-                    <div class="border-t border-dashed border-gray-600 pt-2 text-center">
-                        <div class="text-xs">Terima kasih</div>
-                        <div class="text-xs">~ Semoga puas ~</div>
-                    </div>
-                </div>
-
-                <!-- Action Buttons -->
-                <div class="mt-6 flex gap-3 no-print">
-                    <button onclick="printReceipt()"
-                        class="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg transition duration-200">
-                        🖨️ Print
-                    </button>
-                    <button onclick="resetForm()"
-                        class="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-lg transition duration-200">
-                        🔄 Reset
-                    </button>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -293,8 +177,12 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        showAlert('✅ Check-in berhasil!', 'success');
-                        displayResult(data.data);
+                        showAlert('✅ Check-in berhasil! Mengarahkan ke receipt...', 'success');
+
+                        // Redirect ke halaman receipt dalam 1 detik
+                        setTimeout(() => {
+                            window.location.href = '/checkin/receipt/' + data.data.checkin_id;
+                        }, 1000);
                     } else {
                         showAlert('❌ ' + data.message, 'error');
                     }
@@ -305,50 +193,10 @@
                 });
         }
 
-        function displayResult(data) {
-            const resultCard = document.getElementById('resultCard');
-            const buyerDetails = document.getElementById('buyerDetails');
-
-            buyerDetails.innerHTML = `
-                <div class="mb-2">
-                    <div>11. ${data.external_id}</div>
-                    <div class="ml-4">Tlp: ${data.no_handphone}</div>
-                </div>
-                <div class="border-t border-b border-dashed border-gray-600 py-1 mb-2">
-                    <div class="text-xs text-center">.</div>
-                </div>
-                <div class="mb-2">
-                    <div>Kasir&nbsp;&nbsp;&nbsp;&nbsp;: System</div>
-                    <div>Tanggal&nbsp;: ${data.checked_in_at}</div>
-                    <div>No. Nota : #CHK${data.external_id.split('-')[1]}</div>
-                </div>
-                <div class="border-t border-b border-dashed border-gray-600 py-1 mb-2">
-                    <div class="text-xs text-center">.</div>
-                </div>
-                <div class="mb-2">
-                    <div>${data.ticket_name}</div>
-                    <div class="text-right">${data.quantity}.000</div>
-                </div>
-            `;
-
-            resultCard.classList.remove('hidden');
-
-            // Scroll to result
-            setTimeout(() => {
-                resultCard.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'center'
-                });
-            }, 100);
-        }
-
-        function printReceipt() {
-            window.print();
-        }
+        // Removed displayResult, printReceipt functions since we redirect to receipt page
 
         function resetForm() {
             document.getElementById('externalIdInput').value = '';
-            document.getElementById('resultCard').classList.add('hidden');
             document.getElementById('alertContainer').innerHTML = '';
             document.getElementById('externalIdInput').focus();
         }
@@ -382,9 +230,7 @@
         function resetInactivityTimer() {
             clearTimeout(inactivityTimer);
             inactivityTimer = setTimeout(() => {
-                if (document.getElementById('resultCard').classList.contains('hidden')) {
-                    document.getElementById('externalIdInput').focus();
-                }
+                document.getElementById('externalIdInput').focus();
             }, 15000);
         }
 
@@ -398,6 +244,18 @@
         window.addEventListener('load', () => {
             document.getElementById('externalIdInput').focus();
         });
+
+        // Auto print when page loads (optional - bisa dihapus jika tidak diinginkan)
+        window.onload = function() {
+            // Uncomment line below if you want auto print
+            // window.print();
+        };
+
+        // Close window after printing (optional)
+        window.onafterprint = function() {
+            // Uncomment line below if you want auto close after print
+            // window.close();
+        };
     </script>
 </body>
 

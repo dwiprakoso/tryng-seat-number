@@ -26,6 +26,7 @@ Route::get('/checkin', [BuyerCheckinController::class, 'index'])->name('checkin.
 Route::post('/checkin/process', [BuyerCheckinController::class, 'processCheckin'])->name('checkin.process');
 Route::get('/checkin/stats', [BuyerCheckinController::class, 'getCheckinStats'])->name('checkin.stats');
 Route::get('/checkin/history', [BuyerCheckinController::class, 'getCheckinHistory'])->name('checkin.history');
+Route::get('/checkin/receipt/{id}', [BuyerCheckinController::class, 'printReceipt'])->name('checkin.receipt');
 
 // Order routes (memindahkan route /order ke path lain untuk menghindari konflik)
 Route::get('/orders', [OrderController::class, 'index'])->name('order.list');

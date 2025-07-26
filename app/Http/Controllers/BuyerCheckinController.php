@@ -52,7 +52,7 @@ class BuyerCheckinController extends Controller
             if ($existingCheckin) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Sudah pernah check-in pada: ' . $existingCheckin->checked_in_at->format('d/m/Y H:i:s')
+                    'message' => 'Sudah pernah check-in pada: ' . $existingCheckin->checked_in_at->format('d/m/Y H:i')
                 ], 400);
             }
 
@@ -65,18 +65,20 @@ class BuyerCheckinController extends Controller
 
             DB::commit();
 
-            // Return data untuk print
+            // Return data untuk print sesuai format thermal receipt
             return response()->json([
                 'success' => true,
                 'message' => 'Check-in berhasil!',
                 'data' => [
+                    'checkin_id' => $checkin->id, // Untuk redirect ke receipt
                     'external_id' => $buyer->external_id,
                     'nama_lengkap' => $buyer->nama_lengkap,
                     'email' => $buyer->email,
                     'no_handphone' => $buyer->no_handphone,
-                    'ticket_name' => $buyer->ticket->name ?? 'Unknown Ticket',
+                    'ticket_name' => $buyer->ticket->name ?? 'Festival Ticket',
                     'quantity' => $buyer->quantity,
-                    'checked_in_at' => $checkin->checked_in_at->format('d/m/Y H:i:s')
+                    'checked_in_at' => $checkin->checked_in_at->format('d/m/Y H:i'),
+                    'formatted_id' => str_pad($checkin->id, 3, '0', STR_PAD_LEFT)
                 ]
             ]);
         } catch (\Exception $e) {
@@ -103,18 +105,35 @@ class BuyerCheckinController extends Controller
 
     public function getCheckinStats()
     {
-        $totalBuyers = Buyer::where('payment_status', 'paid')->count();
-        $totalCheckedIn = BuyerCheckin::count();
-        $totalPending = $totalBuyers - $totalCheckedIn;
+        // Hitung total tiket yang sudah dibayar dari buyers
+        $totalPaidTicketsBuyers = Buyer::where('payment_status', 'paid')->sum('quantity');
+
+        // Hitung total tiket yang sudah checkin dari buyers
+        $totalCheckedInBuyers = BuyerCheckin::join('buyers', 'buyer_checkins.buyer_id', '=', 'buyers.id')
+            ->where('buyers.payment_status', 'paid')
+            ->sum('buyer_checkins.qty');
+
+        // Hitung statistik
+        $totalPending = $totalPaidTicketsBuyers - $totalCheckedInBuyers;
+        $percentage = $totalPaidTicketsBuyers > 0 ? round(($totalCheckedInBuyers / $totalPaidTicketsBuyers) * 100, 2) : 0;
 
         return response()->json([
             'success' => true,
             'stats' => [
-                'total_buyers' => $totalBuyers,
-                'total_checked_in' => $totalCheckedIn,
+                'total_paid_tickets' => $totalPaidTicketsBuyers,
+                'total_checked_in' => $totalCheckedInBuyers,
                 'total_pending' => $totalPending,
-                'percentage' => $totalBuyers > 0 ? round(($totalCheckedIn / $totalBuyers) * 100, 2) : 0
+                'percentage' => $percentage
             ]
         ]);
+    }
+
+    // Method untuk print individual receipt (opsional)
+    public function printReceipt($checkinId)
+    {
+        $checkin = BuyerCheckin::with(['buyer', 'buyer.ticket'])
+            ->findOrFail($checkinId);
+
+        return view('check-in.receipt', compact('checkin'));
     }
 }
