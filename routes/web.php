@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\BuyerController;
 use App\Http\Controllers\Admin\EventController;
 use App\Http\Controllers\Admin\DiskonController;
 use App\Http\Controllers\Admin\TicketController;
+use App\Http\Controllers\BuyerCheckinController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\PaymentWebhookController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -18,6 +19,11 @@ Route::get('/', [OrderController::class, 'index'])->name('order.index');
 Route::get('/sign-in', [AuthController::class, 'index'])->name('sign-in');
 Route::post('/sign-in', [AuthController::class, 'login'])->name('login');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+Route::get('/checkin', [BuyerCheckinController::class, 'index'])->name('checkin.index');
+Route::post('/checkin/process', [BuyerCheckinController::class, 'processCheckin'])->name('checkin.process');
+Route::get('/checkin/stats', [BuyerCheckinController::class, 'getCheckinStats'])->name('checkin.stats');
+Route::get('/checkin/history', [BuyerCheckinController::class, 'getCheckinHistory'])->name('checkin.history');
 
 // Order routes (memindahkan route /order ke path lain untuk menghindari konflik)
 Route::get('/orders', [OrderController::class, 'index'])->name('order.list');
