@@ -41,13 +41,6 @@
                         </i>
                         Reset Filter
                     </button>
-                    {{-- <a href="{{ route('admin.checkin.export') }}" class="btn btn-primary">
-                        <i class="ki-duotone ki-exit-down fs-2">
-                            <span class="path1"></span>
-                            <span class="path2"></span>
-                        </i>
-                        Export Excel
-                    </a> --}}
                 </div>
                 <!--end::Actions-->
             </div>
@@ -65,15 +58,14 @@
             <!--begin::Stats Cards-->
             <div class="row g-5 g-xl-10 mb-5 mb-xl-10">
                 <!--begin::Col - Total Check-in-->
-                <div class="col-xl-6">
+                <div class="col-xl-4">
                     <!--begin::Statistics Widget-->
                     <div class="card card-xl-stretch mb-xl-8">
                         <!--begin::Header-->
                         <div class="card-header border-0 pt-5">
                             <h3 class="card-title align-items-start flex-column">
                                 <span class="card-label fw-bold fs-3 mb-1">Total Check-in</span>
-                                <span class="text-muted fw-semibold fs-7">Tiket yang sudah check-in dari total tiket
-                                    paid</span>
+                                <span class="text-muted fw-semibold fs-7">Semua tiket yang sudah check-in</span>
                             </h3>
                             <div class="card-toolbar">
                                 <div class="btn-icon-h-50px">
@@ -109,22 +101,21 @@
                 </div>
                 <!--end::Col-->
 
-                <!--begin::Col - Progress Check-in-->
-                <div class="col-xl-6">
+                <!--begin::Col - Online Booking Stats-->
+                <div class="col-xl-4">
                     <!--begin::Statistics Widget-->
                     <div class="card card-xl-stretch mb-xl-8">
                         <!--begin::Header-->
                         <div class="card-header border-0 pt-5">
                             <h3 class="card-title align-items-start flex-column">
-                                <span class="card-label fw-bold fs-3 mb-1">Progress Check-in</span>
-                                <span class="text-muted fw-semibold fs-7">Persentase tiket yang sudah check-in</span>
+                                <span class="card-label fw-bold fs-3 mb-1">Online Booking</span>
+                                <span class="text-muted fw-semibold fs-7">Tiket online yang check-in</span>
                             </h3>
                             <div class="card-toolbar">
                                 <div class="btn-icon-h-50px">
-                                    <i class="ki-duotone ki-chart-pie-4 fs-3x text-info">
+                                    <i class="ki-duotone ki-tablet fs-3x text-primary">
                                         <span class="path1"></span>
                                         <span class="path2"></span>
-                                        <span class="path3"></span>
                                     </i>
                                 </div>
                             </div>
@@ -133,16 +124,70 @@
                         <!--begin::Body-->
                         <div class="card-body">
                             <div class="d-flex align-items-center">
-                                <span class="fs-2hx fw-bold text-info me-2 lh-1 ls-n2">
-                                    {{ number_format($checkinPercentage, 1) }}%
+                                <span class="fs-2hx fw-bold text-primary me-2 lh-1 ls-n2">
+                                    {{ number_format($buyersStats['total_checkin']) }}
                                 </span>
-                                <span class="text-muted fw-semibold fs-6">completed</span>
+                                <span class="text-muted fw-semibold fs-6">/ {{ number_format($buyersStats['total_paid']) }}
+                                    tiket</span>
                             </div>
                             <div class="separator separator-dashed my-5"></div>
-                            <div class="progress h-6px w-100 bg-light-info">
-                                <div class="progress-bar bg-info" role="progressbar"
-                                    style="width: {{ $checkinPercentage }}%" aria-valuenow="{{ $checkinPercentage }}"
-                                    aria-valuemin="0" aria-valuemax="100"></div>
+                            <div class="progress h-6px w-100 bg-light-primary">
+                                <div class="progress-bar bg-primary" role="progressbar"
+                                    style="width: {{ $buyersStats['percentage'] }}%"
+                                    aria-valuenow="{{ $buyersStats['percentage'] }}" aria-valuemin="0" aria-valuemax="100">
+                                </div>
+                            </div>
+                            <div class="d-flex fw-semibold text-gray-600 mt-3">
+                                <span
+                                    class="fw-semibold text-gray-600 fs-7">{{ number_format($buyersStats['percentage'], 1) }}%
+                                    completed</span>
+                            </div>
+                        </div>
+                        <!--end::Body-->
+                    </div>
+                    <!--end::Statistics Widget-->
+                </div>
+                <!--end::Col-->
+
+                <!--begin::Col - OTS Stats-->
+                <div class="col-xl-4">
+                    <!--begin::Statistics Widget-->
+                    <div class="card card-xl-stretch mb-xl-8">
+                        <!--begin::Header-->
+                        <div class="card-header border-0 pt-5">
+                            <h3 class="card-title align-items-start flex-column">
+                                <span class="card-label fw-bold fs-3 mb-1">On The Spot</span>
+                                <span class="text-muted fw-semibold fs-7">Tiket OTS langsung check-in</span>
+                            </h3>
+                            <div class="card-toolbar">
+                                <div class="btn-icon-h-50px">
+                                    <i class="ki-duotone ki-shop fs-3x text-warning">
+                                        <span class="path1"></span>
+                                        <span class="path2"></span>
+                                        <span class="path3"></span>
+                                        <span class="path4"></span>
+                                        <span class="path5"></span>
+                                    </i>
+                                </div>
+                            </div>
+                        </div>
+                        <!--end::Header-->
+                        <!--begin::Body-->
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <span class="fs-2hx fw-bold text-warning me-2 lh-1 ls-n2">
+                                    {{ number_format($otsStats['total_checkin']) }}
+                                </span>
+                                <span class="text-muted fw-semibold fs-6">/ {{ number_format($otsStats['total_tickets']) }}
+                                    tiket</span>
+                            </div>
+                            <div class="separator separator-dashed my-5"></div>
+                            <div class="progress h-6px w-100 bg-light-warning">
+                                <div class="progress-bar bg-warning" role="progressbar" style="width: 100%"
+                                    aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                            <div class="d-flex fw-semibold text-gray-600 mt-3">
+                                <span class="fw-semibold text-gray-600 fs-7">100% completed</span>
                             </div>
                         </div>
                         <!--end::Body-->
@@ -152,6 +197,54 @@
                 <!--end::Col-->
             </div>
             <!--end::Stats Cards-->
+
+            <!--begin::Filter Tabs-->
+            <div class="card card-flush mb-5">
+                <div class="card-header align-items-center py-5 gap-2 gap-md-5">
+                    <div class="card-title">
+                        <!--begin::Filter Tabs-->
+                        <ul class="nav nav-tabs nav-line-tabs nav-stretch fs-6 border-0">
+                            <li class="nav-item">
+                                <a class="nav-link {{ $filterType == 'all' ? 'active' : '' }}"
+                                    href="{{ route('admin.checkin.index', ['type' => 'all']) }}">
+                                    <i class="ki-duotone ki-element-11 fs-2 me-2">
+                                        <span class="path1"></span>
+                                        <span class="path2"></span>
+                                        <span class="path3"></span>
+                                        <span class="path4"></span>
+                                    </i>
+                                    Semua Data
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {{ $filterType == 'buyers' ? 'active' : '' }}"
+                                    href="{{ route('admin.checkin.index', ['type' => 'buyers']) }}">
+                                    <i class="ki-duotone ki-tablet fs-2 me-2">
+                                        <span class="path1"></span>
+                                        <span class="path2"></span>
+                                    </i>
+                                    Online Booking
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {{ $filterType == 'ots' ? 'active' : '' }}"
+                                    href="{{ route('admin.checkin.index', ['type' => 'ots']) }}">
+                                    <i class="ki-duotone ki-shop fs-2 me-2">
+                                        <span class="path1"></span>
+                                        <span class="path2"></span>
+                                        <span class="path3"></span>
+                                        <span class="path4"></span>
+                                        <span class="path5"></span>
+                                    </i>
+                                    On The Spot
+                                </a>
+                            </li>
+                        </ul>
+                        <!--end::Filter Tabs-->
+                    </div>
+                </div>
+            </div>
+            <!--end::Filter Tabs-->
 
             <!--begin::Checkins Table-->
             <div class="card card-flush">
@@ -214,8 +307,9 @@
                                     <th class="min-w-50px">No</th>
                                     <th class="min-w-125px">ID Pesanan</th>
                                     <th class="min-w-200px">Nama</th>
-                                    <th class="min-w-200px">Email</th>
+                                    <th class="min-w-200px">Email/Phone</th>
                                     <th class="min-w-70px">Qty</th>
+                                    <th class="min-w-100px">Tipe</th>
                                     <th class="min-w-150px">Waktu Check-in</th>
                                 </tr>
                             </thead>
@@ -250,6 +344,28 @@
                                             <span class="badge badge-light-success fw-bold">{{ $checkin->qty }}</span>
                                         </td>
                                         <td>
+                                            @if ($checkin->source_table === 'buyers')
+                                                <span class="badge badge-light-primary">
+                                                    <i class="ki-duotone ki-tablet fs-6 me-1">
+                                                        <span class="path1"></span>
+                                                        <span class="path2"></span>
+                                                    </i>
+                                                    Online
+                                                </span>
+                                            @else
+                                                <span class="badge badge-light-warning">
+                                                    <i class="ki-duotone ki-shop fs-6 me-1">
+                                                        <span class="path1"></span>
+                                                        <span class="path2"></span>
+                                                        <span class="path3"></span>
+                                                        <span class="path4"></span>
+                                                        <span class="path5"></span>
+                                                    </i>
+                                                    OTS
+                                                </span>
+                                            @endif
+                                        </td>
+                                        <td>
                                             <div class="d-flex flex-column">
                                                 <span
                                                     class="fw-bold text-gray-800">{{ \Carbon\Carbon::parse($checkin->checked_in_at)->format('d/m/Y') }}</span>
@@ -260,7 +376,7 @@
                                     </tr>
                                 @empty
                                     <tr id="emptyState">
-                                        <td colspan="6" class="text-center py-10">
+                                        <td colspan="7" class="text-center py-10">
                                             <div class="d-flex flex-column align-items-center">
                                                 <i class="ki-duotone ki-file-deleted fs-3x text-muted mb-4">
                                                     <span class="path1"></span>
