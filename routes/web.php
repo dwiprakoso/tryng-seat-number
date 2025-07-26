@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\EventController;
 use App\Http\Controllers\Admin\DiskonController;
 use App\Http\Controllers\Admin\TicketController;
 use App\Http\Controllers\BuyerCheckinController;
+use App\Http\Controllers\Admin\CheckinController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\PaymentWebhookController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -68,4 +69,6 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/buyer', [BuyerController::class, 'index'])->name('admin.buyer.index');
     Route::get('/export-buyers', [BuyerController::class, 'export'])->name('admin.buyer.export');
+
+    Route::get('/checkin', [CheckinController::class, 'index'])->name('admin.checkin.index');
 });

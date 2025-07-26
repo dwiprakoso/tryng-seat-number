@@ -91,6 +91,17 @@
                     </a>
                 </div>
                 <!--end:Menu item-->
+                <!--begin:Menu item - Pembeli-->
+                <div class="menu-item">
+                    <a class="menu-link {{ Request::routeIs('admin.buyer.*') ? 'active' : '' }}"
+                        href="{{ route('admin.checkin.index') }}">
+                        <span class="menu-icon">
+                            <i class="ki-outline ki-people fs-2"></i>
+                        </span>
+                        <span class="menu-title">Check-In</span>
+                    </a>
+                </div>
+                <!--end:Menu item-->
 
             </div>
             <!--end::Menu-->
@@ -158,7 +169,8 @@
                         data-kt-menu="true" data-kt-element="theme-mode-menu">
                         <!--begin::Menu item-->
                         <div class="menu-item px-3 my-0">
-                            <a href="#" class="menu-link px-3 py-2" data-kt-element="mode" data-kt-value="light">
+                            <a href="#" class="menu-link px-3 py-2" data-kt-element="mode"
+                                data-kt-value="light">
                                 <span class="menu-icon" data-kt-element="icon">
                                     <i class="ki-outline ki-night-day fs-2"></i>
                                 </span>
