@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\TicketController;
 use App\Http\Controllers\BuyerCheckinController;
 use App\Http\Controllers\Admin\CheckinController;
 use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\OtsSalesController;
 use App\Http\Controllers\PaymentWebhookController;
 use App\Http\Controllers\Admin\DashboardController;
 
@@ -71,4 +72,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/export-buyers', [BuyerController::class, 'export'])->name('admin.buyer.export');
 
     Route::get('/checkin', [CheckinController::class, 'index'])->name('admin.checkin.index');
+
+    Route::get('ots-sales', [OtsSalesController::class, 'index'])->name('admin.ots-sales.index');
+    Route::post('ots-sales', [OtsSalesController::class, 'store'])->name('admin.ots-sales.store');
+    Route::get('ots-sales/{id}/receipt', [OtsSalesController::class, 'receipt'])->name('admin.ots-sales.receipt');
+    Route::delete('ots-sales/{id}', [OtsSalesController::class, 'destroy'])->name('admin.ots-sales.destroy');
 });

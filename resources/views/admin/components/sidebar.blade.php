@@ -102,6 +102,17 @@
                     </a>
                 </div>
                 <!--end:Menu item-->
+                <!--begin:Menu item - Pembeli-->
+                <div class="menu-item">
+                    <a class="menu-link {{ Request::routeIs('admin.buyer.*') ? 'active' : '' }}"
+                        href="{{ route('admin.ots-sales.index') }}">
+                        <span class="menu-icon">
+                            <i class="ki-outline ki-people fs-2"></i>
+                        </span>
+                        <span class="menu-title">OTS</span>
+                    </a>
+                </div>
+                <!--end:Menu item-->
 
             </div>
             <!--end::Menu-->
