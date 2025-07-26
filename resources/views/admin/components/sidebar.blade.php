@@ -46,7 +46,7 @@
                     <a class="menu-link {{ Request::routeIs('admin.event.*') || Request::routeIs('admin.products.*') ? 'active' : '' }}"
                         href="{{ route('admin.event.index') }}">
                         <span class="menu-icon">
-                            <i class="ki-outline ki-calendar-2 fs-2"></i>
+                            <i class="ki-outline ki-calendar fs-2"></i>
                         </span>
                         <span class="menu-title">Event</span>
                     </a>
@@ -91,23 +91,25 @@
                     </a>
                 </div>
                 <!--end:Menu item-->
-                <!--begin:Menu item - Pembeli-->
+
+                <!--begin:Menu item - Check-In-->
                 <div class="menu-item">
-                    <a class="menu-link {{ Request::routeIs('admin.buyer.*') ? 'active' : '' }}"
+                    <a class="menu-link {{ Request::routeIs('admin.checkin.*') ? 'active' : '' }}"
                         href="{{ route('admin.checkin.index') }}">
                         <span class="menu-icon">
-                            <i class="ki-outline ki-people fs-2"></i>
+                            <i class="ki-outline ki-entrance-right fs-2"></i>
                         </span>
                         <span class="menu-title">Check-In</span>
                     </a>
                 </div>
                 <!--end:Menu item-->
-                <!--begin:Menu item - Pembeli-->
+
+                <!--begin:Menu item - OTS (On The Spot Sales)-->
                 <div class="menu-item">
-                    <a class="menu-link {{ Request::routeIs('admin.buyer.*') ? 'active' : '' }}"
+                    <a class="menu-link {{ Request::routeIs('admin.ots-sales.*') ? 'active' : '' }}"
                         href="{{ route('admin.ots-sales.index') }}">
                         <span class="menu-icon">
-                            <i class="ki-outline ki-people fs-2"></i>
+                            <i class="ki-outline ki-shop fs-2"></i>
                         </span>
                         <span class="menu-title">OTS</span>
                     </a>

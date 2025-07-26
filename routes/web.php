@@ -71,7 +71,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/buyer', [BuyerController::class, 'index'])->name('admin.buyer.index');
     Route::get('/export-buyers', [BuyerController::class, 'export'])->name('admin.buyer.export');
 
-    Route::get('/checkin', [CheckinController::class, 'index'])->name('admin.checkin.index');
+    Route::get('/checkin-list', [CheckinController::class, 'index'])->name('admin.checkin.index');
 
     Route::get('ots-sales', [OtsSalesController::class, 'index'])->name('admin.ots-sales.index');
     Route::post('ots-sales', [OtsSalesController::class, 'store'])->name('admin.ots-sales.store');
