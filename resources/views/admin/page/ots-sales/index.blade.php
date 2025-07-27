@@ -44,6 +44,7 @@
             <!--begin::OTS Sales-->
             <div class="card card-flush">
                 <!--begin::Card header-->
+                <!--begin::Card header-->
                 <div class="card-header align-items-center py-5 gap-2 gap-md-5">
                     <!--begin::Card toolbar-->
                     <div class="card-toolbar flex-row-fluid justify-content-end gap-5">
@@ -58,6 +59,11 @@
                             </select>
                             <!--end::Select2-->
                         </div>
+                        <!--begin::Export-->
+                        <a href="{{ route('admin.ots-sales.export') }}" class="btn btn-light-primary">
+                            <i class="ki-outline ki-exit-up fs-2"></i>Export Excel
+                        </a>
+                        <!--end::Export-->
                         <!--begin::Add sale-->
                         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#kt_modal_add_sale">Add
                             Sale</button>

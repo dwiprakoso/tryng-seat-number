@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\OtsSales;
 use App\Models\Ticket;
+use App\Exports\OtsSalesExport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
 
 class OtsSalesController extends Controller
 {
@@ -90,6 +92,17 @@ class OtsSalesController extends Controller
             return back()->with('success', 'Data berhasil dihapus');
         } catch (\Exception $e) {
             return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+        }
+    }
+
+    public function export()
+    {
+        try {
+            $fileName = 'ots-sales-' . date('Y-m-d-H-i-s') . '.xlsx';
+
+            return Excel::download(new OtsSalesExport, $fileName);
+        } catch (\Exception $e) {
+            return back()->with('error', 'Terjadi kesalahan saat export data: ' . $e->getMessage());
         }
     }
 }

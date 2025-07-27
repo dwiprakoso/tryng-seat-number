@@ -78,4 +78,5 @@ Route::middleware('auth')->group(function () {
     Route::post('ots-sales', [OtsSalesController::class, 'store'])->name('admin.ots-sales.store');
     Route::get('ots-sales/{id}/receipt', [OtsSalesController::class, 'receipt'])->name('admin.ots-sales.receipt');
     Route::delete('ots-sales/{id}', [OtsSalesController::class, 'destroy'])->name('admin.ots-sales.destroy');
+    Route::get('/ots-sales/export', [OtsSalesController::class, 'export'])->name('admin.ots-sales.export');
 });
