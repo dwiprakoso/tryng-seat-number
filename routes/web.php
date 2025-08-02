@@ -32,6 +32,11 @@ Route::get('/checkin/receipt/{id}', [BuyerCheckinController::class, 'printReceip
 Route::get('/orders', [OrderController::class, 'index'])->name('order.list');
 Route::get('/order/create/{ticket_id}', [OrderController::class, 'create'])->name('order.create');
 Route::post('/order/store', [OrderController::class, 'store'])->name('order.store');
+
+// Manual Payment routes
+Route::get('/payment/manual/{external_id}', [OrderController::class, 'manualPayment'])->name('payment.manual');
+Route::post('/payment/upload/{external_id}', [OrderController::class, 'uploadPaymentProof'])->name('payment.upload');
+
 // Webhook routes (tanpa middleware auth)
 Route::post('/webhook/xendit/invoice', [PaymentWebhookController::class, 'xenditInvoiceCallback'])
     ->name('webhook.xendit.invoice');
@@ -39,6 +44,7 @@ Route::post('/webhook/xendit/invoice', [PaymentWebhookController::class, 'xendit
 // Test webhook untuk development
 Route::post('/webhook/test', [PaymentWebhookController::class, 'testWebhook'])
     ->name('webhook.test');
+
 // Payment routes
 Route::get('/payment/success', function () {
     return view('payment.success');
@@ -52,8 +58,8 @@ Route::get('/ticket/verify/{external_id}', [TicketController::class, 'verify'])-
 
 // Protected admin routes
 Route::middleware('auth')->group(function () {
-    // Mengubah route dashboard admin ke /admin
-    // Route::get('/admin', [DashboardController::class, 'index'])->name('admin.dashboard');
+    // Dashboard admin
+    Route::get('/admin', [DashboardController::class, 'index'])->name('admin.dashboard');
 
     Route::get('/event', [ProductController::class, 'index'])->name('admin.event.index');
     Route::post('/products', [ProductController::class, 'store'])->name('admin.products.store');
@@ -71,6 +77,10 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/buyer', [BuyerController::class, 'index'])->name('admin.buyer.index');
     Route::get('/export-buyers', [BuyerController::class, 'export'])->name('admin.buyer.export');
+
+    // Admin payment confirmation routes
+    Route::post('/buyer/{id}/confirm-payment', [BuyerController::class, 'confirmPayment'])->name('admin.buyer.confirm-payment');
+    Route::post('/buyer/{id}/reject-payment', [BuyerController::class, 'rejectPayment'])->name('admin.buyer.reject-payment');
 
     Route::get('/checkin-list', [CheckinController::class, 'index'])->name('admin.checkin.index');
 

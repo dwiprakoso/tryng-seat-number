@@ -532,7 +532,7 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="no_handphone" class="form-label">No. Handphone <span
+                                <label for="no_handphone" class="form-label">No. Whatsapp <span
                                         class="text-danger">*</span></label>
                                 <input type="tel" class="form-control" id="no_handphone" name="no_handphone"
                                     required value="{{ old('no_handphone') }}" placeholder="08123456789"
@@ -542,17 +542,36 @@
                                     <div class="text-danger">{{ $message }}</div>
                                 @enderror
                             </div>
-
                             <div class="mb-3">
-                                <label for="quantity" class="form-label">Jumlah Tiket <span
+                                <label for="alamat_lengkap" class="form-label">Alamat Domisili <span
                                         class="text-danger">*</span></label>
-                                <input type="number" class="form-control" id="quantity" name="quantity" required
-                                    min="1" max="5" value="{{ old('quantity', 1) }}" />
-                                @error('quantity')
+                                <input type="text" class="form-control" id="alamat_lengkap" name="alamat_lengkap"
+                                    required value="{{ old('alamat_lengkap') }}"
+                                    placeholder="Masukkan alamat lengkap" />
+                                @error('alamat_lengkap')
                                     <div class="text-danger">{{ $message }}</div>
                                 @enderror
                             </div>
-
+                            <div class="mb-3">
+                                <label for="identitas_number" class="form-label">Nomor Identitas (KTP/NIK/SIM)<span
+                                        class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="identitas_number"
+                                    name="identitas_number" required value="{{ old('identitas_number') }}"
+                                    placeholder="0000000000000000" pattern="^\d{12,20}$"
+                                    title="Masukkan nomor identitas yang valid (12-20 digit angka)" />
+                                @error('identitas_number')
+                                    <div class="text-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="mb-3">
+                                <label for="mewakili" class="form-label">Mewakili<span
+                                        class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="mewakili" name="mewakili" required
+                                    value="{{ old('mewakili') }}" placeholder="Coffe Shop" />
+                                @error('mewakili')
+                                    <div class="text-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
                             <button type="submit" class="btn btn-primary">
                                 <i class="fas fa-credit-card"></i> Lanjut ke Pembayaran
                             </button>
@@ -690,6 +709,33 @@
                     isValid = false;
                 } else {
                     qtyInput.classList.remove('is-invalid');
+                }
+                // Validasi alamat lengkap
+                const alamat = document.getElementById('alamat_lengkap');
+                if (!alamat.value.trim() || alamat.value.trim().length < 5) {
+                    alamat.classList.add('is-invalid');
+                    isValid = false;
+                } else {
+                    alamat.classList.remove('is-invalid');
+                }
+
+                // Validasi nomor identitas (12-20 digit angka)
+                const identitas = document.getElementById('identitas_number');
+                const identitasPattern = /^\d{12,20}$/;
+                if (!identitasPattern.test(identitas.value.trim())) {
+                    identitas.classList.add('is-invalid');
+                    isValid = false;
+                } else {
+                    identitas.classList.remove('is-invalid');
+                }
+
+                // Validasi mewakili (minimal 3 karakter)
+                const mewakili = document.getElementById('mewakili');
+                if (!mewakili.value.trim() || mewakili.value.trim().length < 3) {
+                    mewakili.classList.add('is-invalid');
+                    isValid = false;
+                } else {
+                    mewakili.classList.remove('is-invalid');
                 }
 
                 if (!isValid) {

@@ -7,7 +7,6 @@ use App\Models\Buyer;
 use App\Models\Ticket;
 use App\Models\Product;
 use Illuminate\Http\Request;
-use App\Services\XenditService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -25,6 +24,7 @@ class OrderController extends Controller
 
         return view('order.index', compact('product', 'tickets'));
     }
+
     public function create($ticket_id)
     {
         $ticket = Ticket::findOrFail($ticket_id);
@@ -39,29 +39,39 @@ class OrderController extends Controller
             'ticket_id' => 'required|exists:tickets,id',
             'nama_lengkap' => 'required|string|max:255',
             'email' => 'required|email|max:255',
-            'no_handphone' => 'required|string|max:20',
-            'quantity' => 'required|integer|min:1|max:5',
+            'no_handphone' => 'required|string|max:20|regex:/^08\d{8,12}$/',
+            'alamat_lengkap' => 'required|string|min:5|max:255',
+            'identitas_number' => 'required|string|regex:/^\d{12,20}$/',
+            'mewakili' => 'required|string|min:3|max:255',
+        ], [
+            'no_handphone.regex' => 'Nomor handphone harus dimulai dengan 08 dan berjumlah 10-14 digit',
+            'identitas_number.regex' => 'Nomor identitas harus berupa angka 12-20 digit',
+            'alamat_lengkap.min' => 'Alamat lengkap minimal 5 karakter',
+            'mewakili.min' => 'Field mewakili minimal 3 karakter'
         ]);
 
         // Get ticket data untuk harga
         $ticket = Ticket::find($request->ticket_id);
 
+        // Set quantity default 1 karena tidak ada di form
+        $quantity = 1;
+
         // Cek stok tiket
-        if ($ticket->qty < $request->quantity) {
+        if ($ticket->qty < $quantity) {
             return redirect()->back()
                 ->with('error', 'Stok tiket tidak mencukupi. Stok tersedia: ' . $ticket->qty)
                 ->withInput();
         }
 
         // Hitung biaya berdasarkan quantity
-        $ticket_price = $ticket->price * $request->quantity;
+        $ticket_price = $ticket->price * $quantity;
         $admin_fee = $ticket_price * 0.05; // 5% dari total harga tiket
         $total_amount = $ticket_price + $admin_fee;
 
         // Generate external ID yang unik
         do {
             $randomNumber = str_pad(rand(100000, 999999), 6, '0', STR_PAD_LEFT);
-            $externalId = 'SAMPOOKONG-' . $randomNumber;
+            $externalId = 'ORDER-' . $randomNumber;
 
             // Cek apakah external_id sudah ada di database
             $exists = Buyer::where('external_id', $externalId)->exists();
@@ -71,214 +81,198 @@ class OrderController extends Controller
         DB::beginTransaction();
 
         try {
-            // Kurangi stok tiket langsung (untuk testing)
-            $ticket->decrement('qty', $request->quantity);
+            // Kurangi stok tiket
+            $ticket->decrement('qty', $quantity);
 
             // Simpan ke database buyers
             $buyer = new Buyer();
             $buyer->nama_lengkap = $request->nama_lengkap;
             $buyer->email = $request->email;
             $buyer->no_handphone = $request->no_handphone;
-            $buyer->nama_instagram = '-'; // Default value
-            $buyer->alamat_lengkap = '-'; // Default value
-            $buyer->kode_pos = '-'; // Default value
-            $buyer->ukuran_jersey = '-'; // Default value
-            $buyer->quantity = $request->quantity;
+            $buyer->alamat_lengkap = $request->alamat_lengkap;
+            $buyer->identitas_number = $request->identitas_number;
+            $buyer->mewakili = $request->mewakili;
+            $buyer->quantity = $quantity;
             $buyer->ticket_id = $request->ticket_id;
             $buyer->ticket_price = $ticket_price;
             $buyer->admin_fee = $admin_fee;
             $buyer->total_amount = $total_amount;
             $buyer->external_id = $externalId;
+            $buyer->payment_status = 'pending';
             $buyer->save();
-
-            // Debug: Cek konfigurasi Xendit
-            $xenditKey = config('services.xendit.secret_key');
-            if (!$xenditKey) {
-                Log::error('Xendit API Key not configured');
-                DB::rollback();
-                return redirect()->route('admin.dashboard')
-                    ->with('error', 'Konfigurasi Xendit belum diatur. Silakan periksa file .env');
-            }
-
-            // Debug: Log data yang akan dikirim
-            Log::info('Creating Xendit Invoice', [
-                'buyer_id' => $buyer->id,
-                'external_id' => $externalId,
-                'ticket_id' => $ticket->id,
-                'quantity' => $request->quantity,
-                'ticket_price' => $ticket_price,
-                'admin_fee' => $admin_fee,
-                'total_amount' => $total_amount,
-                'customer_name' => $request->nama_lengkap,
-                'customer_email' => $request->email
-            ]);
-
-            $xenditService = new XenditService();
-
-            $invoiceData = [
-                'external_id' => $externalId,
-                'description' => 'Pembelian Tiket: ' . $ticket->name . ' (' . $request->quantity . 'x)',
-                'amount' => $total_amount,
-                'success_url' => route('payment.success'),
-                'failure_url' => route('payment.failed'),
-                'items' => [
-                    [
-                        'name' => $ticket->name,
-                        'quantity' => $request->quantity,
-                        'price' => $ticket->price,
-                        'category' => 'Tiket'
-                    ],
-                    [
-                        'name' => 'Biaya Admin (5%)',
-                        'quantity' => 1,
-                        'price' => $admin_fee,
-                        'category' => 'Admin Fee'
-                    ]
-                ],
-                'customer' => [
-                    'given_names' => $request->nama_lengkap,
-                    'email' => $request->email,
-                    'mobile_number' => $request->no_handphone,
-                    'addresses' => [
-                        [
-                            'city' => 'Jakarta',
-                            'country' => 'Indonesia',
-                            'postal_code' => '10000',
-                            'state' => 'DKI Jakarta',
-                            'street_line1' => 'Jakarta',
-                        ]
-                    ]
-                ]
-            ];
-
-            // Debug: Log invoice data sebelum dikirim
-            Log::info('Invoice Data to be sent to Xendit', $invoiceData);
-
-            $invoice = $xenditService->createInvoice($invoiceData);
-
-            // Debug: Log response dari Xendit
-            Log::info('Xendit Invoice Created Successfully', [
-                'invoice_id' => $invoice['id'],
-                'invoice_url' => $invoice['invoice_url']
-            ]);
-
-            // Generate QR Code setelah invoice berhasil dibuat
-            try {
-                $verifyUrl = route('ticket.verify', ['external_id' => $externalId]);
-                $qrCodeFileName = 'qr_' . $externalId . '.png';
-                $qrCodePath = 'qr_codes/' . $qrCodeFileName;
-
-                // Pastikan direktori ada
-                if (!Storage::disk('public')->exists('qr_codes')) {
-                    Storage::disk('public')->makeDirectory('qr_codes');
-                }
-
-                // Coba berbagai backend secara berurutan
-                $qrCode = null;
-                $backends = ['svg', 'png'];
-                $usedBackend = null;
-
-                foreach ($backends as $format) {
-                    try {
-                        if ($format === 'svg') {
-                            $qrCode = QrCode::format('svg')
-                                ->size(300)
-                                ->margin(2)
-                                ->generate($verifyUrl);
-                            $qrCodePath = 'qr_codes/qr_' . $externalId . '.svg';
-                            $usedBackend = 'svg';
-                        } else {
-                            $qrCode = QrCode::format('png')
-                                ->size(300)
-                                ->margin(2)
-                                ->generate($verifyUrl);
-                            $qrCodePath = 'qr_codes/qr_' . $externalId . '.png';
-                            $usedBackend = 'png';
-                        }
-
-                        // Jika berhasil, keluar dari loop
-                        break;
-                    } catch (Exception $backendException) {
-                        Log::warning('QR Code backend failed', [
-                            'backend' => $format,
-                            'error' => $backendException->getMessage()
-                        ]);
-                        continue;
-                    }
-                }
-
-                // Jika tidak ada backend yang berhasil
-                if (!$qrCode) {
-                    throw new Exception('All QR code backends failed');
-                }
-
-                // Store QR code image
-                Storage::disk('public')->put($qrCodePath, $qrCode);
-
-                // Generate full URL untuk QR code
-                $qrCodeFullUrl = Storage::disk('public')->url($qrCodePath);
-
-                // Log QR code generation
-                Log::info('QR Code Generated Successfully', [
-                    'buyer_id' => $buyer->id,
-                    'external_id' => $externalId,
-                    'qr_code_path' => $qrCodeFullUrl,
-                    'qr_code_file_path' => $qrCodePath,
-                    'verify_url' => $verifyUrl,
-                    'backend_used' => $usedBackend,
-                    'file_size' => Storage::disk('public')->size($qrCodePath)
-                ]);
-
-                $qrCodePathToStore = $qrCodeFullUrl;
-            } catch (Exception $qrException) {
-                // Jika gagal generate QR code, log error tapi tetap lanjutkan proses
-                Log::error('QR Code Generation Failed', [
-                    'buyer_id' => $buyer->id,
-                    'external_id' => $externalId,
-                    'error' => $qrException->getMessage(),
-                    'trace' => $qrException->getTraceAsString(),
-                    'php_extensions' => [
-                        'gd' => extension_loaded('gd'),
-                        'imagick' => extension_loaded('imagick'),
-                        'svg' => extension_loaded('svg')
-                    ]
-                ]);
-
-                $qrCodePathToStore = null;
-            }
-
-            // Update buyer dengan data invoice dan QR code full URL
-            $buyer->update([
-                'xendit_invoice_id' => $invoice['id'],
-                'xendit_invoice_url' => $invoice['invoice_url'],
-                'payment_status' => 'pending',
-                'qr_code_path' => $qrCodePathToStore
-            ]);
 
             // Commit transaction
             DB::commit();
 
-            // Redirect ke halaman invoice atau dashboard dengan link pembayaran
-            return redirect($invoice['invoice_url']);
+            // Redirect ke halaman pembayaran manual
+            return redirect()->route('payment.manual', ['external_id' => $externalId])
+                ->with('success', 'Pesanan berhasil dibuat. Silakan lakukan pembayaran.');
         } catch (Exception $e) {
             // Rollback transaction jika ada error
             DB::rollback();
 
-            // Enhanced error logging
-            Log::error('Xendit Invoice Creation Failed', [
+            Log::error('Order Creation Failed', [
                 'error_message' => $e->getMessage(),
-                'buyer_id' => $buyer->id ?? 'not_created',
                 'external_id' => $externalId ?? 'not_generated',
                 'ticket_id' => $ticket->id,
-                'quantity' => $request->quantity,
-                'customer_email' => $request->email ?? 'not_provided',
+                'customer_email' => $request->email,
                 'stack_trace' => $e->getTraceAsString()
             ]);
 
-            // Return dengan error message yang lebih detail
             return redirect()->route('order.create', ['ticket_id' => $ticket->id])
-                ->with('error', 'Gagal membuat invoice pembayaran: ' . $e->getMessage())
-                ->with('debug_info', 'Silakan cek log untuk detail error');
+                ->with('error', 'Gagal membuat pesanan: ' . $e->getMessage())
+                ->withInput();
+        }
+    }
+
+    /**
+     * Halaman pembayaran manual
+     */
+    public function manualPayment($external_id)
+    {
+        $buyer = Buyer::where('external_id', $external_id)->firstOrFail();
+        $ticket = Ticket::find($buyer->ticket_id);
+        $product = Product::first();
+
+        return view('payment.manual', compact('buyer', 'ticket', 'product'));
+    }
+
+    /**
+     * Upload bukti pembayaran
+     */
+    public function uploadPaymentProof(Request $request, $external_id)
+    {
+        // Debug: Log semua data request
+        Log::info('Upload Payment Proof Request', [
+            'external_id' => $external_id,
+            'has_file' => $request->hasFile('payment_proof'),
+            'all_files' => $request->allFiles(),
+            'request_data' => $request->all()
+        ]);
+
+        $request->validate([
+            'payment_proof' => 'required|image|mimes:jpeg,png,jpg|max:2048',
+            'payment_code' => 'nullable|string|max:50'
+        ], [
+            'payment_proof.required' => 'Bukti pembayaran harus diupload',
+            'payment_proof.image' => 'File harus berupa gambar',
+            'payment_proof.mimes' => 'Format file harus jpeg, png, atau jpg',
+            'payment_proof.max' => 'Ukuran file maksimal 2MB'
+        ]);
+
+        $buyer = Buyer::where('external_id', $external_id)->firstOrFail();
+
+        // Debug: Log buyer status
+        Log::info('Buyer Status', [
+            'buyer_id' => $buyer->id,
+            'payment_status' => $buyer->payment_status,
+            'existing_proof' => $buyer->payment_proof
+        ]);
+
+        // Cek status pembayaran
+        if ($buyer->payment_status === 'waiting_confirmation') {
+            Log::warning('Payment already waiting confirmation', ['buyer_id' => $buyer->id]);
+            return redirect()->back()
+                ->with('info', 'Bukti pembayaran sudah diupload sebelumnya dan sedang dalam proses verifikasi.');
+        }
+
+        if ($buyer->payment_status === 'confirmed') {
+            Log::warning('Payment already confirmed', ['buyer_id' => $buyer->id]);
+            return redirect()->back()
+                ->with('info', 'Pembayaran sudah dikonfirmasi.');
+        }
+
+        try {
+            // Debug: Cek file detail
+            if ($request->hasFile('payment_proof')) {
+                $file = $request->file('payment_proof');
+
+                Log::info('File Details', [
+                    'original_name' => $file->getClientOriginalName(),
+                    'size' => $file->getSize(),
+                    'mime_type' => $file->getMimeType(),
+                    'extension' => $file->getClientOriginalExtension(),
+                    'is_valid' => $file->isValid(),
+                    'error' => $file->getError()
+                ]);
+
+                // Pastikan folder exists
+                $uploadPath = 'payment_proofs';
+                if (!Storage::disk('public')->exists($uploadPath)) {
+                    Storage::disk('public')->makeDirectory($uploadPath);
+                    Log::info('Created directory: ' . $uploadPath);
+                }
+
+                // Hapus file lama jika ada
+                if ($buyer->payment_proof) {
+                    $oldFileName = basename($buyer->payment_proof);
+                    $oldFilePath = $uploadPath . '/' . $oldFileName;
+
+                    if (Storage::disk('public')->exists($oldFilePath)) {
+                        Storage::disk('public')->delete($oldFilePath);
+                        Log::info('Deleted old file: ' . $oldFilePath);
+                    }
+                }
+
+                // Generate filename yang unik
+                $fileName = 'payment_' . $external_id . '_' . time() . '.' . $file->getClientOriginalExtension();
+
+                // Upload file
+                $filePath = $file->storeAs($uploadPath, $fileName, 'public');
+
+                // Debug: Cek apakah file benar-benar tersimpan
+                if (Storage::disk('public')->exists($filePath)) {
+                    Log::info('File uploaded successfully', [
+                        'file_path' => $filePath,
+                        'full_path' => Storage::disk('public')->path($filePath),
+                        'url' => Storage::disk('public')->url($filePath)
+                    ]);
+                } else {
+                    Log::error('File upload failed - file not found after upload', [
+                        'expected_path' => $filePath
+                    ]);
+                    throw new Exception('File tidak berhasil disimpan');
+                }
+
+                // Update buyer dengan URL yang benar
+                $fileUrl = Storage::disk('public')->url($filePath);
+
+                $updateResult = $buyer->update([
+                    'payment_proof' => $fileUrl,
+                    'payment_code' => $request->payment_code,
+                    'payment_status' => 'waiting_confirmation'
+                ]);
+
+                Log::info('Buyer Updated', [
+                    'buyer_id' => $buyer->id,
+                    'update_result' => $updateResult,
+                    'new_payment_proof' => $buyer->fresh()->payment_proof,
+                    'new_status' => $buyer->fresh()->payment_status
+                ]);
+
+                return redirect()->back()
+                    ->with('success', 'Bukti pembayaran berhasil diupload. Pembayaran Anda akan segera diverifikasi.');
+            } else {
+                Log::error('No file found in request', [
+                    'has_file' => $request->hasFile('payment_proof'),
+                    'all_files' => $request->allFiles()
+                ]);
+
+                return redirect()->back()
+                    ->with('error', 'Tidak ada file yang diupload.')
+                    ->withInput();
+            }
+        } catch (Exception $e) {
+            Log::error('Payment Proof Upload Failed', [
+                'buyer_id' => $buyer->id,
+                'external_id' => $external_id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return redirect()->back()
+                ->with('error', 'Gagal mengupload bukti pembayaran: ' . $e->getMessage())
+                ->withInput();
         }
     }
 }
