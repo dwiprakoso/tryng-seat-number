@@ -579,41 +579,6 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Order Summary -->
-            <div class="col-lg-4">
-                <div class="order-summary">
-                    <h5><i class="fas fa-receipt me-2"></i> Ringkasan Pesanan</h5>
-
-                    <div class="summary-item">
-                        <span>Kategori Tiket:</span>
-                        <span>{{ $ticket->name }}</span>
-                    </div>
-
-                    <div class="summary-item">
-                        <span>Harga Tiket:</span>
-                        <span id="ticketPrice" data-price="{{ $ticket->price }}">
-                            Rp {{ number_format($ticket->price, 0, ',', '.') }}
-                        </span>
-                    </div>
-
-                    <div class="summary-item">
-                        <span>Biaya Admin (5%):</span>
-                        <span id="adminFee">
-                            Rp {{ number_format($ticket->price * 0.05, 0, ',', '.') }}
-                        </span>
-                    </div>
-
-                    <div class="total-section">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="fw-bold">Total:</span>
-                            <span class="total-price" id="totalPrice">
-                                Rp {{ number_format($ticket->price * 1.05, 0, ',', '.') }}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 

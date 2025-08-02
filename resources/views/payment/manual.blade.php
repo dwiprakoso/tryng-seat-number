@@ -222,6 +222,30 @@
             color: var(--primary);
         }
 
+        /* Payment Code Highlight */
+        .payment-code-highlight {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+            border: 2px solid #ffc107;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            text-align: center;
+        }
+
+        .payment-code-highlight h5 {
+            color: #856404;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .payment-code-number {
+            font-size: 2rem;
+            font-weight: 900;
+            color: #856404;
+            letter-spacing: 2px;
+            font-family: 'Courier New', monospace;
+        }
+
         /* Buttons */
         .btn-primary {
             background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
@@ -321,6 +345,10 @@
             .upload-area {
                 padding: 1.5rem;
             }
+
+            .payment-code-number {
+                font-size: 1.5rem;
+            }
         }
     </style>
 </head>
@@ -416,6 +444,7 @@
                 </div>
 
                 @if ($buyer->payment_status === 'pending' || $buyer->payment_status === 'waiting_confirmation')
+
                     <!-- Bank Account Information -->
                     <div class="card">
                         <div class="card-header">
@@ -424,7 +453,8 @@
                         <div class="card-body">
                             <div class="alert alert-warning">
                                 <i class="fas fa-exclamation-triangle me-2"></i>
-                                <strong>Penting!</strong> Transfer sesuai dengan total yang tertera dan simpan bukti
+                                <strong>Penting!</strong> Transfer tepat sesuai dengan total yang tertera <strong>(Rp
+                                    {{ number_format($buyer->total_amount, 0, ',', '.') }})</strong> dan simpan bukti
                                 transfer untuk diupload.
                             </div>
 
@@ -553,6 +583,10 @@
                         <div class="order-item">
                             <span>Biaya Admin (5%)</span>
                             <span>Rp {{ number_format($buyer->admin_fee, 0, ',', '.') }}</span>
+                        </div>
+                        <div class="order-item">
+                            <span>Kode Unik</span>
+                            <span>Rp {{ number_format($buyer->payment_code, 0, ',', '.') }}</span>
                         </div>
                         <div class="order-item">
                             <span><strong>Total Pembayaran</strong></span>

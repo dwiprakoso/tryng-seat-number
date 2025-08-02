@@ -66,7 +66,11 @@ class OrderController extends Controller
         // Hitung biaya berdasarkan quantity
         $ticket_price = $ticket->price * $quantity;
         $admin_fee = $ticket_price * 0.05; // 5% dari total harga tiket
-        $total_amount = $ticket_price + $admin_fee;
+
+        // Generate payment code 3 digit random yang unik
+        $payment_code = $this->generateUniquePaymentCode();
+
+        $total_amount = $ticket_price + $admin_fee + $payment_code;
 
         // Generate external ID yang unik
         do {
@@ -96,6 +100,7 @@ class OrderController extends Controller
             $buyer->ticket_id = $request->ticket_id;
             $buyer->ticket_price = $ticket_price;
             $buyer->admin_fee = $admin_fee;
+            $buyer->payment_code = $payment_code; // Simpan payment code
             $buyer->total_amount = $total_amount;
             $buyer->external_id = $externalId;
             $buyer->payment_status = 'pending';
@@ -126,6 +131,22 @@ class OrderController extends Controller
     }
 
     /**
+     * Generate unique payment code 3 digit
+     */
+    private function generateUniquePaymentCode()
+    {
+        do {
+            // Generate random 3 digit number (100-999)
+            $payment_code = rand(100, 999);
+
+            // Cek apakah payment code sudah ada di database
+            $exists = Buyer::where('payment_code', $payment_code)->exists();
+        } while ($exists);
+
+        return $payment_code;
+    }
+
+    /**
      * Halaman pembayaran manual
      */
     public function manualPayment($external_id)
@@ -152,7 +173,6 @@ class OrderController extends Controller
 
         $request->validate([
             'payment_proof' => 'required|image|mimes:jpeg,png,jpg|max:2048',
-            'payment_code' => 'nullable|string|max:50'
         ], [
             'payment_proof.required' => 'Bukti pembayaran harus diupload',
             'payment_proof.image' => 'File harus berupa gambar',
@@ -239,7 +259,6 @@ class OrderController extends Controller
 
                 $updateResult = $buyer->update([
                     'payment_proof' => $fileUrl,
-                    'payment_code' => $request->payment_code,
                     'payment_status' => 'waiting_confirmation'
                 ]);
 
