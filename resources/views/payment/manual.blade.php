@@ -494,7 +494,8 @@
                                     ($buyer->payment_status === 'waiting_confirmation' || $buyer->payment_status === 'confirmed'))
                                 <div class="alert alert-info">
                                     <i class="fas fa-check-circle me-2"></i>
-                                    Bukti pembayaran sudah diupload dan sedang menunggu verifikasi admin.
+                                    Bukti pembayaran sudah diupload dan sedang menunggu verifikasi admin. Proses
+                                    verifikasi maksimal 1x24 jam kerja.
                                 </div>
                                 <div class="text-center mb-3">
                                     <img src="{{ asset('storage/' . $buyer->payment_proof) }}" alt="Bukti Pembayaran"
