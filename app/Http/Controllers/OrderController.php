@@ -65,14 +65,14 @@ class OrderController extends Controller
                 ->withInput();
         }
 
-        // Hitung biaya berdasarkan quantity
+        // // Hitung biaya berdasarkan quantity
         $ticket_price = $ticket->price * $quantity;
-        $admin_fee = $ticket_price * 0.05; // 5% dari total harga tiket
+        // $admin_fee = $ticket_price * 0.05; // 5% dari total harga tiket
 
         // Generate payment code 3 digit random yang unik
         $payment_code = $this->generateUniquePaymentCode();
 
-        $total_amount = $ticket_price + $admin_fee + $payment_code;
+        $total_amount = $ticket_price + $payment_code;
 
         // Generate external ID yang unik
         do {
@@ -101,7 +101,7 @@ class OrderController extends Controller
             $buyer->quantity = $quantity;
             $buyer->ticket_id = $request->ticket_id;
             $buyer->ticket_price = $ticket_price;
-            $buyer->admin_fee = $admin_fee;
+            // $buyer->admin_fee = $admin_fee;
             $buyer->payment_code = $payment_code;
             $buyer->total_amount = $total_amount;
             $buyer->external_id = $externalId;

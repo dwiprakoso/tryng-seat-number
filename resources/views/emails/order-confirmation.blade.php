@@ -361,10 +361,10 @@
                         <span class="cost-label">Harga Tiket ({{ $buyer->quantity }}x)</span>
                         <span class="cost-value">Rp {{ number_format($buyer->ticket_price, 0, ',', '.') }}</span>
                     </div>
-                    <div class="cost-item">
+                    {{-- <div class="cost-item">
                         <span class="cost-label">Biaya Admin (5%)</span>
                         <span class="cost-value">Rp {{ number_format($buyer->admin_fee, 0, ',', '.') }}</span>
-                    </div>
+                    </div> --}}
                     <div class="cost-item">
                         <span class="cost-label">Kode Pembayaran Unik</span>
                         <span class="cost-value">Rp {{ number_format($buyer->payment_code, 0, ',', '.') }}</span>

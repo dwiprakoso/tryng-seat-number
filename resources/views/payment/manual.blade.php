@@ -581,10 +581,10 @@
                             <span>Harga Tiket</span>
                             <span>Rp {{ number_format($buyer->ticket_price, 0, ',', '.') }}</span>
                         </div>
-                        <div class="order-item">
+                        {{-- <div class="order-item">
                             <span>Biaya Admin (5%)</span>
                             <span>Rp {{ number_format($buyer->admin_fee, 0, ',', '.') }}</span>
-                        </div>
+                        </div> --}}
                         <div class="order-item">
                             <span>Kode Unik</span>
                             <span>Rp {{ number_format($buyer->payment_code, 0, ',', '.') }}</span>
