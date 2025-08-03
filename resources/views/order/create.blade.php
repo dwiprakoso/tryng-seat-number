@@ -327,60 +327,6 @@
             display: none;
         }
 
-        /* Order Summary */
-        .order-summary {
-            background-color: var(--white);
-            border: 1px solid var(--gray-200);
-            border-radius: 8px;
-            padding: 2rem;
-            position: sticky;
-            top: 90px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        }
-
-        .order-summary h5 {
-            color: var(--dark);
-            font-weight: 700;
-            margin-bottom: 1.5rem;
-            font-size: 1.125rem;
-        }
-
-        .summary-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.75rem 0;
-            border-bottom: 1px solid var(--gray-200);
-        }
-
-        .summary-item:last-child {
-            border-bottom: none;
-        }
-
-        .summary-item span:first-child {
-            color: var(--gray-600);
-            font-size: 14px;
-        }
-
-        .summary-item span:last-child {
-            font-weight: 600;
-            color: var(--dark);
-            font-size: 14px;
-        }
-
-        .total-section {
-            background-color: var(--gray-100);
-            border-radius: 8px;
-            padding: 1rem;
-            margin: 1rem 0;
-        }
-
-        .total-price {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--primary);
-        }
-
         /* Alerts */
         .alert {
             border: none;
@@ -424,18 +370,6 @@
         }
 
         /* Responsive */
-        @media (max-width: 992px) {
-            .order-summary {
-                position: relative;
-                top: auto;
-                margin-top: 2rem;
-            }
-
-            .container-custom {
-                padding: 1rem;
-            }
-        }
-
         @media (max-width: 768px) {
             .card-body {
                 padding: 1.5rem;
@@ -449,8 +383,8 @@
                 padding: 1rem;
             }
 
-            .order-summary {
-                padding: 1.5rem;
+            .container-custom {
+                padding: 1rem;
             }
         }
     </style>
@@ -480,7 +414,7 @@
 
         <div class="row">
             <!-- Order Form -->
-            <div class="col-lg-8">
+            <div class="col-12">
                 <div class="card">
                     <div class="card-body">
                         <h3 class="card-title">
@@ -579,41 +513,6 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Order Summary -->
-            <div class="col-lg-4">
-                <div class="order-summary">
-                    <h5><i class="fas fa-receipt me-2"></i> Ringkasan Pesanan</h5>
-
-                    <div class="summary-item">
-                        <span>Kategori Tiket:</span>
-                        <span>{{ $ticket->name }}</span>
-                    </div>
-
-                    <div class="summary-item">
-                        <span>Harga Tiket:</span>
-                        <span id="ticketPrice" data-price="{{ $ticket->price }}">
-                            Rp {{ number_format($ticket->price, 0, ',', '.') }}
-                        </span>
-                    </div>
-
-                    <div class="summary-item">
-                        <span>Biaya Admin (5%):</span>
-                        <span id="adminFee">
-                            Rp {{ number_format($ticket->price * 0.05, 0, ',', '.') }}
-                        </span>
-                    </div>
-
-                    <div class="total-section">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="fw-bold">Total:</span>
-                            <span class="total-price" id="totalPrice">
-                                Rp {{ number_format($ticket->price * 1.05, 0, ',', '.') }}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -643,33 +542,8 @@
 
         document.addEventListener('DOMContentLoaded', function() {
             const qtyInput = document.getElementById('quantity');
-            const ticketPriceEl = document.getElementById('ticketPrice');
-            const adminFeeEl = document.getElementById('adminFee');
-            const totalPriceEl = document.getElementById('totalPrice');
 
-            function updatePrices() {
-                let price = parseInt(ticketPriceEl.getAttribute('data-price'), 10);
-                let qty = parseInt(qtyInput.value, 10);
-
-                if (isNaN(qty) || qty < 1) qty = 1;
-                if (qty > 5) qty = 5;
-
-                let ticketTotal = price * qty;
-                let adminFee = Math.round(ticketTotal * 0.05);
-                let total = ticketTotal + adminFee;
-
-                ticketPriceEl.textContent = formatRupiah(ticketTotal);
-                adminFeeEl.textContent = formatRupiah(adminFee);
-                totalPriceEl.textContent = formatRupiah(total);
-            }
-
-            // Update harga saat halaman load
-            updatePrices();
-
-            // Update harga saat quantity berubah
-            qtyInput.addEventListener('input', updatePrices);
-
-            // Validasi form (tetap jaga validasi yang sudah ada)
+            // Validasi form
             document.getElementById('orderForm').addEventListener('submit', function(e) {
                 let isValid = true;
 
@@ -702,14 +576,6 @@
                     noHp.classList.remove('is-invalid');
                 }
 
-                // Quantity antara 1 sampai 5
-                const qtyVal = parseInt(qtyInput.value, 10);
-                if (isNaN(qtyVal) || qtyVal < 1 || qtyVal > 5) {
-                    qtyInput.classList.add('is-invalid');
-                    isValid = false;
-                } else {
-                    qtyInput.classList.remove('is-invalid');
-                }
                 // Validasi alamat lengkap
                 const alamat = document.getElementById('alamat_lengkap');
                 if (!alamat.value.trim() || alamat.value.trim().length < 5) {
