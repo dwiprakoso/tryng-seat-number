@@ -7,8 +7,10 @@ use App\Models\Buyer;
 use App\Models\Ticket;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use App\Mail\OrderConfirmation;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
@@ -100,11 +102,27 @@ class OrderController extends Controller
             $buyer->ticket_id = $request->ticket_id;
             $buyer->ticket_price = $ticket_price;
             $buyer->admin_fee = $admin_fee;
-            $buyer->payment_code = $payment_code; // Simpan payment code
+            $buyer->payment_code = $payment_code;
             $buyer->total_amount = $total_amount;
             $buyer->external_id = $externalId;
             $buyer->payment_status = 'pending';
             $buyer->save();
+
+            // Kirim email konfirmasi
+            try {
+                Mail::to($buyer->email)->send(new OrderConfirmation($buyer, $ticket));
+                Log::info('Order confirmation email sent successfully', [
+                    'external_id' => $externalId,
+                    'email' => $buyer->email
+                ]);
+            } catch (Exception $emailException) {
+                // Log error email tapi jangan gagalkan transaksi
+                Log::error('Failed to send order confirmation email', [
+                    'external_id' => $externalId,
+                    'email' => $buyer->email,
+                    'error' => $emailException->getMessage()
+                ]);
+            }
 
             // Commit transaction
             DB::commit();
@@ -129,7 +147,6 @@ class OrderController extends Controller
                 ->withInput();
         }
     }
-
     /**
      * Generate unique payment code 3 digit
      */
