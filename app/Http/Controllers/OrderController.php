@@ -242,12 +242,21 @@ class OrderController extends Controller
 
                 // Hapus file lama jika ada
                 if ($buyer->payment_proof) {
+                    // Jika payment_proof berupa URL lengkap, ambil hanya nama filenya
                     $oldFileName = basename($buyer->payment_proof);
                     $oldFilePath = $uploadPath . '/' . $oldFileName;
 
                     if (Storage::disk('public')->exists($oldFilePath)) {
                         Storage::disk('public')->delete($oldFilePath);
                         Log::info('Deleted old file: ' . $oldFilePath);
+                    }
+
+                    // Jika payment_proof sudah berupa path relatif
+                    if (strpos($buyer->payment_proof, 'http') === false) {
+                        if (Storage::disk('public')->exists($buyer->payment_proof)) {
+                            Storage::disk('public')->delete($buyer->payment_proof);
+                            Log::info('Deleted old file: ' . $buyer->payment_proof);
+                        }
                     }
                 }
 
@@ -271,11 +280,9 @@ class OrderController extends Controller
                     throw new Exception('File tidak berhasil disimpan');
                 }
 
-                // Update buyer dengan URL yang benar
-                $fileUrl = Storage::disk('public')->url($filePath);
-
+                // PERBAIKAN: Simpan hanya path relatif, bukan URL lengkap
                 $updateResult = $buyer->update([
-                    'payment_proof' => $fileUrl,
+                    'payment_proof' => $filePath, // Simpan: "payment_proofs/payment_ORDER-123_1234567890.jpg"
                     'payment_status' => 'waiting_confirmation'
                 ]);
 

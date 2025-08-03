@@ -468,9 +468,9 @@
                                     </div>
                                     <div class="col-md-8">
                                         <div class="bank-info">
-                                            <h6>Bank Central Asia (BCA)</h6>
-                                            <div class="account-number">1234567890</div>
-                                            <small class="text-muted">a.n. Event Management</small>
+                                            <h6>Bank Jateng</h6>
+                                            <div class="account-number">01021112012553</div>
+                                            <small class="text-muted">a.n. Cipta Kharisma Multi Raya</small>
                                         </div>
                                     </div>
                                     <div class="col-md-2 text-end">
@@ -489,54 +489,54 @@
                             <h4><i class="fas fa-upload"></i>Upload Bukti Pembayaran</h4>
                         </div>
                         <div class="card-body">
-                            @if ($buyer->payment_proof)
+                            @if (
+                                $buyer->payment_proof &&
+                                    ($buyer->payment_status === 'waiting_confirmation' || $buyer->payment_status === 'confirmed'))
                                 <div class="alert alert-info">
                                     <i class="fas fa-check-circle me-2"></i>
                                     Bukti pembayaran sudah diupload dan sedang menunggu verifikasi admin.
                                 </div>
                                 <div class="text-center mb-3">
-                                    <img src="{{ $buyer->payment_proof }}" alt="Bukti Pembayaran" class="img-fluid"
-                                        style="max-height: 300px; border-radius: 8px;">
+                                    <img src="{{ asset('storage/' . $buyer->payment_proof) }}" alt="Bukti Pembayaran"
+                                        class="img-fluid" style="max-height: 300px; border-radius: 8px;">
                                 </div>
-                            @endif
-
-                            <form action="{{ route('payment.upload', $buyer->external_id) }}" method="POST"
-                                enctype="multipart/form-data">
-                                @csrf
-                                <div class="mb-3">
-                                    <label for="payment_proof" class="form-label">Bukti Pembayaran <span
-                                            class="text-danger">*</span></label>
-                                    <div class="upload-area" id="uploadArea">
-                                        <div class="upload-icon">
-                                            <i class="fas fa-cloud-upload-alt"></i>
+                            @else
+                                <form action="{{ route('payment.upload', $buyer->external_id) }}" method="POST"
+                                    enctype="multipart/form-data">
+                                    @csrf
+                                    <div class="mb-3">
+                                        <label for="payment_proof" class="form-label">Bukti Pembayaran <span
+                                                class="text-danger">*</span></label>
+                                        <div class="upload-area" id="uploadArea">
+                                            <div class="upload-icon">
+                                                <i class="fas fa-cloud-upload-alt"></i>
+                                            </div>
+                                            <h6>Pilih atau Drop File Disini</h6>
+                                            <p class="text-muted mb-3">Format: JPG, PNG, JPEG (Max: 2MB)</p>
+                                            <input type="file" class="form-control" id="payment_proof"
+                                                name="payment_proof" accept="image/jpeg,image/png,image/jpg"
+                                                style="display: none;" required>
+                                            <button type="button" class="btn btn-primary"
+                                                onclick="document.getElementById('payment_proof').click()">
+                                                <i class="fas fa-folder-open me-2"></i>Pilih File
+                                            </button>
                                         </div>
-                                        <h6>Pilih atau Drop File Disini</h6>
-                                        <p class="text-muted mb-3">Format: JPG, PNG, JPEG (Max: 2MB)</p>
-                                        <input type="file" class="form-control" id="payment_proof"
-                                            name="payment_proof" accept="image/jpeg,image/png,image/jpg"
-                                            style="display: none;"
-                                            {{ $buyer->payment_status === 'waiting_confirmation' || $buyer->payment_status === 'confirmed' ? 'disabled' : 'required' }}>
-                                        <button type="button" class="btn btn-primary"
-                                            onclick="document.getElementById('payment_proof').click()">
-                                            <i class="fas fa-folder-open me-2"></i>Pilih File
-                                        </button>
+                                        @error('payment_proof')
+                                            <div class="text-danger mt-2">{{ $message }}</div>
+                                        @enderror
                                     </div>
-                                    @error('payment_proof')
-                                        <div class="text-danger mt-2">{{ $message }}</div>
-                                    @enderror
-                                </div>
 
-                                <div id="preview-container" class="mb-3" style="display: none;">
-                                    <img id="preview-image" src="" alt="Preview" class="img-fluid"
-                                        style="max-height: 200px; border-radius: 8px;">
-                                </div>
+                                    <div id="preview-container" class="mb-3" style="display: none;">
+                                        <img id="preview-image" src="" alt="Preview" class="img-fluid"
+                                            style="max-height: 200px; border-radius: 8px;">
+                                    </div>
 
-                                @if ($buyer->payment_status !== 'waiting_confirmation' && $buyer->payment_status !== 'confirmed')
-                                    <button type="submit" class="btn btn-primary btn-lg w-100">
+                                    <button type="submit" class="btn btn-primary btn-lg w-100" id="upload-btn"
+                                        disabled>
                                         <i class="fas fa-upload me-2"></i>Upload Bukti Pembayaran
                                     </button>
-                                @endif
-                            </form>
+                                </form>
+                            @endif
                         </div>
                     </div>
                 @endif
@@ -600,15 +600,6 @@
                                     <h6>Pembayaran Berhasil!</h6>
                                     <small>Tiket Anda sudah aktif</small>
                                 </div>
-                                @if ($buyer->qr_code_path)
-                                    <div class="text-center">
-                                        <h6 class="mb-2">QR Code Tiket</h6>
-                                        <img src="{{ $buyer->qr_code_path }}" alt="QR Code" class="img-fluid"
-                                            style="max-width: 150px;">
-                                        <br>
-                                        <small class="text-muted">Tunjukkan QR Code ini saat check-in</small>
-                                    </div>
-                                @endif
                             </div>
                         @endif
                     </div>
@@ -654,47 +645,54 @@
             const fileInput = document.getElementById('payment_proof');
             const previewContainer = document.getElementById('preview-container');
             const previewImage = document.getElementById('preview-image');
+            const uploadBtn = document.getElementById('upload-btn');
 
             // Handle file selection
-            fileInput.addEventListener('change', function(e) {
-                const file = e.target.files[0];
-                if (file) {
-                    handleFilePreview(file);
-                }
-            });
-
-            // Handle drag and drop
-            uploadArea.addEventListener('dragover', function(e) {
-                e.preventDefault();
-                uploadArea.classList.add('dragover');
-            });
-
-            uploadArea.addEventListener('dragleave', function(e) {
-                e.preventDefault();
-                uploadArea.classList.remove('dragover');
-            });
-
-            uploadArea.addEventListener('drop', function(e) {
-                e.preventDefault();
-                uploadArea.classList.remove('dragover');
-
-                const files = e.dataTransfer.files;
-                if (files.length > 0) {
-                    const file = files[0];
-                    if (file.type.startsWith('image/')) {
-                        fileInput.files = files;
+            if (fileInput) {
+                fileInput.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
                         handleFilePreview(file);
                     } else {
-                        alert('Hanya file gambar yang diperbolehkan!');
+                        resetPreview();
                     }
-                }
-            });
+                });
+            }
+
+            // Handle drag and drop
+            if (uploadArea) {
+                uploadArea.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    uploadArea.classList.add('dragover');
+                });
+
+                uploadArea.addEventListener('dragleave', function(e) {
+                    e.preventDefault();
+                    uploadArea.classList.remove('dragover');
+                });
+
+                uploadArea.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    uploadArea.classList.remove('dragover');
+
+                    const files = e.dataTransfer.files;
+                    if (files.length > 0) {
+                        const file = files[0];
+                        if (file.type.startsWith('image/')) {
+                            fileInput.files = files;
+                            handleFilePreview(file);
+                        } else {
+                            alert('Hanya file gambar yang diperbolehkan!');
+                        }
+                    }
+                });
+            }
 
             function handleFilePreview(file) {
                 // Validate file size (2MB = 2 * 1024 * 1024 bytes)
                 if (file.size > 2 * 1024 * 1024) {
                     alert('Ukuran file terlalu besar! Maksimal 2MB.');
-                    fileInput.value = '';
+                    resetFileInput();
                     return;
                 }
 
@@ -702,30 +700,63 @@
                 const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
                 if (!allowedTypes.includes(file.type)) {
                     alert('Format file tidak didukung! Gunakan JPG, PNG, atau JPEG.');
-                    fileInput.value = '';
+                    resetFileInput();
                     return;
                 }
 
                 // Show preview
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    previewImage.src = e.target.result;
-                    previewContainer.style.display = 'block';
+                    if (previewImage && previewContainer) {
+                        previewImage.src = e.target.result;
+                        previewContainer.style.display = 'block';
+                    }
                 };
                 reader.readAsDataURL(file);
 
                 // Update upload area
-                uploadArea.querySelector('h6').textContent = file.name;
-                uploadArea.querySelector('p').textContent = `Ukuran: ${(file.size / 1024 / 1024).toFixed(2)} MB`;
+                if (uploadArea) {
+                    const titleElement = uploadArea.querySelector('h6');
+                    const sizeElement = uploadArea.querySelector('p');
+                    if (titleElement) titleElement.textContent = file.name;
+                    if (sizeElement) sizeElement.textContent = `Ukuran: ${(file.size / 1024 / 1024).toFixed(2)} MB`;
+                }
+
+                // Enable upload button
+                if (uploadBtn) {
+                    uploadBtn.disabled = false;
+                }
+            }
+
+            function resetFileInput() {
+                if (fileInput) {
+                    fileInput.value = '';
+                }
+                resetPreview();
+            }
+
+            function resetPreview() {
+                if (previewContainer) {
+                    previewContainer.style.display = 'none';
+                }
+                if (previewImage) {
+                    previewImage.src = '';
+                }
+
+                // Reset upload area text
+                if (uploadArea) {
+                    const titleElement = uploadArea.querySelector('h6');
+                    const sizeElement = uploadArea.querySelector('p');
+                    if (titleElement) titleElement.textContent = 'Pilih atau Drop File Disini';
+                    if (sizeElement) sizeElement.textContent = 'Format: JPG, PNG, JPEG (Max: 2MB)';
+                }
+
+                // Disable upload button
+                if (uploadBtn) {
+                    uploadBtn.disabled = true;
+                }
             }
         });
-
-        // Auto refresh page every 30 seconds if payment is waiting confirmation
-        @if ($buyer->payment_status === 'waiting_confirmation')
-            setInterval(function() {
-                location.reload();
-            }, 30000);
-        @endif
     </script>
 </body>
 
