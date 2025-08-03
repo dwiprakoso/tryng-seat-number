@@ -461,20 +461,20 @@
                             <!-- Bank BCA -->
                             <div class="bank-card">
                                 <div class="row align-items-center">
-                                    {{-- <div class="col-md-2">
+                                    <div class="col-md-2">
                                         <div class="bank-logo d-flex align-items-center justify-content-center">
                                             <strong style="color: #003d7a;">BCA</strong>
                                         </div>
-                                    </div> --}}
+                                    </div>
                                     <div class="col-md-8">
                                         <div class="bank-info">
-                                            <h6>Bank Jateng</h6>
-                                            <div class="account-number">01021112012553</div>
-                                            <small class="text-muted">a.n. Cipta Kharisma Multi Raya</small>
+                                            <h6>Bank BCA</h6>
+                                            <div class="account-number">8915260973</div>
+                                            <small class="text-muted">a.n. Bagaskara Bayu Adhi</small>
                                         </div>
                                     </div>
                                     <div class="col-md-2 text-end">
-                                        <button class="copy-btn" onclick="copyToClipboard('01021112012553')">
+                                        <button class="copy-btn" onclick="copyToClipboard('8915260973')">
                                             <i class="fas fa-copy"></i> Copy
                                         </button>
                                     </div>
