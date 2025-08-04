@@ -16,11 +16,15 @@ class ProductController extends Controller
 
     public function store(Request $request)
     {
+        // Debug: Cek data yang diterima
+        // dd($request->all()); // Uncomment untuk debug
+
         $request->validate([
             'product_name' => 'required|string|max:255',
             'product_description' => 'nullable|string',
             'event_date' => 'required|date',
-            'location' => 'nullable|string|max:255', // ✅ Tambahkan validasi location
+            'end_date' => 'required|date|after_or_equal:event_date', // ✅ Validasi end_date harus setelah event_date
+            'location' => 'nullable|string|max:255',
             'avatar' => 'nullable|image|mimes:png,jpg,jpeg|max:2048'
         ]);
 
@@ -28,7 +32,8 @@ class ProductController extends Controller
         $product->product_name = $request->product_name;
         $product->product_description = $request->product_description;
         $product->event_date = $request->event_date;
-        $product->location = $request->location; // ✅ Simpan location
+        $product->end_date = $request->end_date; // ✅ Pastikan ini ada
+        $product->location = $request->location;
 
         if ($request->hasFile('avatar')) {
             $avatarPath = $request->file('avatar')->store('products', 'public');
@@ -40,21 +45,22 @@ class ProductController extends Controller
         return redirect()->back()->with('success', 'Product created successfully!');
     }
 
-
     public function update(Request $request, Product $product)
     {
         $request->validate([
             'product_name' => 'required|string|max:255',
             'product_description' => 'nullable|string',
             'event_date' => 'required|date',
-            'location' => 'nullable|string|max:255', // ✅ Validasi lokasi
+            'end_date' => 'required|date|after_or_equal:event_date', // ✅ Tambahkan validasi end_date
+            'location' => 'nullable|string|max:255',
             'avatar' => 'nullable|image|mimes:png,jpg,jpeg|max:2048'
         ]);
 
         $product->product_name = $request->product_name;
         $product->product_description = $request->product_description;
         $product->event_date = $request->event_date;
-        $product->location = $request->location; // ✅ Simpan lokasi
+        $product->end_date = $request->end_date; // ✅ Tambahkan ini yang hilang!
+        $product->location = $request->location;
 
         if ($request->hasFile('avatar')) {
             $avatarPath = $request->file('avatar')->store('products', 'public');

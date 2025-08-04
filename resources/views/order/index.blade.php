@@ -298,7 +298,10 @@
 
                         <div class="event-meta">
                             <i class="fas fa-calendar-alt"></i>
-                            <span>{{ \Carbon\Carbon::parse($product->event_date)->translatedFormat('d M Y') }}</span>
+                            <span>{{ $product->event_date->translatedFormat('d M Y') }}</span>
+                            @if ($product->end_date)
+                                <span> &nbsp;-&nbsp;{{ $product->end_date->translatedFormat('d M Y') }}</span>
+                            @endif
                         </div>
 
                         <div class="event-meta">

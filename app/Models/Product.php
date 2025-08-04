@@ -14,12 +14,15 @@ class Product extends Model
         'location',
         'product_description',
         'event_date',
+        'end_date',
         'avatar'
     ];
 
     protected $casts = [
-        'event_date' => 'date'
+        'event_date' => 'date',
+        'end_date' => 'date'  // ✅ Tambahkan ini!
     ];
+
     public function tickets()
     {
         return $this->hasMany(Ticket::class);

@@ -115,6 +115,16 @@
                                         value="{{ $product ? $product->event_date->format('Y-m-d') : '' }}" />
                                 </div>
                                 <!--end::Input-->
+                                <!--begin::Label-->
+                                <label class="required form-label">Event End</label>
+                                <!--end::Label-->
+                                <!--begin::Input-->
+                                <div class="position-relative d-flex align-items-center">
+                                    <i class="ki-outline ki-calendar-8 fs-2 position-absolute ms-4"></i>
+                                    <input type="date" name="end_date" class="form-control form-control-solid ps-12"
+                                        value="{{ $product && $product->end_date ? $product->end_date->format('Y-m-d') : '' }}" />
+                                </div>
+                                <!--end::Input-->
                                 <!--begin::Description-->
                                 <div class="text-muted fs-7 mt-2">Set the date when the event will take place.</div>
                                 <!--end::Description-->
