@@ -75,10 +75,19 @@ Route::middleware('auth')->group(function () {
     Route::get('/discounts/{discount}/edit', [DiskonController::class, 'edit'])->name('admin.discounts.edit');
     Route::put('/discounts/{discount}', [DiskonController::class, 'update'])->name('admin.discounts.update');
 
-    Route::get('/buyer', [BuyerController::class, 'index'])->name('admin.buyer.index');
-    Route::get('/export-buyers', [BuyerController::class, 'export'])->name('admin.buyer.export');
+    // Route::get('/buyer', [BuyerController::class, 'index'])->name('admin.buyer.index');
+    // Route::get('/export-buyers', [BuyerController::class, 'export'])->name('admin.buyer.export');
 
     // Admin payment confirmation routes
+    // Route::post('/buyer/{id}/confirm-payment', [BuyerController::class, 'confirmPayment'])->name('admin.buyer.confirm-payment');
+    // Route::post('/buyer/{id}/reject-payment', [BuyerController::class, 'rejectPayment'])->name('admin.buyer.reject-payment');
+
+    // Existing buyer routes
+    Route::get('/buyer', [BuyerController::class, 'index'])->name('admin.buyer.index');
+    Route::get('/buyer/export', [BuyerController::class, 'export'])->name('admin.buyer.export');
+
+    // New payment confirmation routes
+    Route::get('/buyer/{id}/payment-proof', [BuyerController::class, 'getPaymentProof'])->name('admin.buyer.payment-proof');
     Route::post('/buyer/{id}/confirm-payment', [BuyerController::class, 'confirmPayment'])->name('admin.buyer.confirm-payment');
     Route::post('/buyer/{id}/reject-payment', [BuyerController::class, 'rejectPayment'])->name('admin.buyer.reject-payment');
 

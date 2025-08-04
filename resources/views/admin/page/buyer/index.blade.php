@@ -179,6 +179,7 @@
                                 <option value="">Semua Status</option>
                                 <option value="paid">Paid</option>
                                 <option value="pending">Pending</option>
+                                <option value="waiting_confirmation">Waiting Confirmation</option>
                                 <option value="failed">Failed</option>
                             </select>
                         </div>
@@ -232,6 +233,7 @@
                                     <th class="min-w-70px">Qty</th>
                                     <th class="min-w-100px">Status</th>
                                     <th class="min-w-100px">Tanggal</th>
+                                    <th class="min-w-100px">Action</th>
                                 </tr>
                             </thead>
                             <!--end::Table head-->
@@ -274,12 +276,13 @@
                                                 $statusColors = [
                                                     'paid' => 'success',
                                                     'pending' => 'warning',
+                                                    'waiting_confirmation' => 'info',
                                                     'failed' => 'danger',
                                                 ];
                                                 $color = $statusColors[$buyer->payment_status] ?? 'secondary';
                                             @endphp
                                             <div class="badge badge-light-{{ $color }} fw-bold">
-                                                {{ ucfirst($buyer->payment_status) }}
+                                                {{ ucfirst(str_replace('_', ' ', $buyer->payment_status)) }}
                                             </div>
                                         </td>
                                         <td>
@@ -290,10 +293,25 @@
                                                     class="text-muted fw-semibold fs-7">{{ $buyer->created_at->format('H:i') }}</span>
                                             </div>
                                         </td>
+                                        <td>
+                                            @if ($buyer->payment_status === 'waiting_confirmation')
+                                                <button type="button"
+                                                    class="btn btn-sm btn-warning btn-payment-confirmation"
+                                                    data-buyer-id="{{ $buyer->id }}" title="Konfirmasi Pembayaran">
+                                                    <i class="ki-duotone ki-check-circle fs-3">
+                                                        <span class="path1"></span>
+                                                        <span class="path2"></span>
+                                                    </i>
+                                                    Konfirmasi
+                                                </button>
+                                            @else
+                                                <span class="text-muted fs-7">-</span>
+                                            @endif
+                                        </td>
                                     </tr>
                                 @empty
                                     <tr id="emptyState">
-                                        <td colspan="8" class="text-center py-10">
+                                        <td colspan="9" class="text-center py-10">
                                             <div class="d-flex flex-column align-items-center">
                                                 <i class="ki-duotone ki-file-deleted fs-3x text-muted mb-4">
                                                     <span class="path1"></span>
@@ -392,6 +410,200 @@
         <!--end::Content container-->
     </div>
     <!--end::Content-->
+
+    <!--begin::Payment Confirmation Modal-->
+    <div class="modal fade" id="paymentConfirmationModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="fw-bold">Konfirmasi Pembayaran</h2>
+                    <div class="btn btn-icon btn-sm btn-active-icon-primary" data-bs-dismiss="modal">
+                        <i class="ki-duotone ki-cross fs-1">
+                            <span class="path1"></span>
+                            <span class="path2"></span>
+                        </i>
+                    </div>
+                </div>
+                <div class="modal-body scroll-y mx-5 mx-xl-15 my-7">
+                    <div id="modalLoading" class="text-center py-10">
+                        <div class="spinner-border spinner-border-lg text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+
+                    <div id="modalContent" class="d-none">
+                        <!--begin::Order Details-->
+                        <div class="card card-flush border mb-7">
+                            <div class="card-header">
+                                <div class="card-title">
+                                    <h3 class="fw-bold m-0">Detail Pesanan</h3>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="row mb-5">
+                                    <div class="col-md-6">
+                                        <div class="fw-semibold text-gray-600 mb-2">ID Pesanan:</div>
+                                        <div class="fw-bold text-gray-800" id="modal-external-id">-</div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="fw-semibold text-gray-600 mb-2">Tanggal Pesanan:</div>
+                                        <div class="fw-bold text-gray-800" id="modal-created-at">-</div>
+                                    </div>
+                                </div>
+                                <div class="row mb-5">
+                                    <div class="col-md-6">
+                                        <div class="fw-semibold text-gray-600 mb-2">Nama Pembeli:</div>
+                                        <div class="fw-bold text-gray-800" id="modal-nama-lengkap">-</div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="fw-semibold text-gray-600 mb-2">Email:</div>
+                                        <div class="fw-bold text-gray-800" id="modal-email">-</div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="fw-semibold text-gray-600 mb-2">No. Handphone:</div>
+                                        <div class="fw-bold text-gray-800" id="modal-no-handphone">-</div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="fw-semibold text-gray-600 mb-2">Kategori Tiket:</div>
+                                        <div class="fw-bold text-gray-800" id="modal-ticket-name">-</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!--end::Order Details-->
+
+                        <!--begin::Payment Details-->
+                        <div class="card card-flush border mb-7">
+                            <div class="card-header">
+                                <div class="card-title">
+                                    <h3 class="fw-bold m-0">Detail Pembayaran</h3>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-row-bordered table-row-gray-100 align-middle gs-0 gy-3">
+                                        <tbody>
+                                            <tr>
+                                                <td class="fw-semibold text-muted">Harga Tiket</td>
+                                                <td class="text-end fw-bold" id="modal-ticket-price">Rp 0</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="fw-semibold text-muted">Quantity</td>
+                                                <td class="text-end fw-bold" id="modal-quantity">0</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="fw-semibold text-muted">Biaya Admin</td>
+                                                <td class="text-end fw-bold" id="modal-admin-fee">Rp 0</td>
+                                            </tr>
+                                            <tr class="border-bottom-0">
+                                                <td colspan="2">
+                                                    <hr class="my-2">
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="fw-bold text-dark fs-6">Total Pembayaran</td>
+                                                <td class="text-end fw-bold text-primary fs-6" id="modal-total-amount">Rp
+                                                    0</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <!--end::Payment Details-->
+
+                        <!--begin::Payment Proof-->
+                        <div class="card card-flush border mb-7">
+                            <div class="card-header">
+                                <div class="card-title">
+                                    <h3 class="fw-bold m-0">Bukti Pembayaran</h3>
+                                </div>
+                            </div>
+                            <div class="card-body text-center">
+                                <div id="paymentProofContainer">
+                                    <div id="noPaymentProof" class="d-none">
+                                        <i class="ki-duotone ki-file-deleted fs-3x text-muted mb-4">
+                                            <span class="path1"></span>
+                                            <span class="path2"></span>
+                                        </i>
+                                        <p class="text-muted">Tidak ada bukti pembayaran</p>
+                                    </div>
+                                    <div id="paymentProofImage" class="d-none">
+                                        <img id="modal-payment-proof" src="" alt="Bukti Pembayaran"
+                                            class="img-fluid rounded shadow-sm" style="max-height: 400px;">
+                                        <div class="mt-3">
+                                            <a href="#" id="modal-payment-proof-link" target="_blank"
+                                                class="btn btn-sm btn-light-primary">
+                                                <i class="ki-duotone ki-eye fs-3">
+                                                    <span class="path1"></span>
+                                                    <span class="path2"></span>
+                                                    <span class="path3"></span>
+                                                </i>
+                                                Lihat Ukuran Penuh
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!--end::Payment Proof-->
+
+                        <!--begin::Rejection Reason-->
+                        <div id="rejectionReasonSection" class="d-none">
+                            <div class="card card-flush border border-danger mb-7">
+                                <div class="card-header">
+                                    <div class="card-title">
+                                        <h3 class="fw-bold m-0 text-danger">Alasan Penolakan</h3>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="form-group">
+                                        <label for="rejectionReason" class="fw-semibold text-muted mb-2">Berikan alasan
+                                            penolakan pembayaran:</label>
+                                        <textarea class="form-control" id="rejectionReason" rows="4"
+                                            placeholder="Masukkan alasan penolakan pembayaran..."></textarea>
+                                        <div class="invalid-feedback" id="rejectionReasonError"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!--end::Rejection Reason-->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Tutup</button>
+                    <div id="modalActions" class="d-none">
+                        <button type="button" class="btn btn-danger me-3" id="rejectPaymentButton">
+                            <i class="ki-duotone ki-cross-circle fs-3">
+                                <span class="path1"></span>
+                                <span class="path2"></span>
+                            </i>
+                            Tolak Pembayaran
+                        </button>
+                        <button type="button" class="btn btn-success" id="confirmPaymentButton">
+                            <i class="ki-duotone ki-check-circle fs-3">
+                                <span class="path1"></span>
+                                <span class="path2"></span>
+                            </i>
+                            Konfirmasi Pembayaran
+                        </button>
+                    </div>
+                    <div id="rejectionActions" class="d-none">
+                        <button type="button" class="btn btn-light me-3" id="cancelRejectionButton">Batal</button>
+                        <button type="button" class="btn btn-danger" id="submitRejectionButton">
+                            <span class="indicator-label">Tolak Pembayaran</span>
+                            <span class="indicator-progress d-none">
+                                <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
+                            </span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--end::Payment Confirmation Modal-->
 @endsection
 
 @push('scripts')
@@ -412,23 +624,371 @@
             const paginationWrapper = document.querySelector('#paginationWrapper');
             const emptyState = document.querySelector('#emptyState');
 
+            // Modal Elements
+            const paymentModal = document.querySelector('#paymentConfirmationModal');
+            const modalLoading = document.querySelector('#modalLoading');
+            const modalContent = document.querySelector('#modalContent');
+            const modalActions = document.querySelector('#modalActions');
+            const rejectionSection = document.querySelector('#rejectionReasonSection');
+            const rejectionActions = document.querySelector('#rejectionActions');
+
+            // Buttons
+            const confirmPaymentButton = document.querySelector('#confirmPaymentButton');
+            const rejectPaymentButton = document.querySelector('#rejectPaymentButton');
+            const cancelRejectionButton = document.querySelector('#cancelRejectionButton');
+            const submitRejectionButton = document.querySelector('#submitRejectionButton');
+
             // Store original data
             const originalRows = Array.from(table.querySelectorAll('tr:not(#emptyState)'));
             const totalOriginalCount = originalRows.length;
-
-            // Store original total count from the page
             const originalTotalCount = totalResults ? parseInt(totalResults.textContent) : totalOriginalCount;
+
+            let currentBuyerId = null;
 
             // Initialize Select2 if available
             if (typeof $ !== 'undefined' && $.fn.select2) {
                 $('#statusFilter').select2({
                     placeholder: "Filter Status",
                     allowClear: true,
-                    minimumResultsForSearch: Infinity // Disable search in dropdown
+                    minimumResultsForSearch: Infinity
                 });
             }
 
-            // Filter function
+            // Payment Confirmation Modal Handler
+            document.addEventListener('click', function(e) {
+                if (e.target.closest('.btn-payment-confirmation')) {
+                    const button = e.target.closest('.btn-payment-confirmation');
+                    const buyerId = button.getAttribute('data-buyer-id');
+                    showPaymentConfirmationModal(buyerId);
+                }
+            });
+
+            // Show Payment Confirmation Modal
+            function showPaymentConfirmationModal(buyerId) {
+                currentBuyerId = buyerId;
+
+                // Reset modal state
+                modalLoading.classList.remove('d-none');
+                modalContent.classList.add('d-none');
+                modalActions.classList.add('d-none');
+                rejectionSection.classList.add('d-none');
+                rejectionActions.classList.add('d-none');
+
+                // Show modal
+                const modal = new bootstrap.Modal(paymentModal);
+                modal.show();
+
+                // Fetch payment proof data dengan URL yang benar
+                fetch(`{{ route('admin.buyer.payment-proof', '') }}/${buyerId}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            populateModalData(data.data);
+                            modalLoading.classList.add('d-none');
+                            modalContent.classList.remove('d-none');
+                            modalActions.classList.remove('d-none');
+                        } else {
+                            showModalError(data.message || 'Gagal memuat data pembayaran');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showModalError('Terjadi kesalahan saat memuat data: ' + error.message);
+                    });
+            }
+
+            // Populate Modal Data
+            function populateModalData(data) {
+                document.getElementById('modal-external-id').textContent = data.external_id || '-';
+
+                // Format tanggal dengan benar
+                let formattedDate = '-';
+                if (data.created_at) {
+                    try {
+                        const date = new Date(data.created_at);
+                        formattedDate = date.toLocaleDateString('id-ID', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        });
+                    } catch (e) {
+                        formattedDate = data.created_at;
+                    }
+                }
+                document.getElementById('modal-created-at').textContent = formattedDate;
+
+                document.getElementById('modal-nama-lengkap').textContent = data.nama_lengkap || '-';
+                document.getElementById('modal-email').textContent = data.email || '-';
+                document.getElementById('modal-no-handphone').textContent = data.no_handphone || '-';
+                document.getElementById('modal-ticket-name').textContent = data.ticket_name || '-';
+                document.getElementById('modal-ticket-price').textContent = 'Rp ' + formatNumber(data
+                    .ticket_price || 0);
+                document.getElementById('modal-quantity').textContent = data.quantity || 0;
+                document.getElementById('modal-admin-fee').textContent = 'Rp ' + formatNumber(data.admin_fee || 0);
+                document.getElementById('modal-total-amount').textContent = 'Rp ' + formatNumber(data
+                    .total_amount || 0);
+
+                // Handle payment proof dengan pengecekan yang lebih baik
+                const paymentProofContainer = document.getElementById('paymentProofContainer');
+                const noPaymentProof = document.getElementById('noPaymentProof');
+                const paymentProofImage = document.getElementById('paymentProofImage');
+                const modalPaymentProof = document.getElementById('modal-payment-proof');
+                const modalPaymentProofLink = document.getElementById('modal-payment-proof-link');
+
+                if (data.payment_proof && data.payment_proof.trim() !== '') {
+                    // Pastikan URL payment proof benar
+                    let proofUrl = data.payment_proof;
+
+                    // Jika tidak dimulai dengan http/https, tambahkan storage path
+                    if (!proofUrl.startsWith('http')) {
+                        proofUrl = `/storage/${data.payment_proof}`;
+                    }
+
+                    modalPaymentProof.src = proofUrl;
+                    modalPaymentProofLink.href = proofUrl;
+
+                    // Handle error loading image
+                    modalPaymentProof.onerror = function() {
+                        console.error('Failed to load image:', proofUrl);
+                        noPaymentProof.classList.remove('d-none');
+                        paymentProofImage.classList.add('d-none');
+                    };
+
+                    modalPaymentProof.onload = function() {
+                        noPaymentProof.classList.add('d-none');
+                        paymentProofImage.classList.remove('d-none');
+                    };
+
+                } else {
+                    noPaymentProof.classList.remove('d-none');
+                    paymentProofImage.classList.add('d-none');
+                }
+            }
+
+            // Show Modal Error
+            function showModalError(message) {
+                modalLoading.classList.add('d-none');
+                modalContent.innerHTML = `
+                    <div class="text-center py-10">
+                        <i class="ki-duotone ki-cross-circle fs-3x text-danger mb-4">
+                            <span class="path1"></span>
+                            <span class="path2"></span>
+                        </i>
+                        <p class="text-muted">${message}</p>
+                    </div>
+                `;
+                modalContent.classList.remove('d-none');
+            }
+
+            // Confirm Payment
+            confirmPaymentButton.addEventListener('click', function() {
+                if (!currentBuyerId) return;
+
+                // Show loading
+                const button = this;
+                const originalText = button.innerHTML;
+                button.innerHTML = `
+                        <span class="spinner-border spinner-border-sm align-middle me-2"></span>
+                        Memproses...
+                    `;
+                button.disabled = true;
+
+                fetch(`{{ route('admin.buyer.confirm-payment', '') }}/${currentBuyerId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
+                                .getAttribute('content')
+                        }
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            // Close modal
+                            bootstrap.Modal.getInstance(paymentModal).hide();
+
+                            // Show success message
+                            showToast('success', 'Berhasil!', data.message);
+
+                            // Update row status in table without reload
+                            updateRowStatus(currentBuyerId, 'paid');
+
+                            // Optional: reload setelah delay
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 1500);
+                        } else {
+                            showToast('error', 'Gagal!', data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showToast('error', 'Error!',
+                            'Terjadi kesalahan saat mengkonfirmasi pembayaran: ' + error.message);
+                    })
+                    .finally(() => {
+                        button.innerHTML = originalText;
+                        button.disabled = false;
+                    });
+            });
+
+            function updateRowStatus(buyerId, newStatus) {
+                const rows = document.querySelectorAll('tr[data-buyer-id="' + buyerId + '"]');
+                rows.forEach(row => {
+                    const statusBadge = row.querySelector('.badge');
+                    const actionCell = row.querySelector('td:last-child');
+
+                    if (statusBadge) {
+                        statusBadge.className = 'badge badge-light-success fw-bold';
+                        statusBadge.textContent = 'Paid';
+                    }
+
+                    if (actionCell) {
+                        actionCell.innerHTML = '<span class="text-muted fs-7">-</span>';
+                    }
+
+                    // Update data attribute
+                    row.setAttribute('data-status', newStatus);
+                });
+            }
+
+            // Reject Payment Button
+            rejectPaymentButton.addEventListener('click', function() {
+                modalActions.classList.add('d-none');
+                rejectionSection.classList.remove('d-none');
+                rejectionActions.classList.remove('d-none');
+                document.getElementById('rejectionReason').focus();
+            });
+
+            // Cancel Rejection
+            cancelRejectionButton.addEventListener('click', function() {
+                modalActions.classList.remove('d-none');
+                rejectionSection.classList.add('d-none');
+                rejectionActions.classList.add('d-none');
+                document.getElementById('rejectionReason').value = '';
+                document.getElementById('rejectionReasonError').textContent = '';
+            });
+
+            // Submit Rejection
+            submitRejectionButton.addEventListener('click', function() {
+                const reason = document.getElementById('rejectionReason').value.trim();
+                const errorElement = document.getElementById('rejectionReasonError');
+                const reasonInput = document.getElementById('rejectionReason');
+
+                // Reset validation
+                reasonInput.classList.remove('is-invalid');
+                errorElement.textContent = '';
+
+                // Validate reason
+                if (!reason) {
+                    errorElement.textContent = 'Alasan penolakan harus diisi';
+                    reasonInput.classList.add('is-invalid');
+                    reasonInput.focus();
+                    return;
+                }
+
+                if (reason.length < 10) {
+                    errorElement.textContent = 'Alasan penolakan minimal 10 karakter';
+                    reasonInput.classList.add('is-invalid');
+                    reasonInput.focus();
+                    return;
+                }
+
+                // Show loading
+                const button = this;
+                const indicator = button.querySelector('.indicator-progress');
+                const label = button.querySelector('.indicator-label');
+
+                if (indicator) indicator.classList.remove('d-none');
+                if (label) label.textContent = 'Memproses...';
+                button.disabled = true;
+
+                fetch(`{{ route('admin.buyer.reject-payment', '') }}/${currentBuyerId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
+                                .getAttribute('content')
+                        },
+                        body: JSON.stringify({
+                            reason: reason
+                        })
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            // Close modal
+                            bootstrap.Modal.getInstance(paymentModal).hide();
+
+                            // Show success message
+                            showToast('success', 'Berhasil!', data.message);
+
+                            // Update row status
+                            updateRowStatus(currentBuyerId, 'failed');
+
+                            // Reload page to update data
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 1500);
+                        } else {
+                            showToast('error', 'Gagal!', data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showToast('error', 'Error!', 'Terjadi kesalahan saat menolak pembayaran: ' +
+                            error.message);
+                    })
+                    .finally(() => {
+                        if (indicator) indicator.classList.add('d-none');
+                        if (label) label.textContent = 'Tolak Pembayaran';
+                        button.disabled = false;
+                    });
+            });
+
+            // Helper Functions
+            function formatNumber(number) {
+                return new Intl.NumberFormat('id-ID').format(number);
+            }
+
+            function showToast(type, title, message) {
+                // Implement your toast notification here
+                // This is a basic implementation
+                const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+                const alert = document.createElement('div');
+                alert.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
+                alert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+                alert.innerHTML = `
+                    <strong>${title}</strong> ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                document.body.appendChild(alert);
+
+                setTimeout(() => {
+                    if (alert.parentNode) {
+                        alert.parentNode.removeChild(alert);
+                    }
+                }, 5000);
+            }
+
+            // Filter function (existing code)
             function applyFilters() {
                 const searchValue = searchInput ? searchInput.value.toLowerCase().trim() : '';
                 const statusValue = statusFilter ? statusFilter.value.toLowerCase() : '';
@@ -437,33 +997,22 @@
                 let hasActiveFilters = searchValue || statusValue;
                 let filterDescriptions = [];
 
-                console.log('Applying filters:', {
-                    searchValue,
-                    statusValue,
-                    hasActiveFilters
-                });
-
-                // Hide empty state initially
                 if (emptyState) emptyState.style.display = 'none';
 
-                // Show all rows first, then filter
                 originalRows.forEach(function(row) {
                     const searchData = row.getAttribute('data-search') || '';
                     const rowStatus = row.getAttribute('data-status') || '';
 
                     let showRow = true;
 
-                    // Search filter - check if search value is found in search data
                     if (searchValue && !searchData.includes(searchValue)) {
                         showRow = false;
                     }
 
-                    // Status filter - exact match
                     if (statusValue && rowStatus !== statusValue) {
                         showRow = false;
                     }
 
-                    // Show/hide row
                     if (showRow) {
                         row.style.display = '';
                         visibleCount++;
@@ -472,18 +1021,14 @@
                     }
                 });
 
-                console.log('Visible count:', visibleCount);
-
-                // Build filter descriptions
                 if (searchValue) {
                     filterDescriptions.push(`Pencarian: "${searchValue}"`);
                 }
                 if (statusValue) {
-                    const statusText = statusValue.charAt(0).toUpperCase() + statusValue.slice(1);
+                    const statusText = statusValue.charAt(0).toUpperCase() + statusValue.slice(1).replace('_', ' ');
                     filterDescriptions.push(`Status: ${statusText}`);
                 }
 
-                // Show/hide filter info
                 if (hasActiveFilters && filterDescriptions.length > 0) {
                     if (filterInfo) {
                         filterInfo.classList.remove('d-none');
@@ -506,7 +1051,6 @@
                     }
                 }
 
-                // Show/hide no results message
                 if (visibleCount === 0 && hasActiveFilters) {
                     if (noResults) {
                         noResults.classList.remove('d-none');
@@ -521,21 +1065,17 @@
                     if (paginationWrapper && !hasActiveFilters) {
                         paginationWrapper.style.display = '';
                     } else if (paginationWrapper && hasActiveFilters) {
-                        // Hide pagination when filtering
                         paginationWrapper.style.display = 'none';
                     }
 
-                    // Show empty state if no original data and no filters
                     if (totalOriginalCount === 0 && !hasActiveFilters && emptyState) {
                         emptyState.style.display = '';
                     }
                 }
 
-                // Update row numbers for visible rows
                 updateRowNumbers();
             }
 
-            // Update row numbers for visible rows
             function updateRowNumbers() {
                 let visibleIndex = 1;
                 originalRows.forEach(function(row) {
@@ -548,7 +1088,6 @@
                 });
             }
 
-            // Debounce function for search input
             function debounce(func, wait) {
                 let timeout;
                 return function executedFunction(...args) {
@@ -561,15 +1100,12 @@
                 };
             }
 
-            // Event listeners
+            // Event listeners for search and filter (existing code)
             if (searchInput) {
-                // Real-time search with debounce
                 searchInput.addEventListener('input', debounce(function() {
-                    console.log('Search input changed:', this.value);
                     applyFilters();
-                }, 200)); // 200ms delay for real-time feel
+                }, 200));
 
-                // Also trigger on keyup for immediate feedback
                 searchInput.addEventListener('keyup', function() {
                     if (this.value === '') {
                         applyFilters();
@@ -578,33 +1114,25 @@
             }
 
             if (statusFilter) {
-                // Handle both regular select and Select2 change events
                 statusFilter.addEventListener('change', function() {
-                    console.log('Status filter changed:', this.value);
                     applyFilters();
                 });
 
-                // For Select2
                 if (typeof $ !== 'undefined') {
                     $('#statusFilter').on('select2:select select2:clear', function() {
-                        console.log('Select2 status changed:', this.value);
-                        setTimeout(applyFilters, 50); // Small delay to ensure value is updated
+                        setTimeout(applyFilters, 50);
                     });
                 }
             }
 
-            // Reset filters
             if (resetButton) {
                 resetButton.addEventListener('click', function() {
-                    console.log('Resetting filters');
-
                     if (searchInput) {
                         searchInput.value = '';
                     }
 
                     if (statusFilter) {
                         statusFilter.value = '';
-                        // Reset Select2 if it exists
                         if (typeof $ !== 'undefined' && $('#statusFilter').hasClass(
                                 'select2-hidden-accessible')) {
                             $('#statusFilter').val('').trigger('change');
@@ -615,7 +1143,6 @@
                 });
             }
 
-            // Clear filter info
             if (clearFilterInfo) {
                 clearFilterInfo.addEventListener('click', function() {
                     if (resetButton) {
@@ -624,19 +1151,8 @@
                 });
             }
 
-            // Search icon visual feedback
-            if (searchInput) {
-                const searchIcon = document.querySelector('.ki-magnifier');
-                searchInput.addEventListener('input', function() {
-                    if (searchIcon) {
-                        searchIcon.style.opacity = this.value.length > 0 ? '0.5' : '1';
-                    }
-                });
-            }
-
             // Keyboard shortcuts
             document.addEventListener('keydown', function(e) {
-                // Ctrl/Cmd + K to focus search
                 if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
                     e.preventDefault();
                     if (searchInput) {
@@ -645,7 +1161,6 @@
                     }
                 }
 
-                // Escape to clear search
                 if (e.key === 'Escape' && document.activeElement === searchInput) {
                     if (resetButton) {
                         resetButton.click();
@@ -655,37 +1170,7 @@
             });
 
             // Initialize filters on page load
-            console.log('Initializing filters');
             applyFilters();
-
-            // Add loading state for search input
-            function setSearchLoading(isLoading) {
-                const searchIcon = document.querySelector('.ki-magnifier');
-                if (searchIcon) {
-                    if (isLoading) {
-                        searchIcon.innerHTML = '<div class="spinner-border spinner-border-sm" role="status"></div>';
-                    } else {
-                        searchIcon.innerHTML = '<span class="path1"></span><span class="path2"></span>';
-                    }
-                }
-            }
-
-            // Enhanced search with loading state
-            if (searchInput) {
-                const debouncedSearch = debounce(function() {
-                    setSearchLoading(false);
-                    applyFilters();
-                }, 300);
-
-                searchInput.addEventListener('input', function() {
-                    if (this.value.length > 0) {
-                        setSearchLoading(true);
-                    }
-                    debouncedSearch();
-                });
-            }
-
-            console.log('Search and filter initialization complete');
         });
     </script>
 @endpush

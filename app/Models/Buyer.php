@@ -35,6 +35,7 @@ class Buyer extends Model
         'paid_at',
         'payment_updated_at',
         'payment_method',
+        'rejection_reason',
         'payment_channel'
     ];
 
