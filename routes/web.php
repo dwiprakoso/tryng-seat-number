@@ -86,8 +86,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/buyer', [BuyerController::class, 'index'])->name('admin.buyer.index');
     Route::get('/buyer/export', [BuyerController::class, 'export'])->name('admin.buyer.export');
 
-    // New payment confirmation routes
-    Route::get('/buyer/{id}/payment-proof', [BuyerController::class, 'getPaymentProof'])->name('admin.buyer.payment-proof');
+    Route::get('/buyer/{id}/payment-confirmation', [BuyerController::class, 'showPaymentConfirmation'])->name('admin.buyer.payment-confirmation');
     Route::post('/buyer/{id}/confirm-payment', [BuyerController::class, 'confirmPayment'])->name('admin.buyer.confirm-payment');
     Route::post('/buyer/{id}/reject-payment', [BuyerController::class, 'rejectPayment'])->name('admin.buyer.reject-payment');
 

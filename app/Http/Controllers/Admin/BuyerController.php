@@ -5,9 +5,13 @@ namespace App\Http\Controllers\Admin;
 use App\Models\Buyer;
 use App\Exports\BuyerExport;
 use Illuminate\Http\Request;
-use Maatwebsite\Excel\Facades\Excel;
-use App\Http\Controllers\Controller;
+use App\Mail\PaymentRejected;
+use App\Mail\PaymentConfirmed;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Mail;
+use Maatwebsite\Excel\Facades\Excel;
 
 class BuyerController extends Controller
 {
@@ -49,52 +53,36 @@ class BuyerController extends Controller
     }
 
     /**
-     * Get payment proof details for confirmation modal
+     * Show payment confirmation page
      */
-    public function getPaymentProof($id): JsonResponse
+    public function showPaymentConfirmation($id)
     {
         try {
             $buyer = Buyer::with(['ticket'])->findOrFail($id);
 
-            return response()->json([
-                'success' => true,
-                'data' => [
-                    'id' => $buyer->id,
-                    'external_id' => $buyer->external_id,
-                    'nama_lengkap' => $buyer->nama_lengkap,
-                    'email' => $buyer->email,
-                    'no_handphone' => $buyer->no_handphone,
-                    'ticket_name' => $buyer->ticket->name,
-                    'quantity' => $buyer->quantity,
-                    'ticket_price' => $buyer->ticket_price,
-                    'admin_fee' => $buyer->admin_fee,
-                    'total_amount' => $buyer->total_amount,
-                    'payment_proof' => $buyer->payment_proof,
-                    'payment_status' => $buyer->payment_status,
-                    'created_at' => $buyer->created_at->format('d/m/Y H:i'),
-                ]
-            ]);
+            if ($buyer->payment_status !== 'waiting_confirmation') {
+                return redirect()->route('admin.buyer.index')
+                    ->with('error', 'Status pembayaran tidak dapat dikonfirmasi');
+            }
+
+            return view('admin.page.buyer.confirmation', compact('buyer'));
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Data tidak ditemukan'
-            ], 404);
+            return redirect()->route('admin.buyer.index')
+                ->with('error', 'Data tidak ditemukan');
         }
     }
 
     /**
      * Confirm payment
      */
-    public function confirmPayment(Request $request, $id): JsonResponse
+    public function confirmPayment(Request $request, $id)
     {
         try {
             $buyer = Buyer::findOrFail($id);
 
             if ($buyer->payment_status !== 'waiting_confirmation') {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Status pembayaran tidak dapat dikonfirmasi'
-                ], 400);
+                return redirect()->route('admin.buyer.index')
+                    ->with('error', 'Status pembayaran tidak dapat dikonfirmasi');
             }
 
             $buyer->update([
@@ -102,22 +90,26 @@ class BuyerController extends Controller
                 'payment_confirmed_at' => now()
             ]);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Pembayaran berhasil dikonfirmasi'
-            ]);
+            // Send confirmation email
+            try {
+                Mail::to($buyer->email)->send(new PaymentConfirmed($buyer));
+            } catch (\Exception $e) {
+                // Log error but don't stop the process
+                Log::error('Failed to send confirmation email: ' . $e->getMessage());
+            }
+
+            return redirect()->route('admin.buyer.index')
+                ->with('success', 'Pembayaran berhasil dikonfirmasi dan email notifikasi telah dikirim');
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Terjadi kesalahan saat mengkonfirmasi pembayaran'
-            ], 500);
+            return redirect()->route('admin.buyer.index')
+                ->with('error', 'Terjadi kesalahan saat mengkonfirmasi pembayaran');
         }
     }
 
     /**
      * Reject payment
      */
-    public function rejectPayment(Request $request, $id): JsonResponse
+    public function rejectPayment(Request $request, $id)
     {
         $request->validate([
             'reason' => 'required|string|max:500'
@@ -127,10 +119,8 @@ class BuyerController extends Controller
             $buyer = Buyer::findOrFail($id);
 
             if ($buyer->payment_status !== 'waiting_confirmation') {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Status pembayaran tidak dapat ditolak'
-                ], 400);
+                return redirect()->route('admin.buyer.index')
+                    ->with('error', 'Status pembayaran tidak dapat ditolak');
             }
 
             $buyer->update([
@@ -139,15 +129,19 @@ class BuyerController extends Controller
                 'updated_at' => now()
             ]);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Pembayaran berhasil ditolak'
-            ]);
+            // Send rejection email
+            try {
+                Mail::to($buyer->email)->send(new PaymentRejected($buyer, $request->reason));
+            } catch (\Exception $e) {
+                // Log error but don't stop the process
+                Log::error('Failed to send rejection email: ' . $e->getMessage());
+            }
+
+            return redirect()->route('admin.buyer.index')
+                ->with('success', 'Pembayaran berhasil ditolak dan email notifikasi telah dikirim');
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Terjadi kesalahan saat menolak pembayaran'
-            ], 500);
+            return redirect()->route('admin.buyer.index')
+                ->with('error', 'Terjadi kesalahan saat menolak pembayaran');
         }
     }
 }
