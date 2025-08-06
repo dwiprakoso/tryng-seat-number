@@ -87,7 +87,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <div class="logo">Event Tickets</div>
+            <div class="logo">Ticketify ID</div>
             <div class="success-icon">✓</div>
             <h2 style="color: #28a745; margin: 0;">Pembayaran Dikonfirmasi!</h2>
         </div>
@@ -131,12 +131,12 @@
 
             <p style="margin-top: 30px;">Terima kasih telah mempercayai kami untuk kebutuhan tiket event Anda!</p>
 
-            <p>Salam,<br><strong>Tim Event Tickets</strong></p>
+            <p>Salam,<br><strong>Ticketify ID</strong></p>
         </div>
 
         <div class="footer">
             <p>Email ini dikirim secara otomatis, mohon untuk tidak membalas email ini.</p>
-            <p>&copy; {{ date('Y') }} Event Tickets. All rights reserved.</p>
+            <p>&copy; {{ date('Y') }} Ticketify ID. All rights reserved.</p>
         </div>
     </div>
 </body>

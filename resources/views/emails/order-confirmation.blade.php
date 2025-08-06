@@ -7,208 +7,91 @@
     <title>Konfirmasi Pesanan</title>
     <style>
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.5;
-            color: #2c3e50;
-            background-color: #f5f7fa;
+            font-family: 'Arial', sans-serif;
             margin: 0;
-            padding: 20px;
+            padding: 0;
+            background-color: #f8f9fa;
         }
 
-        .email-container {
+        .container {
             max-width: 600px;
             margin: 0 auto;
-            background-color: white;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-        }
-
-        .receipt-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px 20px;
-            text-align: center;
-            position: relative;
-        }
-
-        .receipt-header::after {
-            content: '';
-            position: absolute;
-            bottom: -10px;
-            left: 0;
-            width: 100%;
-            height: 20px;
-            background: white;
-            border-radius: 50% 50% 0 0;
-        }
-
-        .receipt-header h1 {
-            margin: 0 0 10px 0;
-            font-size: 28px;
-            font-weight: 600;
-        }
-
-        .receipt-header p {
-            margin: 0;
-            font-size: 16px;
-            opacity: 0.9;
-        }
-
-        .receipt-body {
-            padding: 30px;
-        }
-
-        .order-id-section {
-            text-align: center;
-            margin-bottom: 30px;
+            background-color: #ffffff;
             padding: 20px;
-            background: #f8f9fa;
-            border-radius: 8px;
-            border: 2px dashed #dee2e6;
         }
 
-        .order-id {
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #28a745;
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+        }
+
+        .logo {
             font-size: 24px;
             font-weight: bold;
-            color: #667eea;
-            margin: 0;
+            color: #28a745;
         }
 
-        .order-date {
-            font-size: 14px;
-            color: #6c757d;
-            margin: 5px 0 0 0;
+        .success-icon {
+            font-size: 48px;
+            color: #28a745;
+            margin: 20px 0;
         }
 
-        .section {
-            margin-bottom: 25px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid #eee;
+        .content {
+            line-height: 1.6;
+            color: #333333;
         }
 
-        .section:last-child {
-            border-bottom: none;
+        .order-details {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .order-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .order-row:last-child {
+            border-top: 1px solid #dee2e6;
+            padding-top: 10px;
+            font-weight: bold;
+        }
+
+        .customer-details {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .customer-row {
+            margin-bottom: 10px;
+        }
+
+        .customer-row:last-child {
             margin-bottom: 0;
         }
 
-        .section h3 {
-            color: #495057;
-            font-size: 18px;
-            margin: 0 0 15px 0;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .ticket-info {
-            background: linear-gradient(135deg, #667eea20, #764ba220);
-            padding: 20px;
-            border-radius: 8px;
-            border-left: 4px solid #667eea;
-        }
-
-        .ticket-name {
-            font-size: 20px;
+        .customer-label {
             font-weight: bold;
-            color: #2c3e50;
-            margin: 0 0 10px 0;
+            color: #555;
+            display: inline-block;
+            min-width: 150px;
         }
 
-        .ticket-quantity {
-            font-size: 16px;
-            color: #6c757d;
-            margin: 0;
-        }
-
-        .info-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-top: 15px;
-        }
-
-        .info-item {
-            background: #f8f9fa;
-            padding: 12px;
-            border-radius: 6px;
-            border-left: 3px solid #667eea;
-        }
-
-        .info-label {
-            font-size: 12px;
-            color: #6c757d;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin: 0 0 5px 0;
-            font-weight: 500;
-        }
-
-        .info-value {
-            font-size: 14px;
-            color: #2c3e50;
-            margin: 0;
-            font-weight: 600;
-        }
-
-        .cost-breakdown {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 8px;
-            margin-top: 15px;
-        }
-
-        .cost-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 0;
-            border-bottom: 1px dotted #dee2e6;
-        }
-
-        .cost-item:last-child {
-            border-bottom: none;
-        }
-
-        .cost-label {
-            font-size: 14px;
-            color: #495057;
-        }
-
-        .cost-value {
-            font-size: 14px;
-            font-weight: 600;
-            color: #2c3e50;
-        }
-
-        .total-section {
-            background: linear-gradient(135deg, #28a745, #20c997);
-            color: white;
-            padding: 20px;
-            border-radius: 8px;
-            text-align: center;
-            margin: 20px 0;
-        }
-
-        .total-label {
-            font-size: 16px;
-            margin: 0 0 5px 0;
-            opacity: 0.9;
-        }
-
-        .total-amount {
-            font-size: 28px;
-            font-weight: bold;
-            margin: 0;
-        }
-
-        .payment-status {
-            text-align: center;
-            padding: 20px;
-            background: #fff3cd;
+        .status-pending {
+            background-color: #fff3cd;
             border: 1px solid #ffeaa7;
             border-radius: 8px;
+            padding: 15px;
             margin: 20px 0;
+            text-align: center;
         }
 
         .status-badge {
@@ -217,14 +100,14 @@
             background: #f39c12;
             color: white;
             border-radius: 20px;
-            font-weight: 600;
+            font-weight: bold;
             text-transform: uppercase;
             font-size: 12px;
             letter-spacing: 0.5px;
         }
 
         .payment-instructions {
-            background: #e3f2fd;
+            background-color: #e3f2fd;
             border: 1px solid #bbdefb;
             border-radius: 8px;
             padding: 20px;
@@ -233,184 +116,173 @@
 
         .payment-instructions h4 {
             color: #1976d2;
-            margin: 0 0 10px 0;
+            margin: 0 0 15px 0;
             font-size: 16px;
         }
 
         .payment-instructions p {
-            margin: 5px 0;
+            margin: 8px 0;
             font-size: 14px;
             color: #424242;
         }
 
-        .payment-link {
+        .btn {
             display: inline-block;
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            padding: 12px 24px;
+            background-color: #28a745;
             color: white;
             text-decoration: none;
-            padding: 12px 24px;
-            border-radius: 6px;
-            font-weight: 600;
-            margin-top: 10px;
-            transition: transform 0.2s;
+            border-radius: 5px;
+            margin: 20px 0;
+            font-weight: bold;
         }
 
-        .payment-link:hover {
-            transform: translateY(-2px);
+        .btn:hover {
+            background-color: #218838;
             text-decoration: none;
             color: white;
+        }
+
+        .important-note {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
         }
 
         .footer {
-            background: #2c3e50;
-            color: white;
-            padding: 25px;
             text-align: center;
-        }
-
-        .footer p {
-            margin: 5px 0;
-            font-size: 13px;
-            opacity: 0.8;
-        }
-
-        .receipt-line {
-            border-top: 2px dashed #dee2e6;
-            margin: 20px 0;
+            margin-top: 30px;
             padding-top: 20px;
+            border-top: 1px solid #dee2e6;
+            color: #666666;
+            font-size: 14px;
         }
 
         @media (max-width: 600px) {
-            .info-grid {
-                grid-template-columns: 1fr;
+            .order-row {
+                flex-direction: column;
+                gap: 5px;
             }
 
-            .receipt-body {
-                padding: 20px;
-            }
-
-            .total-amount {
-                font-size: 24px;
+            .customer-label {
+                min-width: auto;
+                display: block;
+                margin-bottom: 5px;
             }
         }
     </style>
 </head>
 
 <body>
-    <div class="email-container">
-        <!-- Header -->
-        <div class="receipt-header">
-            <h1>✅ Pesanan Berhasil</h1>
-            <p>Terima kasih atas kepercayaan Anda!</p>
+    <div class="container">
+        <div class="header">
+            <div class="logo">Ticketify ID</div>
+            <div class="success-icon">✅</div>
+            <h2 style="color: #28a745; margin: 0;">Pesanan Berhasil!</h2>
         </div>
 
-        <div class="receipt-body">
-            <!-- Order ID Section -->
-            <div class="order-id-section">
-                <p class="order-id">{{ $buyer->external_id }}</p>
-                <p class="order-date">{{ $buyer->created_at->format('d F Y, H:i') }} WIB</p>
-            </div>
+        <div class="content">
+            <p>Halo <strong>{{ $buyer->nama_lengkap }}</strong>,</p>
 
-            <!-- Ticket Information -->
-            <div class="section">
-                <h3>🎫 Informasi Tiket</h3>
-                <div class="ticket-info">
-                    <p class="ticket-name">{{ $ticket->name }}</p>
-                    <p class="ticket-quantity">Quantity: {{ $buyer->quantity }} tiket</p>
+            <p>Terima kasih! Pesanan tiket Anda telah berhasil dibuat. Berikut adalah detail pesanan Anda:</p>
+
+            <div class="order-details">
+                <div class="order-row">
+                    <span>ID Pesanan:</span>
+                    <span><strong>{{ $buyer->external_id }}</strong></span>
+                </div>
+                <div class="order-row">
+                    <span>Tanggal Pesanan:</span>
+                    <span>{{ $buyer->created_at->format('d/m/Y H:i') }} WIB</span>
+                </div>
+                <div class="order-row">
+                    <span>Kategori Tiket:</span>
+                    <span>{{ $ticket->name }}</span>
+                </div>
+                <div class="order-row">
+                    <span>Jumlah Tiket:</span>
+                    <span>{{ $buyer->quantity }} tiket</span>
+                </div>
+                <div class="order-row">
+                    <span>Harga Tiket:</span>
+                    <span>Rp {{ number_format($buyer->ticket_price, 0, ',', '.') }}</span>
+                </div>
+                <div class="order-row">
+                    <span>Kode Pembayaran Unik:</span>
+                    <span>Rp {{ number_format($buyer->payment_code, 0, ',', '.') }}</span>
+                </div>
+                <div class="order-row">
+                    <span>Total Pembayaran:</span>
+                    <span>Rp {{ number_format($buyer->total_amount, 0, ',', '.') }}</span>
                 </div>
             </div>
 
-            <!-- Customer Information -->
-            <div class="section">
-                <h3>👤 Data Pembeli</h3>
-                <div class="info-grid">
-                    <div class="info-item">
-                        <p class="info-label">Nama Lengkap</p>
-                        <p class="info-value">{{ $buyer->nama_lengkap }}</p>
-                    </div>
-                    <div class="info-item">
-                        <p class="info-label">Email</p>
-                        <p class="info-value">{{ $buyer->email }}</p>
-                    </div>
-                    <div class="info-item">
-                        <p class="info-label">No. Handphone</p>
-                        <p class="info-value">{{ $buyer->no_handphone }}</p>
-                    </div>
-                    <div class="info-item">
-                        <p class="info-label">No. Identitas</p>
-                        <p class="info-value">{{ $buyer->identitas_number }}</p>
-                    </div>
+            <div class="customer-details">
+                <h4 style="margin-top: 0; color: #333;">Data Pembeli:</h4>
+                <div class="customer-row">
+                    <span class="customer-label">Nama Lengkap:</span>
+                    <span>{{ $buyer->nama_lengkap }}</span>
                 </div>
-                <div class="info-grid" style="margin-top: 15px;">
-                    <div class="info-item" style="grid-column: 1 / -1;">
-                        <p class="info-label">Alamat Lengkap</p>
-                        <p class="info-value">{{ $buyer->alamat_lengkap }}</p>
-                    </div>
-                    <div class="info-item" style="grid-column: 1 / -1;">
-                        <p class="info-label">Mewakili</p>
-                        <p class="info-value">{{ $buyer->mewakili }}</p>
-                    </div>
+                <div class="customer-row">
+                    <span class="customer-label">Email:</span>
+                    <span>{{ $buyer->email }}</span>
+                </div>
+                <div class="customer-row">
+                    <span class="customer-label">No. Handphone:</span>
+                    <span>{{ $buyer->no_handphone }}</span>
+                </div>
+                <div class="customer-row">
+                    <span class="customer-label">No. Identitas:</span>
+                    <span>{{ $buyer->identitas_number }}</span>
+                </div>
+                <div class="customer-row">
+                    <span class="customer-label">Alamat Lengkap:</span>
+                    <span>{{ $buyer->alamat_lengkap }}</span>
+                </div>
+                <div class="customer-row">
+                    <span class="customer-label">Mewakili:</span>
+                    <span>{{ $buyer->mewakili }}</span>
                 </div>
             </div>
 
-            <!-- Cost Breakdown -->
-            <div class="section">
-                <h3>💰 Rincian Pembayaran</h3>
-                <div class="cost-breakdown">
-                    <div class="cost-item">
-                        <span class="cost-label">Harga Tiket ({{ $buyer->quantity }}x)</span>
-                        <span class="cost-value">Rp {{ number_format($buyer->ticket_price, 0, ',', '.') }}</span>
-                    </div>
-                    {{-- <div class="cost-item">
-                        <span class="cost-label">Biaya Admin (5%)</span>
-                        <span class="cost-value">Rp {{ number_format($buyer->admin_fee, 0, ',', '.') }}</span>
-                    </div> --}}
-                    <div class="cost-item">
-                        <span class="cost-label">Kode Pembayaran Unik</span>
-                        <span class="cost-value">Rp {{ number_format($buyer->payment_code, 0, ',', '.') }}</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Total Amount -->
-            <div class="total-section">
-                <p class="total-label">Total Pembayaran</p>
-                <p class="total-amount">Rp {{ number_format($buyer->total_amount, 0, ',', '.') }}</p>
-            </div>
-
-            <!-- Payment Status -->
-            <div class="payment-status">
+            <div class="status-pending">
                 <span class="status-badge">{{ ucfirst($buyer->payment_status) }}</span>
                 <p style="margin: 10px 0 0 0; font-size: 14px; color: #856404;">
                     Menunggu konfirmasi pembayaran
                 </p>
             </div>
 
-            <!-- Payment Instructions -->
             <div class="payment-instructions">
                 <h4>📋 Langkah Selanjutnya</h4>
                 <p>1. Lakukan pembayaran sesuai dengan total amount di atas</p>
                 <p>2. Simpan nomor pesanan <strong>{{ $buyer->external_id }}</strong> untuk referensi</p>
                 <p>3. Upload bukti pembayaran melalui link di bawah ini</p>
 
-                <a href="{{ route('payment.manual', ['external_id' => $buyer->external_id]) }}" class="payment-link">
+                <a href="{{ route('payment.manual', ['external_id' => $buyer->external_id]) }}" class="btn">
                     Upload Bukti Pembayaran
                 </a>
             </div>
 
-            <div class="receipt-line">
-                <p style="text-align: center; color: #6c757d; font-size: 14px; margin: 0;">
+            <div class="important-note">
+                <p style="margin: 0; font-size: 14px; font-weight: bold;">
                     <strong>Penting:</strong> Pastikan nominal transfer sesuai dengan total pembayaran termasuk kode
                     unik
                 </p>
             </div>
+
+            <p style="margin-top: 30px;">Silakan simpan email ini sebagai bukti pemesanan tiket Anda.</p>
+
+            <p>Terima kasih telah mempercayai kami untuk kebutuhan tiket event Anda!</p>
+
+            <p>Salam,<br><strong>Ticketify ID</strong></p>
         </div>
 
-        <!-- Footer -->
         <div class="footer">
-            <p><strong>Email otomatis - Jangan membalas</strong></p>
+            <p>Email ini dikirim secara otomatis, mohon untuk tidak membalas email ini.</p>
             <p>Hubungi customer service jika memerlukan bantuan</p>
-            <p>© {{ date('Y') }} Event Ticketing System</p>
+            <p>&copy; {{ date('Y') }} Ticketify ID. All rights reserved.</p>
         </div>
     </div>
 </body>

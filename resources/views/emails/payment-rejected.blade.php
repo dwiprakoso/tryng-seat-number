@@ -96,7 +96,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <div class="logo">Event Tickets</div>
+            <div class="logo">Ticketify ID</div>
             <div class="error-icon">✗</div>
             <h2 style="color: #dc3545; margin: 0;">Pembayaran Ditolak</h2>
         </div>
@@ -143,9 +143,8 @@
 
             <p><strong>Langkah Selanjutnya:</strong></p>
             <ul>
-                <li>Silakan perbaiki bukti pembayaran sesuai dengan alasan penolakan di atas</li>
-                <li>Upload ulang bukti pembayaran yang benar</li>
-                <li>Hubungi customer service jika ada pertanyaan</li>
+                <li>Hubungi customer service jika ada pertanyaan <a href="wa.me/+6282227031735"></a>+62 822-2703-1735
+                </li>
             </ul>
 
             <p>Kami mohon maaf atas ketidaknyamanan ini. Jika Anda memiliki pertanyaan atau memerlukan bantuan lebih
@@ -153,12 +152,12 @@
 
             <p style="margin-top: 30px;">Terima kasih atas pengertiannya.</p>
 
-            <p>Salam,<br><strong>Tim Event Tickets</strong></p>
+            <p>Salam,<br><strong>Ticketify ID</strong></p>
         </div>
 
         <div class="footer">
             <p>Email ini dikirim secara otomatis, mohon untuk tidak membalas email ini.</p>
-            <p>&copy; {{ date('Y') }} Event Tickets. All rights reserved.</p>
+            <p>&copy; {{ date('Y') }} Ticketify ID. All rights reserved.</p>
         </div>
     </div>
 </body>
