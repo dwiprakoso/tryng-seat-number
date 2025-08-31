@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use App\Mail\PaymentRejected;
 use App\Mail\PaymentConfirmed;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Mail;
@@ -149,7 +150,7 @@ class BuyerController extends Controller
             ]);
             Log::info('Request validation passed', $validatedData);
 
-            $buyer = Buyer::findOrFail($id);
+            $buyer = Buyer::with('ticket')->findOrFail($id); // Load relasi ticket
             Log::info('Buyer found', ['buyer_id' => $buyer->id, 'status' => $buyer->payment_status]);
 
             if ($buyer->payment_status !== 'waiting_confirmation') {
@@ -161,33 +162,67 @@ class BuyerController extends Controller
                     ->with('error', 'Status pembayaran tidak dapat ditolak');
             }
 
-            // Update buyer status
-            Log::info('Updating buyer payment status to rejected');
-            $buyer->update([
-                'payment_status' => 'rejected',
-                'rejection_reason' => $request->reason,
-                'updated_at' => now()
-            ]);
-            Log::info('Buyer payment status updated to rejected successfully');
+            // Gunakan Database Transaction untuk memastikan atomicity
+            DB::beginTransaction();
 
-            // Send rejection email
             try {
-                Log::info('Sending rejection email to: ' . $buyer->email);
-                Mail::to($buyer->email)->send(new PaymentRejected($buyer, $request->reason));
-                Log::info('Rejection email sent successfully');
-            } catch (\Exception $emailException) {
-                // Log error but don't stop the process
-                Log::error('Failed to send rejection email: ' . $emailException->getMessage(), [
-                    'buyer_id' => $id,
-                    'buyer_email' => $buyer->email,
-                    'reason' => $request->reason,
-                    'stack_trace' => $emailException->getTraceAsString()
+                // Kembalikan stok tiket
+                Log::info('Restoring ticket stock', [
+                    'ticket_id' => $buyer->ticket->id,
+                    'current_stock' => $buyer->ticket->qty,
+                    'quantity_to_restore' => $buyer->quantity
                 ]);
-            }
 
-            Log::info('Payment rejection completed successfully');
-            return redirect()->route('admin.buyer.index')
-                ->with('success', 'Pembayaran berhasil ditolak dan email notifikasi telah dikirim');
+                $buyer->ticket->increment('qty', $buyer->quantity);
+
+                Log::info('Ticket stock restored successfully', [
+                    'ticket_id' => $buyer->ticket->id,
+                    'quantity_restored' => $buyer->quantity,
+                    'new_stock' => $buyer->ticket->fresh()->qty
+                ]);
+
+                // Update buyer status
+                Log::info('Updating buyer payment status to rejected');
+                $buyer->update([
+                    'payment_status' => 'rejected',
+                    'rejection_reason' => $request->reason,
+                    'updated_at' => now()
+                ]);
+                Log::info('Buyer payment status updated to rejected successfully');
+
+                // Send rejection email
+                try {
+                    Log::info('Sending rejection email to: ' . $buyer->email);
+                    Mail::to($buyer->email)->send(new PaymentRejected($buyer, $request->reason));
+                    Log::info('Rejection email sent successfully');
+                } catch (\Exception $emailException) {
+                    // Log error but don't stop the process
+                    Log::error('Failed to send rejection email: ' . $emailException->getMessage(), [
+                        'buyer_id' => $id,
+                        'buyer_email' => $buyer->email,
+                        'reason' => $request->reason,
+                        'stack_trace' => $emailException->getTraceAsString()
+                    ]);
+                }
+
+                // Commit transaction
+                DB::commit();
+
+                Log::info('Payment rejection completed successfully');
+                return redirect()->route('admin.buyer.index')
+                    ->with('success', 'Pembayaran berhasil ditolak, stok tiket telah dikembalikan, dan email notifikasi telah dikirim');
+            } catch (\Exception $transactionException) {
+                // Rollback transaction jika ada error
+                DB::rollback();
+
+                Log::error('Transaction failed during payment rejection', [
+                    'buyer_id' => $id,
+                    'error' => $transactionException->getMessage(),
+                    'stack_trace' => $transactionException->getTraceAsString()
+                ]);
+
+                throw $transactionException; // Re-throw untuk di-catch oleh try-catch luar
+            }
         } catch (\Exception $e) {
             Log::error('Error in rejectPayment: ' . $e->getMessage(), [
                 'buyer_id' => $id,

@@ -37,22 +37,14 @@ Route::post('/order/store', [OrderController::class, 'store'])->name('order.stor
 Route::get('/payment/manual/{external_id}', [OrderController::class, 'manualPayment'])->name('payment.manual');
 Route::post('/payment/upload/{external_id}', [OrderController::class, 'uploadPaymentProof'])->name('payment.upload');
 
-// Webhook routes (tanpa middleware auth)
-Route::post('/webhook/xendit/invoice', [PaymentWebhookController::class, 'xenditInvoiceCallback'])
-    ->name('webhook.xendit.invoice');
+// // Payment routes
+// Route::get('/payment/success', function () {
+//     return view('payment.success');
+// })->name('payment.success');
 
-// Test webhook untuk development
-Route::post('/webhook/test', [PaymentWebhookController::class, 'testWebhook'])
-    ->name('webhook.test');
-
-// Payment routes
-Route::get('/payment/success', function () {
-    return view('payment.success');
-})->name('payment.success');
-
-Route::get('/payment/failed', function () {
-    return view('payment.failed');
-})->name('payment.failed');
+// Route::get('/payment/failed', function () {
+//     return view('payment.failed');
+// })->name('payment.failed');
 
 Route::get('/ticket/verify/{external_id}', [TicketController::class, 'verify'])->name('ticket.verify');
 
