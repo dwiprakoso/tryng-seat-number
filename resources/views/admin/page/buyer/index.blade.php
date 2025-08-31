@@ -303,10 +303,10 @@
                                         <td>
                                             @php
                                                 $statusColors = [
-                                                    'paid' => 'success',
+                                                    'confirmed' => 'success',
                                                     'pending' => 'warning',
                                                     'waiting_confirmation' => 'info',
-                                                    'failed' => 'danger',
+                                                    'rejected' => 'danger',
                                                 ];
                                                 $color = $statusColors[$buyer->payment_status] ?? 'secondary';
                                             @endphp
