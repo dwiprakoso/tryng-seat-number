@@ -46,7 +46,7 @@
                     <a class="menu-link {{ Request::routeIs('admin.event.*') || Request::routeIs('admin.products.*') ? 'active' : '' }}"
                         href="{{ route('admin.event.index') }}">
                         <span class="menu-icon">
-                            <i class="ki-outline ki-calendar fs-2"></i>
+                            <i class="ki-outline ki-calendar-8 fs-2"></i>
                         </span>
                         <span class="menu-title">Event</span>
                     </a>
@@ -58,12 +58,21 @@
                     <a class="menu-link {{ Request::routeIs('admin.tickets.*') ? 'active' : '' }}"
                         href="{{ route('admin.tickets.index') }}">
                         <span class="menu-icon">
-                            <i class="ki-duotone ki-document fs-2">
-                                <span class="path1"></span>
-                                <span class="path2"></span>
-                            </i>
+                            <i class="fas fa-ticket-alt fs-2"></i>
                         </span>
                         <span class="menu-title">Tiket</span>
+                    </a>
+                </div>
+                <!--end:Menu item-->
+
+                <!--begin:Menu item - Kursi-->
+                <div class="menu-item">
+                    <a class="menu-link {{ Request::routeIs('admin.seats.*') ? 'active' : '' }}"
+                        href="{{ route('admin.seats.index') }}">
+                        <span class="menu-icon">
+                            <i class="ki-outline ki-element-11 fs-2"></i>
+                        </span>
+                        <span class="menu-title">Kursi</span>
                     </a>
                 </div>
                 <!--end:Menu item-->
@@ -85,7 +94,7 @@
                     <a class="menu-link {{ Request::routeIs('admin.buyer.*') ? 'active' : '' }}"
                         href="{{ route('admin.buyer.index') }}">
                         <span class="menu-icon">
-                            <i class="ki-outline ki-people fs-2"></i>
+                            <i class="ki-outline ki-profile-user fs-2"></i>
                         </span>
                         <span class="menu-title">Pembeli</span>
                     </a>

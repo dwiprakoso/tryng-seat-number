@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\Admin\AuthController;
+use App\Http\Controllers\Admin\SeatController;
 use App\Http\Controllers\Admin\BuyerController;
 use App\Http\Controllers\Admin\EventController;
 use App\Http\Controllers\Admin\DiskonController;
@@ -89,4 +90,10 @@ Route::middleware('auth')->group(function () {
     Route::get('ots-sales/{id}/receipt', [OtsSalesController::class, 'receipt'])->name('admin.ots-sales.receipt');
     Route::delete('ots-sales/{id}', [OtsSalesController::class, 'destroy'])->name('admin.ots-sales.destroy');
     Route::get('/ots-sales/export', [OtsSalesController::class, 'export'])->name('admin.ots-sales.export');
+
+    Route::get('/seats', [SeatController::class, 'index'])->name('admin.seats.index');
+    Route::post('/seats', [SeatController::class, 'store'])->name('admin.seats.store');
+    Route::get('/seats/{seat}/edit', [SeatController::class, 'edit'])->name('admin.seats.edit');
+    Route::put('/seats/{seat}', [SeatController::class, 'update'])->name('admin.seats.update');
+    Route::delete('/seats/{seat}', [SeatController::class, 'destroy'])->name('admin.seats.destroy');
 });
