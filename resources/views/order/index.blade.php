@@ -268,6 +268,37 @@
                 padding: 1rem;
             }
         }
+
+        /* Tambahkan di bagian CSS */
+        .btn-disabled {
+            background: var(--gray-300) !important;
+            color: var(--gray-600) !important;
+            cursor: not-allowed !important;
+            box-shadow: none !important;
+            border: 1px solid var(--gray-300) !important;
+        }
+
+        .btn-disabled:hover {
+            background: var(--gray-300) !important;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        .ticket-item.sold-out {
+            opacity: 0.6;
+            background: var(--gray-100);
+        }
+
+        .sold-out-badge {
+            background: #dc3545;
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: inline-block;
+        }
     </style>
 </head>
 
@@ -330,25 +361,39 @@
                 <div class="row">
                     @foreach ($tickets as $ticket)
                         <div class="col-md-6">
-                            <div class="ticket-item">
+                            <div class="ticket-item {{ $ticket->qty == 0 ? 'sold-out' : '' }}">
                                 <div class="d-flex justify-content-between">
                                     <div class="flex-grow-1">
+                                        @if ($ticket->qty == 0)
+                                            <span class="sold-out-badge">SOLD OUT</span>
+                                        @endif
                                         <h5 class="ticket-name">{{ $ticket->name }}</h5>
                                         <p class="ticket-description">Tiket reguler untuk akses umum</p>
-                                        {{-- <div class="ticket-qty">
-                                            <i class="fas fa-users"></i>
-                                            {{ $ticket->qty }} tiket tersisa
-                                        </div> --}}
+                                        <div class="ticket-qty">
+                                            {{-- <i class="fas fa-users"></i> --}}
+                                            @if ($ticket->qty == 0)
+                                                Tiket habis
+                                                {{-- @else
+                                                {{ $ticket->qty }} tiket tersisa --}}
+                                            @endif
+                                        </div>
                                     </div>
                                     <div class="text-end">
                                         <div class="ticket-price">Rp {{ number_format($ticket->price, 0, ',', '.') }}
                                         </div>
                                         <div class="price-label">per tiket</div>
-                                        <a href="{{ route('order.create', ['ticket_id' => $ticket->id]) }}"
-                                            class="btn btn-primary">
-                                            <i class="fas fa-shopping-cart"></i>
-                                            Pesan Sekarang
-                                        </a>
+                                        @if ($ticket->qty == 0)
+                                            <button class="btn btn-disabled" disabled>
+                                                <i class="fas fa-times"></i>
+                                                Tiket Habis
+                                            </button>
+                                        @else
+                                            <a href="{{ route('order.create', ['ticket_id' => $ticket->id]) }}"
+                                                class="btn btn-primary">
+                                                <i class="fas fa-shopping-cart"></i>
+                                                Pesan Sekarang
+                                            </a>
+                                        @endif
                                     </div>
                                 </div>
                             </div>

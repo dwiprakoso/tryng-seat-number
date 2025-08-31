@@ -18,11 +18,10 @@ class OrderController extends Controller
 {
     public function index()
     {
-        // Ambil 1 produk terbaru (event)
         $product = Product::latest()->first();
-
-        // Ambil semua tiket yang statusnya published
         $tickets = Ticket::where('status', 'published')->get();
+
+        // $tickets = Ticket::where('status', 'published')->where('qty', '>', 0)->get();
 
         return view('order.index', compact('product', 'tickets'));
     }
@@ -30,7 +29,7 @@ class OrderController extends Controller
     public function create($ticket_id)
     {
         $ticket = Ticket::findOrFail($ticket_id);
-        $product = Product::first(); // Ambil product pertama karena hanya ada 1
+        $product = Product::first();
 
         return view('order.create', compact('product', 'ticket'));
     }
@@ -52,10 +51,8 @@ class OrderController extends Controller
             'mewakili.min' => 'Field mewakili minimal 3 karakter'
         ]);
 
-        // Get ticket data untuk harga
         $ticket = Ticket::find($request->ticket_id);
 
-        // Set quantity default 1 karena tidak ada di form
         $quantity = 1;
 
         // Cek stok tiket
@@ -67,7 +64,6 @@ class OrderController extends Controller
 
         // // Hitung biaya berdasarkan quantity
         $ticket_price = $ticket->price * $quantity;
-        // $admin_fee = $ticket_price * 0.05; // 5% dari total harga tiket
 
         // Generate payment code 3 digit random yang unik
         $payment_code = $this->generateUniquePaymentCode();
@@ -116,7 +112,7 @@ class OrderController extends Controller
                     'email' => $buyer->email
                 ]);
             } catch (Exception $emailException) {
-                // Log error email tapi jangan gagalkan transaksi
+
                 Log::error('Failed to send order confirmation email', [
                     'external_id' => $externalId,
                     'email' => $buyer->email,
