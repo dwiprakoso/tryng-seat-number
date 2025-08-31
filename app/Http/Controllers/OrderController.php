@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Exception;
+use App\Models\Seat;
 use App\Models\Buyer;
 use App\Models\Ticket;
 use App\Models\Product;
@@ -28,61 +29,94 @@ class OrderController extends Controller
 
     public function create($ticket_id)
     {
-        $ticket = Ticket::findOrFail($ticket_id);
-        $product = Product::first();
+        try {
+            $ticket = Ticket::findOrFail($ticket_id);
+            $product = Product::first();
 
-        return view('order.create', compact('product', 'ticket'));
+            // Cek stok tiket
+            if ($ticket->qty <= 0) {
+                return redirect()->back()->with('error', 'Tiket sudah habis.');
+            }
+
+            // Get available seats (not booked)
+            $availableSeats = Seat::where('is_booked', 0)->orderBy('seat_number')->get();
+
+            // Get booked seats for display
+            $bookedSeats = Seat::where('is_booked', 1)->pluck('seat_number')->toArray();
+
+            // Check if there are available seats
+            if ($availableSeats->isEmpty()) {
+                return redirect()->back()->with('error', 'Semua kursi sudah dipesan.');
+            }
+
+            return view('order.create', compact('product', 'ticket', 'availableSeats', 'bookedSeats'));
+        } catch (Exception $e) {
+            Log::error('Error loading order form', [
+                'ticket_id' => $ticket_id,
+                'error' => $e->getMessage()
+            ]);
+
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat memuat form pemesanan.');
+        }
     }
 
     public function store(Request $request)
     {
         $request->validate([
             'ticket_id' => 'required|exists:tickets,id',
-            'nama_lengkap' => 'required|string|max:255',
+            'nama_lengkap' => 'required|string|min:3|max:255',
             'email' => 'required|email|max:255',
             'no_handphone' => 'required|string|max:20|regex:/^08\d{8,12}$/',
             'alamat_lengkap' => 'required|string|min:5|max:255',
             'identitas_number' => 'required|string|regex:/^\d{12,20}$/',
             'mewakili' => 'required|string|min:3|max:255',
         ], [
+            'nama_lengkap.min' => 'Nama lengkap minimal 3 karakter',
             'no_handphone.regex' => 'Nomor handphone harus dimulai dengan 08 dan berjumlah 10-14 digit',
             'identitas_number.regex' => 'Nomor identitas harus berupa angka 12-20 digit',
             'alamat_lengkap.min' => 'Alamat lengkap minimal 5 karakter',
             'mewakili.min' => 'Field mewakili minimal 3 karakter'
         ]);
 
-        $ticket = Ticket::find($request->ticket_id);
-
-        $quantity = 1;
-
-        // Cek stok tiket
-        if ($ticket->qty < $quantity) {
-            return redirect()->back()
-                ->with('error', 'Stok tiket tidak mencukupi. Stok tersedia: ' . $ticket->qty)
-                ->withInput();
-        }
-
-        // // Hitung biaya berdasarkan quantity
-        $ticket_price = $ticket->price * $quantity;
-
-        // Generate payment code 3 digit random yang unik
-        $payment_code = $this->generateUniquePaymentCode();
-
-        $total_amount = $ticket_price + $payment_code;
-
-        // Generate external ID yang unik
-        do {
-            $randomNumber = str_pad(rand(100000, 999999), 6, '0', STR_PAD_LEFT);
-            $externalId = 'ORDER-' . $randomNumber;
-
-            // Cek apakah external_id sudah ada di database
-            $exists = Buyer::where('external_id', $externalId)->exists();
-        } while ($exists);
-
         // Gunakan Database Transaction untuk memastikan atomicity
         DB::beginTransaction();
 
         try {
+            // Ambil data tiket dengan lock untuk mencegah race condition
+            $ticket = Ticket::lockForUpdate()->find($request->ticket_id);
+
+            if (!$ticket) {
+                throw new Exception('Tiket tidak ditemukan.');
+            }
+
+            $quantity = 1;
+
+            // Cek stok tiket
+            if ($ticket->qty < $quantity) {
+                throw new Exception('Stok tiket tidak mencukupi. Stok tersedia: ' . $ticket->qty);
+            }
+
+            // Cek duplikasi email untuk mencegah double booking
+            $existingOrder = Buyer::where('email', $request->email)
+                ->where('ticket_id', $request->ticket_id)
+                ->whereIn('payment_status', ['pending', 'paid'])
+                ->first();
+
+            if ($existingOrder) {
+                throw new Exception('Email ini sudah pernah digunakan untuk memesan tiket yang sama.');
+            }
+
+            // Hitung biaya berdasarkan quantity
+            $ticket_price = $ticket->price * $quantity;
+
+            // Generate payment code 3 digit random yang unik
+            $payment_code = $this->generateUniquePaymentCode();
+
+            $total_amount = $ticket_price + $payment_code;
+
+            // Generate external ID yang unik dengan format lebih baik
+            $externalId = $this->generateUniqueExternalId();
+
             // Kurangi stok tiket
             $ticket->decrement('qty', $quantity);
 
@@ -97,14 +131,16 @@ class OrderController extends Controller
             $buyer->quantity = $quantity;
             $buyer->ticket_id = $request->ticket_id;
             $buyer->ticket_price = $ticket_price;
-            // $buyer->admin_fee = $admin_fee;
             $buyer->payment_code = $payment_code;
             $buyer->total_amount = $total_amount;
             $buyer->external_id = $externalId;
             $buyer->payment_status = 'pending';
             $buyer->save();
 
-            // Kirim email konfirmasi
+            // Commit transaction
+            DB::commit();
+
+            // Kirim email konfirmasi (di luar transaction agar tidak mempengaruhi flow utama)
             try {
                 Mail::to($buyer->email)->send(new OrderConfirmation($buyer, $ticket));
                 Log::info('Order confirmation email sent successfully', [
@@ -112,7 +148,6 @@ class OrderController extends Controller
                     'email' => $buyer->email
                 ]);
             } catch (Exception $emailException) {
-
                 Log::error('Failed to send order confirmation email', [
                     'external_id' => $externalId,
                     'email' => $buyer->email,
@@ -120,8 +155,22 @@ class OrderController extends Controller
                 ]);
             }
 
-            // Commit transaction
-            DB::commit();
+            // Log successful order creation
+            Log::info('Order created successfully', [
+                'external_id' => $externalId,
+                'buyer_id' => $buyer->id,
+                'ticket_id' => $ticket->id,
+                'email' => $buyer->email
+            ]);
+
+            // Handle AJAX request
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Pesanan berhasil dibuat. Silakan lakukan pembayaran.',
+                    'redirect_url' => route('payment.manual', ['external_id' => $externalId])
+                ]);
+            }
 
             // Redirect ke halaman pembayaran manual
             return redirect()->route('payment.manual', ['external_id' => $externalId])
@@ -133,31 +182,71 @@ class OrderController extends Controller
             Log::error('Order Creation Failed', [
                 'error_message' => $e->getMessage(),
                 'external_id' => $externalId ?? 'not_generated',
-                'ticket_id' => $ticket->id,
-                'customer_email' => $request->email,
+                'ticket_id' => $request->ticket_id ?? 'not_provided',
+                'customer_email' => $request->email ?? 'not_provided',
                 'stack_trace' => $e->getTraceAsString()
             ]);
 
-            return redirect()->route('order.create', ['ticket_id' => $ticket->id])
+            // Handle AJAX request
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ], 500);
+            }
+
+            return redirect()->route('order.create', ['ticket_id' => $request->ticket_id])
                 ->with('error', 'Gagal membuat pesanan: ' . $e->getMessage())
                 ->withInput();
         }
     }
+
     /**
-     * Generate unique payment code 3 digit
+     * Generate unique payment code (3 digit)
      */
     private function generateUniquePaymentCode()
     {
         do {
-            // Generate random 3 digit number (100-999)
             $payment_code = rand(100, 999);
-
-            // Cek apakah payment code sudah ada di database
-            $exists = Buyer::where('payment_code', $payment_code)->exists();
+            // Cek duplikasi dalam 24 jam terakhir saja untuk performa
+            $exists = Buyer::where('payment_code', $payment_code)
+                ->where('created_at', '>=', now()->subDay())
+                ->exists();
         } while ($exists);
 
         return $payment_code;
     }
+
+    /**
+     * Generate unique external ID dengan format yang lebih informatif
+     */
+    private function generateUniqueExternalId()
+    {
+        do {
+            $randomNumber = str_pad(rand(100000, 999999), 6, '0', STR_PAD_LEFT);
+            $externalId = 'ORDER-' . now()->format('Ymd') . '-' . $randomNumber;
+
+            // Cek apakah external_id sudah ada di database
+            $exists = Buyer::where('external_id', $externalId)->exists();
+        } while ($exists);
+
+        return $externalId;
+    }
+    /**
+     * Generate unique payment code 3 digit
+     */
+    // private function generateUniquePaymentCode()
+    // {
+    //     do {
+    //         // Generate random 3 digit number (100-999)
+    //         $payment_code = rand(100, 999);
+
+    //         // Cek apakah payment code sudah ada di database
+    //         $exists = Buyer::where('payment_code', $payment_code)->exists();
+    //     } while ($exists);
+
+    //     return $payment_code;
+    // }
 
     /**
      * Halaman pembayaran manual

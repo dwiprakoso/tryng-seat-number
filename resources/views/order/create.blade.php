@@ -4,7 +4,8 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Order Form - Event Management</title><!-- Bootstrap CSS -->
+    <title>Order Form - Event Management</title>
+    <!-- Bootstrap CSS -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet" />
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
@@ -14,26 +15,18 @@
     <style>
         :root {
             --primary: #D4A574;
-            /* Gold color */
             --primary-dark: #B8935F;
-            /* Darker gold for hover */
-            --success: #D4A574;
-            /* Gold for price */
+            --success: #28a745;
+            --danger: #dc3545;
             --dark: #2C2C2C;
-            /* Dark gray */
             --white: #ffffff;
+            --gray-50: #FAFAFA;
             --gray-100: #F5F5F5;
-            /* Light gray background */
             --gray-200: #E8E8E8;
-            /* Light border */
             --gray-300: #D1D1D1;
-            /* Medium border */
             --gray-600: #666666;
-            /* Medium gray text */
             --gray-700: #4A4A4A;
-            /* Darker gray text */
             --gray-900: #2C2C2C;
-            /* Very dark gray */
         }
 
         * {
@@ -44,17 +37,16 @@
 
         body {
             font-family: 'Inter', sans-serif;
-            background-color: var(--gray-100);
+            background-color: var(--gray-50);
             color: var(--gray-700);
             font-size: 14px;
-            line-height: 1.5;
+            line-height: 1.6;
         }
 
-        /* Minimal Navbar */
+        /* Improved Navbar */
         .navbar {
-            background: var(--dark);
-            border-bottom: 1px solid var(--gray-600);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            background: linear-gradient(135deg, var(--dark) 0%, #1a1a1a 100%);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
             padding: 1rem 0;
             position: fixed;
             top: 0;
@@ -64,55 +56,34 @@
 
         .navbar-brand {
             font-weight: 700;
-            font-size: 1.5rem;
+            font-size: 1.75rem;
             color: var(--primary);
             text-decoration: none;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .navbar-brand:hover {
+            color: var(--primary-dark);
+            transform: scale(1.05);
+        }
+
+        .navbar-brand img {
+            height: 45px;
+            width: auto;
+        }
+
+        /* Container */
+        .main-container {
+            max-width: 1400px;
             margin: 0 auto;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .navbar-brand i {
-            color: var(--primary);
-            margin-right: 0.5rem;
-        }
-
-        .navbar .container {
-            display: flex;
-            justify-content: center;
-        }
-
-        /* Cards */
-        .card {
-            background: var(--white);
-            border: 1px solid var(--gray-200);
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-            margin-bottom: 1.5rem;
-        }
-
-        .card-body {
-            padding: 2rem;
-        }
-
-        .card-title {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--dark);
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-        }
-
-        .card-title i {
-            color: var(--primary);
-            margin-right: 0.75rem;
+            padding: 2rem 1rem;
         }
 
         /* Breadcrumb */
         .breadcrumb {
-            background-color: transparent;
+            background: transparent;
             padding: 0;
             margin-bottom: 2rem;
             font-size: 14px;
@@ -123,268 +94,590 @@
         }
 
         .breadcrumb-item.active {
-            color: var(--gray-700);
+            color: var(--gray-900);
             font-weight: 600;
         }
 
         .breadcrumb-item a {
             color: var(--primary);
             text-decoration: none;
+            transition: color 0.3s ease;
         }
 
         .breadcrumb-item a:hover {
             color: var(--primary-dark);
         }
 
-        /* Form Controls */
-        .form-label {
-            font-weight: 600;
-            color: var(--gray-700);
-            margin-bottom: 0.5rem;
-            font-size: 14px;
+        /* Layout Grid */
+        .order-layout {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 2rem;
         }
 
-        .form-control,
-        .form-select {
-            border: 1px solid var(--gray-300);
-            border-radius: 8px;
-            padding: 0.75rem 1rem;
-            font-size: 14px;
-            transition: all 0.3s ease;
-            background-color: var(--white);
+        @media (max-width: 1200px) {
+            .order-layout {
+                grid-template-columns: 1fr;
+            }
         }
 
-        .form-control:focus,
-        .form-select:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 0.25rem rgba(212, 165, 116, 0.15);
-            background-color: var(--white);
-        }
-
-        .form-control.is-invalid {
-            border-color: #f1416c;
-        }
-
-        .text-danger {
-            color: #f1416c !important;
-            font-size: 12px;
-            margin-top: 0.25rem;
-        }
-
-        /* Input Groups */
-        .input-group-text {
-            background-color: var(--gray-200);
-            border-color: var(--gray-300);
-            color: var(--gray-600);
-            font-size: 14px;
-        }
-
-        /* Buttons */
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        /* Cards */
+        .card {
+            background: var(--white);
             border: none;
-            color: var(--white);
-            font-weight: 600;
-            padding: 0.75rem 1.5rem;
-            border-radius: 6px;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
             transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            box-shadow: 0 4px 12px rgba(212, 165, 116, 0.3);
         }
 
-        .btn-primary:hover {
-            background: linear-gradient(135deg, var(--primary-dark) 0%, #A67C52 100%);
+        .card:hover {
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.12);
             transform: translateY(-2px);
-            color: var(--white);
-            box-shadow: 0 6px 20px rgba(212, 165, 116, 0.4);
         }
 
-        .btn-primary i {
-            margin-right: 0.5rem;
+        .card-body {
+            padding: 2.5rem;
         }
 
-        .btn-secondary {
-            background-color: var(--gray-200);
-            border: 1px solid var(--gray-300);
-            color: var(--gray-700);
-            font-weight: 600;
-            padding: 0.75rem 1.5rem;
-            border-radius: 6px;
-            transition: all 0.3s ease;
-            display: inline-flex;
+        .card-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 1.5rem;
+            display: flex;
             align-items: center;
-            text-decoration: none;
+            border-bottom: 2px solid var(--gray-100);
+            padding-bottom: 1rem;
         }
 
-        .btn-secondary:hover {
-            background-color: var(--gray-300);
-            border-color: var(--gray-700);
-            color: var(--gray-700);
+        .card-title i {
+            color: var(--primary);
+            margin-right: 1rem;
+            font-size: 1.5rem;
         }
 
-        .btn-secondary i {
-            margin-right: 0.5rem;
+        /* Event Info Sidebar */
+        .event-sidebar {
+            position: sticky;
+            top: 120px;
+            height: fit-content;
         }
 
-        /* Event Info Card */
         .event-info {
-            background-color: var(--white);
+            background: linear-gradient(135deg, var(--white) 0%, var(--gray-50) 100%);
             border: 1px solid var(--gray-200);
-            border-radius: 8px;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
         }
 
         .event-info img {
-            border-radius: 8px;
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
         }
 
         .event-info h5 {
             color: var(--dark);
             font-weight: 700;
-            margin-bottom: 0.75rem;
-            font-size: 1.125rem;
-        }
-
-        .event-info .text-muted {
-            color: var(--gray-600) !important;
-            font-size: 14px;
-        }
-
-        /* Ticket Selection */
-        .ticket-selection {
-            background-color: var(--white);
-            border: 1px solid var(--gray-200);
-            border-radius: 8px;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-        }
-
-        .ticket-selection h6 {
-            color: var(--dark);
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-        }
-
-        .price-display {
+            margin-bottom: 1rem;
             font-size: 1.25rem;
-            font-weight: 700;
-            color: var(--primary);
         }
 
-        /* Section Headers */
-        .section-header {
+        .event-detail {
             display: flex;
             align-items: center;
-            margin-bottom: 1.5rem;
-            font-size: 1.125rem;
-            font-weight: 700;
-            color: var(--dark);
+            margin-bottom: 0.75rem;
+            padding: 0.5rem 0;
+            color: var(--gray-600);
         }
 
-        .section-header i {
+        .event-detail i {
+            color: var(--primary);
+            margin-right: 0.75rem;
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Order Summary */
+        .order-summary {
+            background: var(--gray-50);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--gray-200);
+        }
+
+        .order-summary h6 {
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .order-summary h6 i {
             color: var(--primary);
             margin-right: 0.5rem;
         }
 
-        /* Jersey Size Grid */
-        .jersey-size-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
-            gap: 0.75rem;
-            margin-top: 0.75rem;
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--gray-200);
         }
 
-        .jersey-size-option {
+        .summary-item:last-child {
+            border-bottom: none;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--dark);
+        }
+
+        /* Step Progress - Improved */
+        .step-progress {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 3rem;
+            padding: 2rem 0;
+            background: var(--gray-50);
+            border-radius: 12px;
             position: relative;
-            text-align: center;
-            padding: 1rem 0.5rem;
-            border: 1px solid var(--gray-300);
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            background-color: var(--white);
+        }
+
+        .step-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            z-index: 2;
+            margin: 0 3rem;
+        }
+
+        .step-number {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--gray-300);
+            color: var(--gray-600);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.25rem;
+            transition: all 0.4s ease;
+            border: 4px solid var(--gray-300);
+            margin-bottom: 0.75rem;
+        }
+
+        .step-item.active .step-number {
+            background: var(--primary);
+            color: var(--white);
+            border-color: var(--primary);
+            box-shadow: 0 0 0 8px rgba(212, 165, 116, 0.15);
+            transform: scale(1.1);
+        }
+
+        .step-item.completed .step-number {
+            background: var(--success);
+            color: var(--white);
+            border-color: var(--success);
+        }
+
+        .step-text {
             font-weight: 600;
+            color: var(--gray-600);
+            text-align: center;
             font-size: 14px;
         }
 
-        .jersey-size-option:hover {
-            border-color: var(--primary);
-            background-color: rgba(212, 165, 116, 0.1);
-        }
-
-        .jersey-size-option.selected {
-            border-color: var(--primary);
-            background-color: var(--primary);
-            color: var(--white);
-        }
-
-        .jersey-size-option input[type="radio"] {
-            display: none;
-        }
-
-        /* Alerts */
-        .alert {
-            border: none;
-            border-radius: 8px;
-            font-size: 12px;
-            padding: 1rem;
-        }
-
-        .alert-info {
-            background-color: rgba(212, 165, 116, 0.1);
+        .step-item.active .step-text {
             color: var(--primary);
-            border: 1px solid rgba(212, 165, 116, 0.2);
+            font-weight: 700;
         }
 
-        .alert-warning {
-            background-color: #fff8dd;
-            color: #ffc700;
-            border: 1px solid #ffeaa7;
+        .step-item.completed .step-text {
+            color: var(--success);
+        }
+
+        /* Step connector */
+        .step-progress::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 25%;
+            right: 25%;
+            height: 4px;
+            background: var(--gray-300);
+            transform: translateY(-50%);
+            z-index: 1;
+            border-radius: 2px;
+        }
+
+        .step-progress.step-1-completed::before {
+            background: var(--success);
+        }
+
+        /* Step Content */
+        .step-content {
+            opacity: 0;
+            transform: translateX(30px);
+            transition: all 0.5s ease;
+            position: absolute;
+            width: 100%;
+            visibility: hidden;
+        }
+
+        .step-content.active {
+            opacity: 1;
+            transform: translateX(0);
+            position: relative;
+            visibility: visible;
+        }
+
+        /* Form Controls - Enhanced */
+        .form-group {
+            margin-bottom: 1.75rem;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: var(--gray-900);
+            margin-bottom: 0.75rem;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+        }
+
+        .form-label .text-danger {
+            margin-left: 0.25rem;
+        }
+
+        .form-control {
+            border: 2px solid var(--gray-300);
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background: var(--white);
+            line-height: 1.5;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 0.25rem rgba(212, 165, 116, 0.15);
+            background: var(--white);
+        }
+
+        .form-control.is-valid {
+            border-color: var(--success);
+            background-image: none;
+        }
+
+        .form-control.is-invalid {
+            border-color: var(--danger);
+        }
+
+        .invalid-feedback {
+            display: none;
+            color: var(--danger);
+            font-size: 12px;
+            margin-top: 0.5rem;
+            font-weight: 500;
+        }
+
+        .form-control.is-invalid+.invalid-feedback {
+            display: block;
+        }
+
+        /* Buttons - Enhanced */
+        .btn {
+            font-weight: 600;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            border: none;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: var(--white);
+            box-shadow: 0 6px 20px rgba(212, 165, 116, 0.3);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, #A67C52 100%);
+            color: var(--white);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(212, 165, 116, 0.4);
+        }
+
+        .btn-primary:disabled {
+            background: var(--gray-300);
+            color: var(--gray-600);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-secondary {
+            background: var(--gray-200);
+            color: var(--gray-700);
+            border: 2px solid var(--gray-300);
+        }
+
+        .btn-secondary:hover {
+            background: var(--gray-300);
+            color: var(--gray-900);
+            transform: translateY(-2px);
+        }
+
+        .btn i {
+            margin-right: 0.5rem;
+        }
+
+        /* Seat Selection - Redesigned */
+        .seat-map {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid var(--gray-200);
+        }
+
+        .seat-map h5 {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: var(--dark);
+            font-weight: 700;
+        }
+
+        .stage-indicator {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .stage {
+            background: linear-gradient(135deg, var(--gray-300) 0%, var(--gray-200) 100%);
+            padding: 1rem 3rem;
+            border-radius: 25px;
+            display: inline-block;
+            font-weight: 600;
+            color: var(--gray-700);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .seat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(45px, 1fr));
+            gap: 0.75rem;
+            max-width: 600px;
+            margin: 0 auto 2rem;
+            justify-items: center;
+        }
+
+        .seat {
+            width: 45px;
+            height: 45px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 3px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .seat::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.2) 50%, transparent 70%);
+            transform: translateX(-100%);
+            transition: transform 0.6s ease;
+        }
+
+        .seat:hover::before {
+            transform: translateX(100%);
+        }
+
+        .seat.available {
+            background: var(--gray-200);
+            color: var(--gray-700);
+            border-color: var(--gray-300);
+        }
+
+        .seat.available:hover {
+            background: var(--primary);
+            color: var(--white);
+            transform: scale(1.1);
+            box-shadow: 0 6px 16px rgba(212, 165, 116, 0.4);
+        }
+
+        .seat.selected {
+            background: var(--primary);
+            color: var(--white);
+            border-color: var(--primary-dark);
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(212, 165, 116, 0.5);
+        }
+
+        .seat.booked {
+            background: var(--danger);
+            color: var(--white);
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .seat-legend {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            font-size: 13px;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            background: var(--gray-50);
+            border-radius: 8px;
+        }
+
+        .legend-color {
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            margin-right: 0.75rem;
+            border: 2px solid var(--gray-300);
+        }
+
+        /* Selected Seat Info */
+        .selected-seat-info {
+            background: linear-gradient(135deg, rgba(212, 165, 116, 0.1) 0%, rgba(212, 165, 116, 0.05) 100%);
+            border: 2px solid rgba(212, 165, 116, 0.3);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            margin-top: 2rem;
+        }
+
+        .selected-seat-info i {
+            color: var(--primary);
+            font-size: 1.25rem;
+            margin-right: 0.5rem;
+        }
+
+        /* Navigation Buttons */
+        .step-navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 2px solid var(--gray-100);
+        }
+
+        /* Toast Notifications */
+        .custom-toast {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            z-index: 9999;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.4s ease;
+            max-width: 400px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+        }
+
+        .custom-toast-success {
+            background: linear-gradient(135deg, var(--success) 0%, #1e7e34 100%);
+        }
+
+        .custom-toast-error {
+            background: linear-gradient(135deg, var(--danger) 0%, #c82333 100%);
         }
 
         /* Footer */
         .footer {
-            background: var(--dark);
+            background: linear-gradient(135deg, var(--dark) 0%, #1a1a1a 100%);
             color: var(--gray-600);
-            padding: 2rem 0;
-            margin-top: 3rem;
-            border-top: 3px solid var(--primary);
+            padding: 3rem 0;
+            margin-top: 4rem;
+            border-top: 4px solid var(--primary);
         }
 
         .footer h6 {
             color: var(--primary);
-            font-weight: 600;
+            font-weight: 700;
             margin-bottom: 1rem;
         }
 
-        /* Container */
-        .container-custom {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 2rem 1rem;
-        }
-
-        /* Responsive */
+        /* Responsive Design */
         @media (max-width: 768px) {
+            .main-container {
+                padding: 1rem;
+            }
+
             .card-body {
                 padding: 1.5rem;
             }
 
-            .jersey-size-grid {
-                grid-template-columns: repeat(4, 1fr);
+            .step-item {
+                margin: 0 1rem;
             }
 
-            .event-info {
-                padding: 1rem;
+            .step-number {
+                width: 50px;
+                height: 50px;
+                font-size: 1.1rem;
             }
 
-            .container-custom {
-                padding: 1rem;
+            .seat-grid {
+                grid-template-columns: repeat(8, 1fr);
+                gap: 0.5rem;
+            }
+
+            .seat {
+                width: 35px;
+                height: 35px;
+                font-size: 10px;
+            }
+
+            .step-navigation {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .custom-toast {
+                left: 20px;
+                right: 20px;
+                max-width: none;
             }
         }
     </style>
@@ -395,11 +688,14 @@
     <nav class="navbar">
         <div class="container">
             <a href="#" class="navbar-brand">
-                <img src="{{ asset('assets/media/logos/logo.png') }}" alt="Ticketify" height="50" />
+                <img src="{{ asset('assets/media/logos/logo.png') }}" alt="Ticketify" />
+                Ticketify
             </a>
         </div>
-    </nav><!-- Main Content -->
-    <div class="container-custom" style="margin-top: 100px;">
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-container" style="margin-top: 100px;">
         <!-- Breadcrumb -->
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
@@ -412,106 +708,217 @@
             </ol>
         </nav>
 
-        <div class="row">
-            <!-- Order Form -->
-            <div class="col-12">
+        <div class="order-layout">
+            <!-- Main Form -->
+            <div class="order-form">
                 <div class="card">
                     <div class="card-body">
                         <h3 class="card-title">
-                            <i class="fas fa-shopping-cart"></i> Form Pemesanan Tiket
+                            <i class="fas fa-shopping-cart"></i>
+                            Form Pemesanan Tiket
                         </h3>
 
-                        <!-- Event Info -->
-                        <div class="event-info mb-4">
-                            <div class="row align-items-center">
-                                <div class="col-md-3">
-                                    <img src="{{ $product->avatar ? Storage::url($product->avatar) : 'https://via.placeholder.com/150x100?text=No+Image' }}"
-                                        alt="Event" class="img-fluid rounded" />
-                                </div>
-                                <div class="col-md-9">
-                                    <h5>{{ $product->product_name }}</h5>
-                                    <p class="text-muted mb-1">
-                                        <i class="fas fa-calendar me-2"></i>
-                                        {{ \Carbon\Carbon::parse($product->event_date)->translatedFormat('d M Y') }}
-                                    </p>
-                                    <p class="text-muted mb-0">
-                                        <i class="fas fa-map-marker-alt me-2"></i> {{ $product->location }}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <form action="{{ route('order.store') }}" method="POST" id="orderForm" novalidate>
+                        <form id="orderForm" novalidate>
                             @csrf
                             <input type="hidden" name="ticket_id" value="{{ $ticket->id }}" />
+                            <input type="hidden" name="selected_seat" id="selected_seat" />
 
-                            <div class="mb-3">
-                                <label for="nama_lengkap" class="form-label">Nama Lengkap <span
-                                        class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="nama_lengkap" name="nama_lengkap"
-                                    required value="{{ old('nama_lengkap') }}" placeholder="Masukkan nama lengkap" />
-                                @error('nama_lengkap')
-                                    <div class="text-danger">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="email" class="form-label">Email <span
-                                        class="text-danger">*</span></label>
-                                <input type="email" class="form-control" id="email" name="email" required
-                                    value="{{ old('email') }}" placeholder="contoh@mail.com" />
-                                @error('email')
-                                    <div class="text-danger">{{ $message }}</div>
-                                @enderror
+                            <!-- Step Progress Bar -->
+                            <div class="step-progress">
+                                <div class="step-item active" id="step1">
+                                    <div class="step-number">1</div>
+                                    <div class="step-text">Data Diri</div>
+                                </div>
+                                <div class="step-item" id="step2">
+                                    <div class="step-number">2</div>
+                                    <div class="step-text">Pilih Kursi</div>
+                                </div>
                             </div>
 
-                            <div class="mb-3">
-                                <label for="no_handphone" class="form-label">No. Whatsapp <span
-                                        class="text-danger">*</span></label>
-                                <input type="tel" class="form-control" id="no_handphone" name="no_handphone"
-                                    required value="{{ old('no_handphone') }}" placeholder="08123456789"
-                                    pattern="^08\d{8,12}$"
-                                    title="Masukkan nomor handphone yang valid, mulai dengan 08 dan 10-14 digit" />
-                                @error('no_handphone')
-                                    <div class="text-danger">{{ $message }}</div>
-                                @enderror
+                            <!-- Step Content Wrapper -->
+                            <div style="position: relative; min-height: 500px;">
+                                <!-- Step 1: Data Diri -->
+                                <div class="step-content active" id="step1-content">
+                                    <div class="form-group">
+                                        <label for="nama_lengkap" class="form-label">
+                                            Nama Lengkap <span class="text-danger">*</span>
+                                        </label>
+                                        <input type="text" class="form-control" id="nama_lengkap" name="nama_lengkap"
+                                            required value="{{ old('nama_lengkap') }}"
+                                            placeholder="Masukkan nama lengkap" />
+                                        <div class="invalid-feedback">Nama lengkap minimal 3 karakter</div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="email" class="form-label">
+                                            Email <span class="text-danger">*</span>
+                                        </label>
+                                        <input type="email" class="form-control" id="email" name="email"
+                                            required value="{{ old('email') }}" placeholder="contoh@email.com" />
+                                        <div class="invalid-feedback">Email harus valid</div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="no_handphone" class="form-label">
+                                            No. WhatsApp <span class="text-danger">*</span>
+                                        </label>
+                                        <input type="tel" class="form-control" id="no_handphone" name="no_handphone"
+                                            required value="{{ old('no_handphone') }}" placeholder="08123456789"
+                                            pattern="^08\d{8,12}$" />
+                                        <div class="invalid-feedback">Nomor HP harus valid (08xxxxxxxxx)</div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="alamat_lengkap" class="form-label">
+                                            Alamat Domisili <span class="text-danger">*</span>
+                                        </label>
+                                        <input type="text" class="form-control" id="alamat_lengkap"
+                                            name="alamat_lengkap" required value="{{ old('alamat_lengkap') }}"
+                                            placeholder="Masukkan alamat lengkap" />
+                                        <div class="invalid-feedback">Alamat minimal 5 karakter</div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="identitas_number" class="form-label">
+                                            Nomor Identitas (KTP/NIK/SIM) <span class="text-danger">*</span>
+                                        </label>
+                                        <input type="text" class="form-control" id="identitas_number"
+                                            name="identitas_number" required value="{{ old('identitas_number') }}"
+                                            placeholder="0000000000000000" pattern="^\d{12,20}$" />
+                                        <div class="invalid-feedback">Nomor identitas harus 12-20 digit angka</div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="mewakili" class="form-label">
+                                            Mewakili <span class="text-danger">*</span>
+                                        </label>
+                                        <input type="text" class="form-control" id="mewakili" name="mewakili"
+                                            required value="{{ old('mewakili') }}"
+                                            placeholder="Nama organisasi/perusahaan" />
+                                        <div class="invalid-feedback">Mewakili minimal 3 karakter</div>
+                                    </div>
+
+                                    <div class="step-navigation">
+                                        <div></div>
+                                        <button type="button" class="btn btn-primary" id="nextToStep2">
+                                            <i class="fas fa-arrow-right"></i> Lanjut ke Pilih Kursi
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Step 2: Pilih Kursi -->
+                                <div class="step-content" id="step2-content">
+                                    <div class="seat-map">
+                                        <h5>
+                                            <i class="fas fa-couch me-2"></i>Pilih Kursi Anda
+                                        </h5>
+
+                                        <div class="stage-indicator">
+                                            <div class="stage">
+                                                <i class="fas fa-tv me-2"></i>PANGGUNG
+                                            </div>
+                                        </div>
+
+                                        <div class="seat-grid" id="seatGrid">
+                                            <!-- Available seats will be rendered here -->
+                                            @foreach ($availableSeats as $seat)
+                                                <div class="seat available" data-seat="{{ $seat->seat_number }}">
+                                                    {{ $seat->seat_number }}
+                                                </div>
+                                            @endforeach
+                                            @foreach ($bookedSeats as $bookedSeat)
+                                                <div class="seat booked">{{ $bookedSeat }}</div>
+                                            @endforeach
+                                        </div>
+
+                                        <div class="seat-legend">
+                                            <div class="legend-item">
+                                                <div class="legend-color" style="background-color: var(--gray-200);">
+                                                </div>
+                                                <span>Tersedia</span>
+                                            </div>
+                                            <div class="legend-item">
+                                                <div class="legend-color" style="background-color: var(--primary);">
+                                                </div>
+                                                <span>Dipilih</span>
+                                            </div>
+                                            <div class="legend-item">
+                                                <div class="legend-color" style="background-color: var(--danger);">
+                                                </div>
+                                                <span>Sudah Dipesan</span>
+                                            </div>
+                                        </div>
+
+                                        <div id="selectedSeatInfo" class="selected-seat-info" style="display: none;">
+                                            <i class="fas fa-chair"></i>
+                                            Kursi yang dipilih: <strong id="selectedSeatNumber"></strong>
+                                        </div>
+                                    </div>
+
+                                    <div class="step-navigation">
+                                        <button type="button" class="btn btn-secondary" id="backToStep1">
+                                            <i class="fas fa-arrow-left"></i> Kembali ke Data Diri
+                                        </button>
+                                        <button type="submit" class="btn btn-primary" id="submitOrder" disabled>
+                                            <i class="fas fa-credit-card"></i> Lanjut ke Pembayaran
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="mb-3">
-                                <label for="alamat_lengkap" class="form-label">Alamat Domisili <span
-                                        class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="alamat_lengkap" name="alamat_lengkap"
-                                    required value="{{ old('alamat_lengkap') }}"
-                                    placeholder="Masukkan alamat lengkap" />
-                                @error('alamat_lengkap')
-                                    <div class="text-danger">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            <div class="mb-3">
-                                <label for="identitas_number" class="form-label">Nomor Identitas (KTP/NIK/SIM)<span
-                                        class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="identitas_number"
-                                    name="identitas_number" required value="{{ old('identitas_number') }}"
-                                    placeholder="0000000000000000" pattern="^\d{12,20}$"
-                                    title="Masukkan nomor identitas yang valid (12-20 digit angka)" />
-                                @error('identitas_number')
-                                    <div class="text-danger">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            <div class="mb-3">
-                                <label for="mewakili" class="form-label">Mewakili<span
-                                        class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="mewakili" name="mewakili" required
-                                    value="{{ old('mewakili') }}" placeholder="Coffe Shop" />
-                                @error('mewakili')
-                                    <div class="text-danger">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-credit-card"></i> Lanjut ke Pembayaran
-                            </button>
                         </form>
                     </div>
                 </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="event-sidebar">
+                <!-- Event Info -->
+                <div class="event-info">
+                    <img src="{{ $product->avatar ? Storage::url($product->avatar) : 'https://via.placeholder.com/400x200?text=No+Image' }}"
+                        alt="Event" />
+                    <h5>{{ $product->product_name }}</h5>
+                    <div class="event-detail">
+                        <i class="fas fa-calendar"></i>
+                        <span>{{ \Carbon\Carbon::parse($product->event_date)->translatedFormat('d M Y') }}</span>
+                    </div>
+                    <div class="event-detail">
+                        <i class="fas fa-clock"></i>
+                        <span>{{ \Carbon\Carbon::parse($product->event_time)->format('H:i') }} WIB</span>
+                    </div>
+                    <div class="event-detail">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>{{ $product->location }}</span>
+                    </div>
+                    <div class="event-detail">
+                        <i class="fas fa-ticket-alt"></i>
+                        <span>{{ $ticket->name }}</span>
+                    </div>
+                </div>
+
+                <!-- Order Summary -->
+                {{-- <div class="order-summary">
+                    <h6>
+                        <i class="fas fa-receipt"></i>
+                        Ringkasan Pesanan
+                    </h6>
+                    <div class="summary-item">
+                        <span>Tiket {{ $ticket->name }}</span>
+                        <span>Rp {{ number_format($ticket->price, 0, ',', '.') }}</span>
+                    </div>
+                    <div class="summary-item">
+                        <span>Jumlah</span>
+                        <span>1 tiket</span>
+                    </div>
+                    <div class="summary-item">
+                        <span>Kode Pembayaran</span>
+                        <span id="paymentCodeDisplay">Akan digenerate</span>
+                    </div>
+                    <div class="summary-item">
+                        <span><strong>Total</strong></span>
+                        <span><strong id="totalDisplay">Rp
+                                {{ number_format($ticket->price, 0, ',', '.') }}</strong></span>
+                    </div>
+                </div> --}}
             </div>
         </div>
     </div>
@@ -535,78 +942,329 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 
     <script>
-        // Fungsi format Rupiah
-        function formatRupiah(number) {
-            return 'Rp ' + number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-        }
-
         document.addEventListener('DOMContentLoaded', function() {
-            const qtyInput = document.getElementById('quantity');
+            let currentStep = 1;
+            let selectedSeat = null;
+            const ticketPrice = {{ $ticket->price }};
 
-            // Validasi form
-            document.getElementById('orderForm').addEventListener('submit', function(e) {
+            // Form elements
+            const form = document.getElementById('orderForm');
+            const nextBtn = document.getElementById('nextToStep2');
+            const backBtn = document.getElementById('backToStep1');
+            const submitBtn = document.getElementById('submitOrder');
+
+            // Step navigation
+            nextBtn.addEventListener('click', function() {
+                if (validateStep1()) {
+                    showStep(2);
+                }
+            });
+
+            backBtn.addEventListener('click', function() {
+                showStep(1);
+            });
+
+            // Seat selection
+            document.querySelectorAll('.seat.available').forEach(seat => {
+                seat.addEventListener('click', function() {
+                    const seatNumber = this.dataset.seat;
+                    selectSeat(seatNumber, this);
+                });
+            });
+
+            // Form submission
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                handleFormSubmit();
+            });
+
+            // Real-time validation
+            document.querySelectorAll('.form-control').forEach(input => {
+                input.addEventListener('blur', () => validateField(input));
+                input.addEventListener('input', () => {
+                    if (input.classList.contains('is-invalid')) {
+                        input.classList.remove('is-invalid');
+                    }
+                });
+            });
+
+            function showStep(step) {
+                // Hide all content
+                document.querySelectorAll('.step-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+
+                // Reset step items
+                document.querySelectorAll('.step-item').forEach(item => {
+                    item.classList.remove('active', 'completed');
+                });
+
+                // Remove progress line classes
+                const progressBar = document.querySelector('.step-progress');
+                progressBar.classList.remove('step-1-completed');
+
+                // Show current step
+                setTimeout(() => {
+                    document.getElementById(`step${step}-content`).classList.add('active');
+                }, 100);
+
+                document.getElementById(`step${step}`).classList.add('active');
+
+                // Mark completed steps
+                for (let i = 1; i < step; i++) {
+                    document.getElementById(`step${i}`).classList.add('completed');
+                    if (i === 1 && step === 2) {
+                        progressBar.classList.add('step-1-completed');
+                    }
+                }
+
+                currentStep = step;
+
+                // Smooth scroll to top
+                document.querySelector('.card-title').scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+
+            function validateStep1() {
                 let isValid = true;
+                const fields = [{
+                        id: 'nama_lengkap',
+                        minLength: 3,
+                        message: 'Nama lengkap minimal 3 karakter'
+                    },
+                    {
+                        id: 'email',
+                        pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                        message: 'Email harus valid'
+                    },
+                    {
+                        id: 'no_handphone',
+                        pattern: /^08\d{8,12}$/,
+                        message: 'Nomor HP harus valid (08xxxxxxxxx)'
+                    },
+                    {
+                        id: 'alamat_lengkap',
+                        minLength: 5,
+                        message: 'Alamat minimal 5 karakter'
+                    },
+                    {
+                        id: 'identitas_number',
+                        pattern: /^\d{12,20}$/,
+                        message: 'Nomor identitas harus 12-20 digit angka'
+                    },
+                    {
+                        id: 'mewakili',
+                        minLength: 3,
+                        message: 'Mewakili minimal 3 karakter'
+                    }
+                ];
 
-                // Nama lengkap harus diisi dan minimal 3 karakter
-                const nama = document.getElementById('nama_lengkap');
-                if (!nama.value.trim() || nama.value.trim().length < 3) {
-                    nama.classList.add('is-invalid');
-                    isValid = false;
-                } else {
-                    nama.classList.remove('is-invalid');
-                }
+                fields.forEach(field => {
+                    const element = document.getElementById(field.id);
+                    const value = element.value.trim();
+                    let fieldValid = true;
 
-                // Email valid
-                const email = document.getElementById('email');
-                const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                if (!emailPattern.test(email.value.trim())) {
-                    email.classList.add('is-invalid');
-                    isValid = false;
-                } else {
-                    email.classList.remove('is-invalid');
-                }
+                    if (!value) {
+                        fieldValid = false;
+                    } else if (field.minLength && value.length < field.minLength) {
+                        fieldValid = false;
+                    } else if (field.pattern && !field.pattern.test(value)) {
+                        fieldValid = false;
+                    }
 
-                // No HP valid sesuai pattern
-                const noHp = document.getElementById('no_handphone');
-                const noHpPattern = /^08\d{8,12}$/;
-                if (!noHpPattern.test(noHp.value.trim())) {
-                    noHp.classList.add('is-invalid');
-                    isValid = false;
-                } else {
-                    noHp.classList.remove('is-invalid');
-                }
-
-                // Validasi alamat lengkap
-                const alamat = document.getElementById('alamat_lengkap');
-                if (!alamat.value.trim() || alamat.value.trim().length < 5) {
-                    alamat.classList.add('is-invalid');
-                    isValid = false;
-                } else {
-                    alamat.classList.remove('is-invalid');
-                }
-
-                // Validasi nomor identitas (12-20 digit angka)
-                const identitas = document.getElementById('identitas_number');
-                const identitasPattern = /^\d{12,20}$/;
-                if (!identitasPattern.test(identitas.value.trim())) {
-                    identitas.classList.add('is-invalid');
-                    isValid = false;
-                } else {
-                    identitas.classList.remove('is-invalid');
-                }
-
-                // Validasi mewakili (minimal 3 karakter)
-                const mewakili = document.getElementById('mewakili');
-                if (!mewakili.value.trim() || mewakili.value.trim().length < 3) {
-                    mewakili.classList.add('is-invalid');
-                    isValid = false;
-                } else {
-                    mewakili.classList.remove('is-invalid');
-                }
+                    if (fieldValid) {
+                        element.classList.remove('is-invalid');
+                        element.classList.add('is-valid');
+                    } else {
+                        element.classList.remove('is-valid');
+                        element.classList.add('is-invalid');
+                        isValid = false;
+                    }
+                });
 
                 if (!isValid) {
+                    const firstInvalid = document.querySelector('.form-control.is-invalid');
+                    if (firstInvalid) {
+                        firstInvalid.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'center'
+                        });
+                        firstInvalid.focus();
+                    }
+                    showToast('Mohon lengkapi semua data dengan benar!', 'error');
+                }
+
+                return isValid;
+            }
+
+            function validateField(element) {
+                const value = element.value.trim();
+                let isValid = true;
+
+                switch (element.id) {
+                    case 'nama_lengkap':
+                    case 'mewakili':
+                        isValid = value.length >= 3;
+                        break;
+                    case 'alamat_lengkap':
+                        isValid = value.length >= 5;
+                        break;
+                    case 'email':
+                        isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+                        break;
+                    case 'no_handphone':
+                        isValid = /^08\d{8,12}$/.test(value);
+                        break;
+                    case 'identitas_number':
+                        isValid = /^\d{12,20}$/.test(value);
+                        break;
+                }
+
+                if (value && isValid) {
+                    element.classList.remove('is-invalid');
+                    element.classList.add('is-valid');
+                } else if (value) {
+                    element.classList.remove('is-valid');
+                    element.classList.add('is-invalid');
+                } else {
+                    element.classList.remove('is-valid', 'is-invalid');
+                }
+            }
+
+            function selectSeat(seatNumber, seatElement) {
+                // Remove previous selection
+                document.querySelectorAll('.seat.selected').forEach(s => {
+                    s.classList.remove('selected');
+                    s.classList.add('available');
+                });
+
+                // Select new seat
+                seatElement.classList.remove('available');
+                seatElement.classList.add('selected');
+
+                selectedSeat = seatNumber;
+                document.getElementById('selected_seat').value = seatNumber;
+                document.getElementById('selectedSeatNumber').textContent = seatNumber;
+                document.getElementById('selectedSeatInfo').style.display = 'block';
+
+                submitBtn.disabled = false;
+
+                // Update payment code in summary (simulate)
+                const paymentCode = Math.floor(Math.random() * 900) + 100;
+                const total = ticketPrice + paymentCode;
+                document.getElementById('paymentCodeDisplay').textContent =
+                    `+Rp ${paymentCode.toLocaleString('id-ID')}`;
+                document.getElementById('totalDisplay').innerHTML =
+                    `<strong>Rp ${total.toLocaleString('id-ID')}</strong>`;
+            }
+
+            function handleFormSubmit() {
+                if (!selectedSeat) {
+                    showToast('Silakan pilih kursi terlebih dahulu!', 'error');
+                    return;
+                }
+
+                // Show loading state
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Memproses...';
+                submitBtn.disabled = true;
+
+                // Create form data
+                const formData = new FormData();
+                formData.append('_token', document.querySelector('input[name="_token"]').value);
+                formData.append('ticket_id', document.querySelector('input[name="ticket_id"]').value);
+                formData.append('nama_lengkap', document.getElementById('nama_lengkap').value);
+                formData.append('email', document.getElementById('email').value);
+                formData.append('no_handphone', document.getElementById('no_handphone').value);
+                formData.append('alamat_lengkap', document.getElementById('alamat_lengkap').value);
+                formData.append('identitas_number', document.getElementById('identitas_number').value);
+                formData.append('mewakili', document.getElementById('mewakili').value);
+
+                // Submit form
+                fetch('{{ route('order.store') }}', {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
+                        }
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.json().then(err => Promise.reject(err));
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            showToast('Pesanan berhasil dibuat!', 'success');
+                            setTimeout(() => {
+                                window.location.href = data.redirect_url;
+                            }, 1000);
+                        } else {
+                            throw new Error(data.message || 'Terjadi kesalahan');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+
+                        let errorMessage = 'Terjadi kesalahan saat memproses pesanan';
+                        if (error.errors) {
+                            const firstError = Object.values(error.errors)[0];
+                            errorMessage = Array.isArray(firstError) ? firstError[0] : firstError;
+                        } else if (error.message) {
+                            errorMessage = error.message;
+                        }
+
+                        showToast(errorMessage, 'error');
+
+                        // Reset button
+                        submitBtn.innerHTML = '<i class="fas fa-credit-card"></i> Lanjut ke Pembayaran';
+                        submitBtn.disabled = !selectedSeat;
+                    });
+            }
+
+            function showToast(message, type = 'info') {
+                // Remove existing toast
+                const existingToast = document.querySelector('.custom-toast');
+                if (existingToast) {
+                    existingToast.remove();
+                }
+
+                // Create toast
+                const toast = document.createElement('div');
+                toast.className = `custom-toast custom-toast-${type}`;
+                toast.innerHTML = `
+                    <div class="d-flex align-items-center">
+                        <i class="fas ${type === 'error' ? 'fa-exclamation-circle' : type === 'success' ? 'fa-check-circle' : 'fa-info-circle'} me-2"></i>
+                        <span>${message}</span>
+                    </div>
+                `;
+
+                document.body.appendChild(toast);
+
+                // Show toast
+                setTimeout(() => {
+                    toast.style.opacity = '1';
+                    toast.style.transform = 'translateX(0)';
+                }, 100);
+
+                // Hide toast
+                setTimeout(() => {
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateX(100%)';
+                    setTimeout(() => toast.remove(), 400);
+                }, 4000);
+            }
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && currentStep === 1 && !e.target.matches('textarea')) {
                     e.preventDefault();
-                    alert('Mohon lengkapi form dengan benar ya!');
+                    if (validateStep1()) {
+                        showStep(2);
+                    }
                 }
             });
         });
