@@ -176,12 +176,9 @@ class OrderController extends Controller
      */
     public function uploadPaymentProof(Request $request, $external_id)
     {
-        // Debug: Log semua data request
         Log::info('Upload Payment Proof Request', [
             'external_id' => $external_id,
-            'has_file' => $request->hasFile('payment_proof'),
-            'all_files' => $request->allFiles(),
-            'request_data' => $request->all()
+            'has_file' => $request->hasFile('payment_proof')
         ]);
 
         $request->validate([
@@ -195,118 +192,45 @@ class OrderController extends Controller
 
         $buyer = Buyer::where('external_id', $external_id)->firstOrFail();
 
-        // Debug: Log buyer status
-        Log::info('Buyer Status', [
-            'buyer_id' => $buyer->id,
-            'payment_status' => $buyer->payment_status,
-            'existing_proof' => $buyer->payment_proof
-        ]);
-
         // Cek status pembayaran
-        if ($buyer->payment_status === 'waiting_confirmation') {
-            Log::warning('Payment already waiting confirmation', ['buyer_id' => $buyer->id]);
-            return redirect()->back()
-                ->with('info', 'Bukti pembayaran sudah diupload sebelumnya dan sedang dalam proses verifikasi.');
-        }
+        if (in_array($buyer->payment_status, ['waiting_confirmation', 'confirmed'])) {
+            $message = $buyer->payment_status === 'confirmed'
+                ? 'Pembayaran sudah dikonfirmasi.'
+                : 'Bukti pembayaran sudah diupload sebelumnya dan sedang dalam proses verifikasi.';
 
-        if ($buyer->payment_status === 'confirmed') {
-            Log::warning('Payment already confirmed', ['buyer_id' => $buyer->id]);
-            return redirect()->back()
-                ->with('info', 'Pembayaran sudah dikonfirmasi.');
+            return redirect()->back()->with('info', $message);
         }
 
         try {
-            // Debug: Cek file detail
-            if ($request->hasFile('payment_proof')) {
-                $file = $request->file('payment_proof');
+            $file = $request->file('payment_proof');
+            $uploadPath = 'payment_proofs';
 
-                Log::info('File Details', [
-                    'original_name' => $file->getClientOriginalName(),
-                    'size' => $file->getSize(),
-                    'mime_type' => $file->getMimeType(),
-                    'extension' => $file->getClientOriginalExtension(),
-                    'is_valid' => $file->isValid(),
-                    'error' => $file->getError()
-                ]);
-
-                // Pastikan folder exists
-                $uploadPath = 'payment_proofs';
-                if (!Storage::disk('public')->exists($uploadPath)) {
-                    Storage::disk('public')->makeDirectory($uploadPath);
-                    Log::info('Created directory: ' . $uploadPath);
-                }
-
-                // Hapus file lama jika ada
-                if ($buyer->payment_proof) {
-                    // Jika payment_proof berupa URL lengkap, ambil hanya nama filenya
-                    $oldFileName = basename($buyer->payment_proof);
-                    $oldFilePath = $uploadPath . '/' . $oldFileName;
-
-                    if (Storage::disk('public')->exists($oldFilePath)) {
-                        Storage::disk('public')->delete($oldFilePath);
-                        Log::info('Deleted old file: ' . $oldFilePath);
-                    }
-
-                    // Jika payment_proof sudah berupa path relatif
-                    if (strpos($buyer->payment_proof, 'http') === false) {
-                        if (Storage::disk('public')->exists($buyer->payment_proof)) {
-                            Storage::disk('public')->delete($buyer->payment_proof);
-                            Log::info('Deleted old file: ' . $buyer->payment_proof);
-                        }
-                    }
-                }
-
-                // Generate filename yang unik
-                $fileName = 'payment_' . $external_id . '_' . time() . '.' . $file->getClientOriginalExtension();
-
-                // Upload file
-                $filePath = $file->storeAs($uploadPath, $fileName, 'public');
-
-                // Debug: Cek apakah file benar-benar tersimpan
-                if (Storage::disk('public')->exists($filePath)) {
-                    Log::info('File uploaded successfully', [
-                        'file_path' => $filePath,
-                        'full_path' => Storage::disk('public')->path($filePath),
-                        'url' => Storage::disk('public')->url($filePath)
-                    ]);
-                } else {
-                    Log::error('File upload failed - file not found after upload', [
-                        'expected_path' => $filePath
-                    ]);
-                    throw new Exception('File tidak berhasil disimpan');
-                }
-
-                // PERBAIKAN: Simpan hanya path relatif, bukan URL lengkap
-                $updateResult = $buyer->update([
-                    'payment_proof' => $filePath, // Simpan: "payment_proofs/payment_ORDER-123_1234567890.jpg"
-                    'payment_status' => 'waiting_confirmation'
-                ]);
-
-                Log::info('Buyer Updated', [
-                    'buyer_id' => $buyer->id,
-                    'update_result' => $updateResult,
-                    'new_payment_proof' => $buyer->fresh()->payment_proof,
-                    'new_status' => $buyer->fresh()->payment_status
-                ]);
-
-                return redirect()->back()
-                    ->with('success', 'Bukti pembayaran berhasil diupload. Pembayaran Anda akan segera diverifikasi.');
-            } else {
-                Log::error('No file found in request', [
-                    'has_file' => $request->hasFile('payment_proof'),
-                    'all_files' => $request->allFiles()
-                ]);
-
-                return redirect()->back()
-                    ->with('error', 'Tidak ada file yang diupload.')
-                    ->withInput();
+            // Hapus file lama jika ada
+            if ($buyer->payment_proof && Storage::disk('public')->exists($buyer->payment_proof)) {
+                Storage::disk('public')->delete($buyer->payment_proof);
             }
+
+            // Upload file baru
+            $fileName = 'payment_' . $external_id . '_' . time() . '.' . $file->getClientOriginalExtension();
+            $filePath = $file->storeAs($uploadPath, $fileName, 'public');
+
+            // Update buyer
+            $buyer->update([
+                'payment_proof' => $filePath,
+                'payment_status' => 'waiting_confirmation'
+            ]);
+
+            Log::info('Payment proof uploaded successfully', [
+                'buyer_id' => $buyer->id,
+                'file_path' => $filePath
+            ]);
+
+            return redirect()->back()
+                ->with('success', 'Bukti pembayaran berhasil diupload. Pembayaran Anda akan segera diverifikasi.');
         } catch (Exception $e) {
             Log::error('Payment Proof Upload Failed', [
                 'buyer_id' => $buyer->id,
-                'external_id' => $external_id,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'error' => $e->getMessage()
             ]);
 
             return redirect()->back()
