@@ -219,7 +219,7 @@
                     </div>
                     <!--end::Card title-->
                     <!--begin::Card toolbar-->
-                    <div class="card-toolbar flex-row-fluid justify-content-end gap-5">
+                    {{-- <div class="card-toolbar flex-row-fluid justify-content-end gap-5">
                         <!--begin::Status Filter-->
                         <div class="w-100 mw-150px">
                             <select class="form-select form-select-solid" id="statusFilter" data-control="select2"
@@ -230,7 +230,7 @@
                             </select>
                         </div>
                         <!--end::Status Filter-->
-                    </div>
+                    </div> --}}
                     <!--end::Card toolbar-->
                 </div>
                 <!--end::Card header-->
