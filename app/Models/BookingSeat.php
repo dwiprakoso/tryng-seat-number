@@ -14,7 +14,6 @@ class BookingSeat extends Model
     protected $fillable = [
         'buyer_id',
         'seat_id',
-        'seat_number'
     ];
 
     /**
