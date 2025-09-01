@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Models\Buyer;
+use App\Models\BookingSeat;
 use App\Exports\BuyerExport;
 use Illuminate\Http\Request;
 use App\Mail\PaymentRejected;
@@ -61,7 +62,7 @@ class BuyerController extends Controller
         try {
             $buyer = Buyer::with(['ticket'])->findOrFail($id);
 
-            if ($buyer->payment_status !== 'waiting_confirmation') {
+            if (!in_array($buyer->payment_status, ['waiting_confirmation', 'pending'])) {
                 return redirect()->route('admin.buyer.index')
                     ->with('error', 'Status pembayaran tidak dapat dikonfirmasi');
             }
@@ -153,7 +154,7 @@ class BuyerController extends Controller
             $buyer = Buyer::with('ticket')->findOrFail($id); // Load relasi ticket
             Log::info('Buyer found', ['buyer_id' => $buyer->id, 'status' => $buyer->payment_status]);
 
-            if ($buyer->payment_status !== 'waiting_confirmation') {
+            if (!in_array($buyer->payment_status, ['waiting_confirmation', 'pending'])) {
                 Log::warning('Invalid payment status for rejection', [
                     'buyer_id' => $id,
                     'current_status' => $buyer->payment_status
@@ -180,6 +181,27 @@ class BuyerController extends Controller
                     'quantity_restored' => $buyer->quantity,
                     'new_stock' => $buyer->ticket->fresh()->qty
                 ]);
+                // Kembalikan seat dan hapus booking record
+                $bookingSeat = BookingSeat::where('buyer_id', $buyer->id)->first();
+                if ($bookingSeat) {
+                    Log::info('Releasing seat booking', [
+                        'booking_seat_id' => $bookingSeat->id,
+                        'seat_id' => $bookingSeat->seat_id,
+                        'buyer_id' => $buyer->id
+                    ]);
+
+                    // Set seat menjadi available lagi
+                    $bookingSeat->seat->update(['is_booked' => 0]);
+
+                    // Hapus record booking_seat
+                    $bookingSeat->delete();
+
+                    Log::info('Seat released successfully', [
+                        'seat_id' => $bookingSeat->seat_id
+                    ]);
+                } else {
+                    Log::warning('No booking seat record found for buyer', ['buyer_id' => $buyer->id]);
+                }
 
                 // Update buyer status
                 Log::info('Updating buyer payment status to rejected');

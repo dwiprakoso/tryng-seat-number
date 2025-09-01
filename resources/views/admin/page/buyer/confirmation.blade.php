@@ -95,9 +95,10 @@
                             <div class="card-toolbar">
                                 @php
                                     $statusColors = [
-                                        'paid' => 'success',
+                                        'confirmed' => 'success',
                                         'pending' => 'warning',
                                         'waiting_confirmation' => 'info',
+                                        'rejected' => 'danger',
                                         'failed' => 'danger',
                                     ];
                                     $color = $statusColors[$buyer->payment_status] ?? 'secondary';
@@ -342,6 +343,95 @@
                                     </div>
                                 </div>
                                 <!--end::Info-->
+                            @elseif ($buyer->payment_status === 'pending')
+                                <!--begin::Pending Alert-->
+                                <div class="alert alert-warning d-flex align-items-center p-5 mb-7">
+                                    <i class="ki-duotone ki-time fs-2hx text-warning me-4">
+                                        <span class="path1"></span>
+                                        <span class="path2"></span>
+                                    </i>
+                                    <div class="d-flex flex-column">
+                                        <h4 class="mb-1 text-warning">Status Pending</h4>
+                                        <span>Pembayaran masih dalam status pending. Hanya dapat ditolak, tidak dapat
+                                            dikonfirmasi.</span>
+                                    </div>
+                                </div>
+                                <!--end::Pending Alert-->
+
+                                <!--begin::Reject Payment Button-->
+                                <button type="button" class="btn btn-danger w-100" id="showRejectForm">
+                                    <i class="ki-duotone ki-cross-circle fs-3">
+                                        <span class="path1"></span>
+                                        <span class="path2"></span>
+                                    </i>
+                                    Tolak Pembayaran
+                                </button>
+                                <!--end::Reject Payment Button-->
+
+                                <!--begin::Rejection Form (Hidden by default)-->
+                                <div id="rejectionForm" class="d-none mt-7">
+                                    <div class="separator separator-dashed my-5"></div>
+                                    <div class="alert alert-danger d-flex align-items-center p-5 mb-5">
+                                        <i class="ki-duotone ki-information-5 fs-2hx text-danger me-4">
+                                            <span class="path1"></span>
+                                            <span class="path2"></span>
+                                            <span class="path3"></span>
+                                        </i>
+                                        <div class="d-flex flex-column">
+                                            <h4 class="mb-1 text-danger">Tolak Pembayaran</h4>
+                                            <span>Berikan alasan penolakan yang jelas.</span>
+                                        </div>
+                                    </div>
+
+                                    <form action="{{ route('admin.buyer.reject-payment', $buyer->id) }}" method="POST">
+                                        @csrf
+                                        <div class="form-group mb-5">
+                                            <label for="reason" class="fw-semibold text-muted mb-2">Alasan Penolakan
+                                                <span class="text-danger">*</span></label>
+                                            <textarea class="form-control @error('reason') is-invalid @enderror" id="reason" name="reason" rows="4"
+                                                placeholder="Masukkan alasan penolakan pembayaran..." required>{{ old('reason') }}</textarea>
+                                            @error('reason')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+
+                                        <div class="d-flex gap-3">
+                                            <button type="button" class="btn btn-light flex-fill" id="cancelReject">
+                                                Batal
+                                            </button>
+                                            <button type="submit" class="btn btn-danger flex-fill"
+                                                onclick="return confirm('Apakah Anda yakin ingin menolak pembayaran ini?')">
+                                                <i class="ki-duotone ki-cross fs-3">
+                                                    <span class="path1"></span>
+                                                    <span class="path2"></span>
+                                                </i>
+                                                Tolak Pembayaran
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                                <!--end::Rejection Form-->
+
+                                <!--begin::Info-->
+                                <div class="separator separator-dashed my-7"></div>
+                                <div class="text-muted fw-semibold fs-7">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <i class="ki-duotone ki-information-5 fs-6 text-muted me-2">
+                                            <span class="path1"></span>
+                                            <span class="path2"></span>
+                                            <span class="path3"></span>
+                                        </i>
+                                        Status pending tidak dapat dikonfirmasi secara manual.
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                        <i class="ki-duotone ki-shield-cross fs-6 text-muted me-2">
+                                            <span class="path1"></span>
+                                            <span class="path2"></span>
+                                        </i>
+                                        Penolakan pembayaran tidak dapat dibatalkan.
+                                    </div>
+                                </div>
+                                <!--end::Info-->
                             @else
                                 <!--begin::Status Info-->
                                 <div class="alert alert-info d-flex align-items-center p-5">
@@ -354,9 +444,9 @@
                                         <h4 class="mb-1 text-info">Status:
                                             {{ ucfirst(str_replace('_', ' ', $buyer->payment_status)) }}</h4>
                                         <span>
-                                            @if ($buyer->payment_status === 'paid')
+                                            @if ($buyer->payment_status === 'confirmed')
                                                 Pembayaran telah dikonfirmasi.
-                                            @elseif($buyer->payment_status === 'failed')
+                                            @elseif($buyer->payment_status === 'rejected')
                                                 Pembayaran ditolak.
                                                 @if ($buyer->rejection_reason)
                                                     <br><strong>Alasan:</strong> {{ $buyer->rejection_reason }}
@@ -381,7 +471,7 @@
     <!--end::Content-->
 
     <!--begin::JavaScript-->
-    @if ($buyer->payment_status === 'waiting_confirmation')
+    @if (in_array($buyer->payment_status, ['waiting_confirmation', 'pending']))
         <script>
             document.addEventListener('DOMContentLoaded', function() {
                 const showRejectBtn = document.getElementById('showRejectForm');

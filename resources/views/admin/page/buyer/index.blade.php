@@ -323,7 +323,7 @@
                                             </div>
                                         </td>
                                         <td>
-                                            @if ($buyer->payment_status === 'waiting_confirmation')
+                                            @if ($buyer->payment_status === 'waiting_confirmation' || $buyer->payment_status === 'pending')
                                                 <a href="{{ route('admin.buyer.payment-confirmation', $buyer->id) }}"
                                                     class="btn btn-sm btn-warning" title="Konfirmasi Pembayaran">
                                                     <i class="ki-duotone ki-check-circle fs-3">
@@ -336,8 +336,7 @@
                                                 <span class="text-muted fs-7">-</span>
                                             @endif
                                         </td>
-                                    </tr>
-                                @empty
+                                    @empty
                                     <tr id="emptyState">
                                         <td colspan="9" class="text-center py-10">
                                             <div class="d-flex flex-column align-items-center">

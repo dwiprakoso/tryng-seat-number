@@ -31,11 +31,11 @@ Route::get('/checkin/receipt/{id}', [BuyerCheckinController::class, 'printReceip
 
 // Order routes (memindahkan route /order ke path lain untuk menghindari konflik)
 Route::get('/orders', [OrderController::class, 'index'])->name('order.list');
-Route::get('/order/create/{ticket_id}', [OrderController::class, 'create'])->name('order.create');
+Route::get('/order/{ticket_id}', [OrderController::class, 'create'])->name('order.create');
 Route::post('/order/store', [OrderController::class, 'store'])->name('order.store');
 
 // Manual Payment routes
-Route::get('/payment/manual/{external_id}', [OrderController::class, 'manualPayment'])->name('payment.manual');
+Route::get('/payment/{external_id}', [OrderController::class, 'manualPayment'])->name('payment.manual');
 Route::post('/payment/upload/{external_id}', [OrderController::class, 'uploadPaymentProof'])->name('payment.upload');
 
 // // Payment routes
