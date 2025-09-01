@@ -303,6 +303,26 @@
 </head>
 
 <body>
+    <!-- Alert Messages -->
+    {{-- @if (session('error'))
+        <div class="container" style="margin-top: 100px;">
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        </div>
+    @endif
+
+    @if (session('success'))
+        <div class="container" style="margin-top: 100px;">
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle me-2"></i>
+                {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        </div>
+    @endif --}}
     <!-- Minimal Navbar with Centered Logo -->
     <nav class="navbar">
         <div class="container">
@@ -314,7 +334,7 @@
     </nav>
 
     <!-- Main Content -->
-    <div class="container" style="margin-top: 100px; max-width: 1200px;">
+    <div class="container" style="margin-top: 20px; max-width: 1200px;">
 
         <!-- Event Details -->
         <div class="card">
@@ -418,9 +438,77 @@
             </div>
         </div>
         </div>
-
+        <!-- Modal untuk Seats Full -->
+        @if (session('seats_full'))
+            <div class="modal fade" id="seatsFullModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header border-0 pb-0">
+                            <h5 class="modal-title">
+                                <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                                Kursi Sudah Penuh
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body text-center py-4">
+                            <div class="mb-3">
+                                <i class="fas fa-chair" style="font-size: 3rem; color: var(--gray-400);"></i>
+                            </div>
+                            <h6 class="mb-3">Maaf, semua kursi untuk event ini sudah dipesan</h6>
+                            <p class="text-muted mb-0">
+                                Silakan pilih hubungi admin untuk informasi lebih lanjut
+                            </p>
+                        </div>
+                        <div class="modal-footer border-0 pt-0">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="fas fa-times me-1"></i>Tutup
+                            </button>
+                            {{-- <a href="#" class="btn btn-primary">
+                                <i class="fas fa-phone me-1"></i>Hubungi Admin
+                            </a> --}}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
+        <!-- Modal untuk Error Umum -->
+        @if (session('error'))
+            <div class="modal fade" id="errorModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header border-0">
+                            <h5 class="modal-title text-danger">
+                                <i class="fas fa-exclamation-circle me-2"></i>Terjadi Kesalahan
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            {{ session('error') }}
+                        </div>
+                        <div class="modal-footer border-0">
+                            <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
         <!-- Bootstrap JS -->
         <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+        <script>
+            @if (session('seats_full'))
+                // Auto show modal when page loads
+                document.addEventListener('DOMContentLoaded', function() {
+                    const modal = new bootstrap.Modal(document.getElementById('seatsFullModal'));
+                    modal.show();
+                });
+            @endif
+            @if (session('error'))
+                document.addEventListener('DOMContentLoaded', function() {
+                    const modal = new bootstrap.Modal(document.getElementById('errorModal'));
+                    modal.show();
+                });
+            @endif
+        </script>
 </body>
 
 </html>

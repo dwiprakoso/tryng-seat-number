@@ -7,6 +7,7 @@ use App\Models\Seat;
 use App\Models\Buyer;
 use App\Models\Ticket;
 use App\Models\Product;
+use App\Models\BookingSeat;
 use Illuminate\Http\Request;
 use App\Mail\OrderConfirmation;
 use Illuminate\Support\Facades\DB;
@@ -45,8 +46,9 @@ class OrderController extends Controller
             $bookedSeats = Seat::where('is_booked', 1)->pluck('seat_number')->toArray();
 
             // Check if there are available seats
+            // Check if there are available seats
             if ($availableSeats->isEmpty()) {
-                return redirect()->back()->with('error', 'Semua kursi sudah dipesan.');
+                return redirect()->route('order.index')->with('seats_full', true);
             }
 
             return view('order.create', compact('product', 'ticket', 'availableSeats', 'bookedSeats'));
@@ -64,6 +66,7 @@ class OrderController extends Controller
     {
         $request->validate([
             'ticket_id' => 'required|exists:tickets,id',
+            'selected_seat' => 'required|exists:seats,seat_number', // Tambahkan validasi seat
             'nama_lengkap' => 'required|string|min:3|max:255',
             'email' => 'required|email|max:255',
             'no_handphone' => 'required|string|max:20|regex:/^08\d{8,12}$/',
@@ -71,6 +74,8 @@ class OrderController extends Controller
             'identitas_number' => 'required|string|regex:/^\d{12,20}$/',
             'mewakili' => 'required|string|min:3|max:255',
         ], [
+            'selected_seat.required' => 'Silakan pilih kursi terlebih dahulu',
+            'selected_seat.exists' => 'Kursi yang dipilih tidak valid',
             'nama_lengkap.min' => 'Nama lengkap minimal 3 karakter',
             'no_handphone.regex' => 'Nomor handphone harus dimulai dengan 08 dan berjumlah 10-14 digit',
             'identitas_number.regex' => 'Nomor identitas harus berupa angka 12-20 digit',
@@ -87,6 +92,16 @@ class OrderController extends Controller
 
             if (!$ticket) {
                 throw new Exception('Tiket tidak ditemukan.');
+            }
+
+            // Ambil data seat dengan lock dan cek availability
+            $seat = Seat::lockForUpdate()
+                ->where('seat_number', $request->selected_seat)
+                ->where('is_booked', 0) // Pastikan kursi masih available
+                ->first();
+
+            if (!$seat) {
+                throw new Exception('Kursi yang dipilih sudah tidak tersedia atau sudah dipesan.');
             }
 
             $quantity = 1;
@@ -137,6 +152,14 @@ class OrderController extends Controller
             $buyer->payment_status = 'pending';
             $buyer->save();
 
+            BookingSeat::create([
+                'buyer_id' => $buyer->id,
+                'seat_id' => $seat->id,
+            ]);
+
+            // UPDATE: Mark seat sebagai booked
+            $seat->update(['is_booked' => 1]);
+
             // Commit transaction
             DB::commit();
 
@@ -145,7 +168,8 @@ class OrderController extends Controller
                 Mail::to($buyer->email)->send(new OrderConfirmation($buyer, $ticket));
                 Log::info('Order confirmation email sent successfully', [
                     'external_id' => $externalId,
-                    'email' => $buyer->email
+                    'email' => $buyer->email,
+                    'seat_number' => $seat->seat_number
                 ]);
             } catch (Exception $emailException) {
                 Log::error('Failed to send order confirmation email', [
@@ -160,17 +184,18 @@ class OrderController extends Controller
                 'external_id' => $externalId,
                 'buyer_id' => $buyer->id,
                 'ticket_id' => $ticket->id,
+                'seat_number' => $seat->seat_number,
                 'email' => $buyer->email
             ]);
 
             // Handle AJAX request
-            if ($request->ajax()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Pesanan berhasil dibuat. Silakan lakukan pembayaran.',
-                    'redirect_url' => route('payment.manual', ['external_id' => $externalId])
-                ]);
-            }
+            // if ($request->ajax()) {
+            //     return response()->json([
+            //         'success' => true,
+            //         'message' => 'Pesanan berhasil dibuat. Silakan lakukan pembayaran.',
+            //         'redirect_url' => route('payment.manual', ['external_id' => $externalId])
+            //     ]);
+            // }
 
             // Redirect ke halaman pembayaran manual
             return redirect()->route('payment.manual', ['external_id' => $externalId])
@@ -183,17 +208,18 @@ class OrderController extends Controller
                 'error_message' => $e->getMessage(),
                 'external_id' => $externalId ?? 'not_generated',
                 'ticket_id' => $request->ticket_id ?? 'not_provided',
+                'selected_seat' => $request->selected_seat ?? 'not_provided',
                 'customer_email' => $request->email ?? 'not_provided',
                 'stack_trace' => $e->getTraceAsString()
             ]);
 
             // Handle AJAX request
-            if ($request->ajax()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => $e->getMessage()
-                ], 500);
-            }
+            // if ($request->ajax()) {
+            //     return response()->json([
+            //         'success' => false,
+            //         'message' => $e->getMessage()
+            //     ], 500);
+            // }
 
             return redirect()->route('order.create', ['ticket_id' => $request->ticket_id])
                 ->with('error', 'Gagal membuat pesanan: ' . $e->getMessage())
