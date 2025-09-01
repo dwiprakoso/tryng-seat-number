@@ -39,19 +39,19 @@ class OrderController extends Controller
                 return redirect()->back()->with('error', 'Tiket sudah habis.');
             }
 
-            // Get available seats (not booked)
-            $availableSeats = Seat::where('is_booked', 0)->orderBy('seat_number')->get();
+            // Get ALL seats dengan pengurutan numerik
+            $allSeats = Seat::orderByRaw('CAST(seat_number AS UNSIGNED) ASC')->get();
 
-            // Get booked seats for display
-            $bookedSeats = Seat::where('is_booked', 1)->pluck('seat_number')->toArray();
+            // Atau jika menggunakan PostgreSQL:
+            // $allSeats = Seat::orderByRaw('seat_number::integer ASC')->get();
 
             // Check if there are available seats
-            // Check if there are available seats
-            if ($availableSeats->isEmpty()) {
+            $availableSeatsCount = $allSeats->where('is_booked', 0)->count();
+            if ($availableSeatsCount == 0) {
                 return redirect()->route('order.index')->with('seats_full', true);
             }
 
-            return view('order.create', compact('product', 'ticket', 'availableSeats', 'bookedSeats'));
+            return view('order.create', compact('product', 'ticket', 'allSeats'));
         } catch (Exception $e) {
             Log::error('Error loading order form', [
                 'ticket_id' => $ticket_id,
@@ -61,7 +61,6 @@ class OrderController extends Controller
             return redirect()->back()->with('error', 'Terjadi kesalahan saat memuat form pemesanan.');
         }
     }
-
     public function store(Request $request)
     {
         $request->validate([

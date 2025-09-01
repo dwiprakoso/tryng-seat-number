@@ -478,27 +478,65 @@
 
         .seat-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(45px, 1fr));
-            gap: 0.75rem;
-            max-width: 600px;
+            grid-template-columns: repeat(15, 1fr);
+            /* Perbanyak jadi 15 kolom */
+            gap: 2px;
+            /* Gap dalam pixel untuk lebih presisi */
+            max-width: 900px;
+            /* Perbesar max-width */
             margin: 0 auto 2rem;
             justify-items: center;
         }
 
         .seat {
-            width: 45px;
-            height: 45px;
-            border-radius: 8px;
+            width: 24px;
+            /* Lebih kecil lagi dari 32px ke 24px */
+            height: 24px;
+            /* Lebih kecil lagi dari 32px ke 24px */
+            border-radius: 4px;
+            /* Border radius minimal */
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 12px;
+            font-size: 8px;
+            /* Font size minimal 8px */
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            border: 3px solid transparent;
+            border: 1px solid transparent;
+            /* Border minimal 1px */
             position: relative;
             overflow: hidden;
+        }
+
+        .seat-preview {
+            margin-bottom: 1.5rem;
+            text-align: center;
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+
+        .seat-layout-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .seat-layout-image:hover {
+            transform: scale(1.05);
+            cursor: pointer;
+        }
+
+        /* Responsive untuk mobile */
+        @media (max-width: 768px) {
+            .seat-preview {
+                margin-bottom: 1rem;
+                padding: 0.75rem;
+            }
         }
 
         .seat::before {
@@ -680,6 +718,50 @@
                 max-width: none;
             }
         }
+
+        @media (max-width: 768px) {
+            .seat-grid {
+                grid-template-columns: repeat(12, 1fr);
+                /* 12 kolom untuk mobile */
+                gap: 0.1rem;
+                /* Gap minimal untuk mobile */
+                max-width: 100%;
+            }
+
+            .seat {
+                width: 20px;
+                height: 20px;
+                font-size: 7px;
+            }
+        }
+
+        /* Untuk tablet */
+        @media (max-width: 992px) and (min-width: 769px) {
+            .seat-grid {
+                grid-template-columns: repeat(13, 1fr);
+                /* 13 kolom untuk tablet */
+                gap: 0.12rem;
+            }
+
+            .seat {
+                width: 22px;
+                height: 22px;
+                font-size: 7px;
+            }
+        }
+
+        /* Legend items juga diperkecil */
+        .legend-color {
+            width: 20px;
+            /* Kurangi dari 24px */
+            height: 20px;
+            /* Kurangi dari 24px */
+            border-radius: 4px;
+            /* Kurangi border radius */
+            margin-right: 0.5rem;
+            /* Kurangi margin */
+            border: 2px solid var(--gray-300);
+        }
     </style>
 </head>
 
@@ -813,6 +895,15 @@
                                             <i class="fas fa-couch me-2"></i>Pilih Kursi Anda
                                         </h5>
 
+                                        <!-- Preview Image Section -->
+                                        <div class="seat-preview">
+                                            <img src="{{ asset('assets/img/Kursi_TBRS[1].png') }}" alt="Layout Kursi"
+                                                class="seat-layout-image" data-bs-toggle="modal"
+                                                data-bs-target="#seatPreviewModal">
+                                            <small class="text-muted d-block mt-1">Klik untuk melihat gambar lebih
+                                                besar</small>
+                                        </div>
+
                                         <div class="stage-indicator">
                                             <div class="stage">
                                                 <i class="fas fa-tv me-2"></i>PANGGUNG
@@ -820,14 +911,14 @@
                                         </div>
 
                                         <div class="seat-grid" id="seatGrid">
-                                            <!-- Available seats will be rendered here -->
-                                            @foreach ($availableSeats as $seat)
-                                                <div class="seat available" data-seat="{{ $seat->seat_number }}">
-                                                    {{ $seat->seat_number }}
-                                                </div>
-                                            @endforeach
-                                            @foreach ($bookedSeats as $bookedSeat)
-                                                <div class="seat booked">{{ $bookedSeat }}</div>
+                                            @foreach ($allSeats as $seat)
+                                                @if ($seat->is_booked == 0)
+                                                    <div class="seat available" data-seat="{{ $seat->seat_number }}">
+                                                        {{ $seat->seat_number }}
+                                                    </div>
+                                                @else
+                                                    <div class="seat booked">{{ $seat->seat_number }}</div>
+                                                @endif
                                             @endforeach
                                         </div>
 
@@ -937,6 +1028,20 @@
             </div>
         </div>
     </footer>
+    <!-- Modal untuk preview gambar besar -->
+    <div class="modal fade" id="seatPreviewModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Layout Kursi</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img src="{{ asset('assets/img/Kursi_TBRS[1].png') }}" alt="Layout Kursi" class="img-fluid">
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Bootstrap JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
