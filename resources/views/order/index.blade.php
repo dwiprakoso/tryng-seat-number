@@ -334,7 +334,7 @@
     </nav>
 
     <!-- Main Content -->
-    <div class="container" style="margin-top: 20px; max-width: 1200px;">
+    <div class="container" style="margin-top: 100px; max-width: 1200px;">
 
         <!-- Event Details -->
         <div class="card">
