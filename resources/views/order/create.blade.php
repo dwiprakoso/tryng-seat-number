@@ -771,7 +771,6 @@
         <div class="container">
             <a href="#" class="navbar-brand">
                 <img src="{{ asset('assets/media/logos/logo.png') }}" alt="Ticketify" />
-                Ticketify
             </a>
         </div>
     </nav>
