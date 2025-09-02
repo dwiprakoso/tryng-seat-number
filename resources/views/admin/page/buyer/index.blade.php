@@ -206,10 +206,10 @@
                             <select class="form-select form-select-solid" id="statusFilter" data-control="select2"
                                 data-placeholder="Filter Status" data-hide-search="true">
                                 <option value="">Semua Status</option>
-                                <option value="paid">Paid</option>
+                                <option value="confirmed">Confirmed</option>
                                 <option value="pending">Pending</option>
                                 <option value="waiting_confirmation">Waiting Confirmation</option>
-                                <option value="failed">Failed</option>
+                                <option value="rejected">Rejected</option>
                             </select>
                         </div>
                         <!--end::Status Filter-->
@@ -475,9 +475,19 @@
                 let hasFilter = false;
                 let filterTexts = [];
 
+                console.log('Filtering with:', {
+                    searchValue,
+                    statusValue
+                }); // Debug log
+
                 tableRows.forEach(row => {
                     const searchData = row.getAttribute('data-search') || '';
                     const statusData = row.getAttribute('data-status') || '';
+
+                    console.log('Row data:', {
+                        searchData,
+                        statusData
+                    }); // Debug log
 
                     let showRow = true;
 
@@ -537,19 +547,47 @@
 
             // Event listeners
             searchInput.addEventListener('input', filterTable);
-            statusFilter.addEventListener('change', filterTable);
+
+            // Handle Select2 change event differently
+            if (window.$ && $('#statusFilter').length) {
+                // Jika menggunakan Select2
+                $('#statusFilter').on('change', function() {
+                    filterTable();
+                });
+            } else {
+                // Fallback untuk select biasa
+                statusFilter.addEventListener('change', filterTable);
+            }
 
             resetFilters.addEventListener('click', function() {
                 searchInput.value = '';
-                statusFilter.value = '';
+
+                // Reset select2 jika ada
+                if (window.$ && $('#statusFilter').length) {
+                    $('#statusFilter').val('').trigger('change');
+                } else {
+                    statusFilter.value = '';
+                }
+
                 filterTable();
             });
 
             clearFilterInfo.addEventListener('click', function() {
                 searchInput.value = '';
-                statusFilter.value = '';
+
+                // Reset select2 jika ada
+                if (window.$ && $('#statusFilter').length) {
+                    $('#statusFilter').val('').trigger('change');
+                } else {
+                    statusFilter.value = '';
+                }
+
                 filterTable();
             });
+
+            // Debug: Check if Select2 is loaded
+            console.log('jQuery available:', typeof window.$ !== 'undefined');
+            console.log('Select2 element:', document.getElementById('statusFilter'));
         });
     </script>
     <!--end::JavaScript-->
