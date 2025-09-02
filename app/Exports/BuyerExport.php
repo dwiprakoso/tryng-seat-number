@@ -19,7 +19,7 @@ class BuyerExport implements FromCollection, WithHeadings, WithMapping, WithColu
 
     public function __construct()
     {
-        $this->buyers = Buyer::with('ticket')->orderBy('created_at', 'asc')->get();
+        $this->buyers = Buyer::with(['ticket', 'seats'])->orderBy('created_at', 'asc')->get();
     }
 
     public function collection()
@@ -32,16 +32,17 @@ class BuyerExport implements FromCollection, WithHeadings, WithMapping, WithColu
         return [
             'No',
             'ID Pesanan',
-            'Nama',
-            'No HP',
+            'Nama Lengkap',
             'Email',
+            'No HP',
             'Kategori Tiket',
             'Jumlah',
-            'Waktu Pemesanan',
+            'Kursi',
             'Status Pembayaran',
-            'Link Pembayaran',
+            'Tanggal Pemesanan',
+            'Jam Pemesanan',
             'Harga Tiket',
-            'Biaya Layanan',
+            'Payment Code',
             'Total Harga',
         ];
     }
@@ -50,41 +51,47 @@ class BuyerExport implements FromCollection, WithHeadings, WithMapping, WithColu
     {
         static $no = 1;
 
+        // Format nomor kursi
+        $seatNumbers = $buyer->seats->count() > 0
+            ? $buyer->seats->pluck('seat_number')->sort()->implode(', ')
+            : 'Belum dipilih';
+
         return [
             $no++,
             $buyer->external_id,
             $buyer->nama_lengkap,
-            $buyer->no_handphone,
             $buyer->email,
+            $buyer->no_handphone,
             $buyer->ticket->name,
             $buyer->quantity,
-            $buyer->created_at->translatedFormat('l, d F Y'),
-            $buyer->payment_status,
-            $buyer->xendit_invoice_url,
+            $seatNumbers,
+            ucfirst(str_replace('_', ' ', $buyer->payment_status)),
+            $buyer->created_at->format('d/m/Y'),
+            $buyer->created_at->format('H:i'),
             $buyer->ticket_price,
-            $buyer->admin_fee,
+            $buyer->payment_code ?? '-',
             $buyer->total_amount,
         ];
     }
-
-
 
     public function columnWidths(): array
     {
         return [
             'A' => 5,   // No
             'B' => 20,  // ID Pesanan
-            'C' => 25,  // Nama
-            'D' => 15,  // No HP
-            'E' => 25,  // Email
+            'C' => 25,  // Nama Lengkap
+            'D' => 25,  // Email
+            'E' => 15,  // No HP
             'F' => 20,  // Kategori Tiket
             'G' => 8,   // Jumlah
-            'H' => 20,  // Waktu Pemesanan
-            'I' => 15,  // Status Pembayaran
-            'J' => 30,  // Link Pembayaran
-            'K' => 12,  // Harga Tiket
-            'L' => 12,  // Biaya Layanan
-            'M' => 12,  // Total Harga
+            'H' => 15,  // Kursi
+            'I' => 18,  // Status Pembayaran
+            'J' => 15,  // Tanggal Pemesanan
+            'K' => 10,  // Jam Pemesanan
+            'L' => 12,  // Harga Tiket
+            'M' => 12,  // Unique Code
+            'N' => 12,  // Total Harga
+            'O' => 15,  // Kode Pembayaran
         ];
     }
 
@@ -93,22 +100,33 @@ class BuyerExport implements FromCollection, WithHeadings, WithMapping, WithColu
         // Set row height untuk header
         $sheet->getRowDimension('1')->setRowHeight(30);
 
-        // Set row height untuk semua baris data (normal height tanpa QR code)
+        // Set row height untuk semua baris data
         $totalRows = $this->buyers->count() + 1; // +1 untuk header
         for ($row = 2; $row <= $totalRows; $row++) {
             $sheet->getRowDimension($row)->setRowHeight(25);
         }
 
-        // Style untuk header (opsional)
-        $sheet->getStyle('A1:M1')->getFont()->setBold(true);
-        $sheet->getStyle('A1:M1')->getFill()
+        // Style untuk header
+        $sheet->getStyle('A1:N1')->getFont()->setBold(true);
+        $sheet->getStyle('A1:N1')->getFill()
             ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
             ->getStartColor()->setARGB('CCCCCC');
 
-        // Center align untuk semua cells
-        $sheet->getStyle('A1:M' . $totalRows)->getAlignment()
-            ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)
-            ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+        // Center align untuk kolom tertentu
+        $sheet->getStyle('A1:A' . $totalRows)->getAlignment()
+            ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('G1:G' . $totalRows)->getAlignment()
+            ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('H1:H' . $totalRows)->getAlignment()
+            ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('I1:I' . $totalRows)->getAlignment()
+            ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('J1:K' . $totalRows)->getAlignment()
+            ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+
+        // Format currency untuk kolom harga
+        $sheet->getStyle('L2:N' . $totalRows)->getNumberFormat()
+            ->setFormatCode('#,##0');
 
         return [];
     }
