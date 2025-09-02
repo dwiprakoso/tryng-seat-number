@@ -301,7 +301,7 @@
                                         <td class="text-center">
                                             <span class="fw-bold text-gray-800">{{ $buyer->quantity }}</span>
                                         </td>
-                                        <td class="text-center">
+                                        <td>
                                             <div class="d-flex flex-column">
                                                 @if ($buyer->seats->count() > 0)
                                                     @foreach ($buyer->seats as $seat)
