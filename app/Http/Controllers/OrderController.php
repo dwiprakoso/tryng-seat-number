@@ -39,13 +39,11 @@ class OrderController extends Controller
                 return redirect()->back()->with('error', 'Tiket sudah habis.');
             }
 
-            // Get ALL seats dengan pengurutan numerik
-            $allSeats = Seat::orderByRaw('CAST(seat_number AS UNSIGNED) ASC')->get();
-
-            // Atau jika menggunakan PostgreSQL:
-            // $allSeats = Seat::orderByRaw('seat_number::integer ASC')->get();
-
-            // Check if there are available seats
+            // Get seats berdasarkan ticket_id dengan pengurutan numerik
+            $allSeats = Seat::where('ticket_id', $ticket_id)
+                ->orderByRaw('CAST(seat_number AS UNSIGNED) ASC')
+                ->get();
+            // Check if there are available seats for this ticket
             $availableSeatsCount = $allSeats->where('is_booked', 0)->count();
             if ($availableSeatsCount == 0) {
                 return redirect()->route('order.index')->with('seats_full', true);
