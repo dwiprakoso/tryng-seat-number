@@ -63,104 +63,85 @@ class OrderController extends Controller
     {
         $request->validate([
             'ticket_id' => 'required|exists:tickets,id',
-            'selected_seat' => 'required|exists:seats,seat_number', // Tambahkan validasi seat
+            'selected_seat' => 'required|exists:seats,seat_number',
             'nama_lengkap' => 'required|string|min:3|max:255',
             'email' => 'required|email|max:255',
             'no_handphone' => 'required|string|max:20|regex:/^08\d{8,12}$/',
-            'alamat_lengkap' => 'required|string|min:5|max:255',
-            'identitas_number' => 'required|string|regex:/^\d{12,20}$/',
-            'mewakili' => 'required|string|min:3|max:255',
         ], [
             'selected_seat.required' => 'Silakan pilih kursi terlebih dahulu',
             'selected_seat.exists' => 'Kursi yang dipilih tidak valid',
             'nama_lengkap.min' => 'Nama lengkap minimal 3 karakter',
             'no_handphone.regex' => 'Nomor handphone harus dimulai dengan 08 dan berjumlah 10-14 digit',
-            'identitas_number.regex' => 'Nomor identitas harus berupa angka 12-20 digit',
-            'alamat_lengkap.min' => 'Alamat lengkap minimal 5 karakter',
-            'mewakili.min' => 'Field mewakili minimal 3 karakter'
         ]);
 
-        // Gunakan Database Transaction untuk memastikan atomicity
+        // Pre-generate IDs untuk optimasi
+        $paymentCode = $this->generateUniquePaymentCode();
+        $externalId = $this->generateUniqueExternalId();
+
         DB::beginTransaction();
 
         try {
-            // Ambil data tiket dengan lock untuk mencegah race condition
+            // 1. Cek dan update seat dalam satu query optimized
+            $seatUpdated = DB::table('seats')
+                ->where('seat_number', $request->selected_seat)
+                ->where('is_booked', 0)
+                ->update(['is_booked' => 1]);
+
+            if (!$seatUpdated) {
+                throw new Exception('Kursi yang dipilih sudah tidak tersedia.');
+            }
+
+            // 2. Ambil seat ID setelah update
+            $seat = Seat::where('seat_number', $request->selected_seat)->first();
+
+            // 3. Ambil ticket dengan lock minimal
             $ticket = Ticket::lockForUpdate()->find($request->ticket_id);
 
-            if (!$ticket) {
-                throw new Exception('Tiket tidak ditemukan.');
+            if (!$ticket || $ticket->qty < 1) {
+                throw new Exception('Stok tiket tidak mencukupi.');
             }
 
-            // Ambil data seat dengan lock dan cek availability
-            $seat = Seat::lockForUpdate()
-                ->where('seat_number', $request->selected_seat)
-                ->where('is_booked', 0) // Pastikan kursi masih available
-                ->first();
-
-            if (!$seat) {
-                throw new Exception('Kursi yang dipilih sudah tidak tersedia atau sudah dipesan.');
-            }
-
-            $quantity = 1;
-
-            // Cek stok tiket
-            if ($ticket->qty < $quantity) {
-                throw new Exception('Stok tiket tidak mencukupi. Stok tersedia: ' . $ticket->qty);
-            }
-
-            // Cek duplikasi email untuk mencegah double booking
-            $existingOrder = Buyer::where('email', $request->email)
+            // 4. Cek duplikasi email dengan query optimized
+            $existingOrder = DB::table('buyers')
+                ->where('email', $request->email)
                 ->where('ticket_id', $request->ticket_id)
                 ->whereIn('payment_status', ['pending', 'paid'])
-                ->first();
+                ->exists();
 
             if ($existingOrder) {
                 throw new Exception('Email ini sudah pernah digunakan untuk memesan tiket yang sama.');
             }
 
-            // Hitung biaya berdasarkan quantity
-            $ticket_price = $ticket->price * $quantity;
+            $quantity = 1;
+            $ticketPrice = $ticket->price * $quantity;
+            $totalAmount = $ticketPrice + $paymentCode;
 
-            // Generate payment code 3 digit random yang unik
-            $payment_code = $this->generateUniquePaymentCode();
+            // 5. Bulk operations - kombinasi create dan update
+            $buyer = Buyer::create([
+                'nama_lengkap' => $request->nama_lengkap,
+                'email' => $request->email,
+                'no_handphone' => $request->no_handphone,
+                'quantity' => $quantity,
+                'ticket_id' => $request->ticket_id,
+                'ticket_price' => $ticketPrice,
+                'payment_code' => $paymentCode,
+                'total_amount' => $totalAmount,
+                'external_id' => $externalId,
+                'payment_status' => 'pending',
+            ]);
 
-            $total_amount = $ticket_price + $payment_code;
-
-            // Generate external ID yang unik dengan format lebih baik
-            $externalId = $this->generateUniqueExternalId();
-
-            // Kurangi stok tiket
-            $ticket->decrement('qty', $quantity);
-
-            // Simpan ke database buyers
-            $buyer = new Buyer();
-            $buyer->nama_lengkap = $request->nama_lengkap;
-            $buyer->email = $request->email;
-            $buyer->no_handphone = $request->no_handphone;
-            $buyer->alamat_lengkap = $request->alamat_lengkap;
-            $buyer->identitas_number = $request->identitas_number;
-            $buyer->mewakili = $request->mewakili;
-            $buyer->quantity = $quantity;
-            $buyer->ticket_id = $request->ticket_id;
-            $buyer->ticket_price = $ticket_price;
-            $buyer->payment_code = $payment_code;
-            $buyer->total_amount = $total_amount;
-            $buyer->external_id = $externalId;
-            $buyer->payment_status = 'pending';
-            $buyer->save();
-
+            // 6. Create booking seat
             BookingSeat::create([
                 'buyer_id' => $buyer->id,
                 'seat_id' => $seat->id,
             ]);
 
-            // UPDATE: Mark seat sebagai booked
-            $seat->update(['is_booked' => 1]);
+            // 7. Update ticket quantity
+            $ticket->decrement('qty', $quantity);
 
-            // Commit transaction
             DB::commit();
 
-            // Kirim email konfirmasi (di luar transaction agar tidak mempengaruhi flow utama)
+            // Kirim email konfirmasi (tetap synchronous seperti sebelumnya)
             try {
                 Mail::to($buyer->email)->send(new OrderConfirmation($buyer, $ticket));
                 Log::info('Order confirmation email sent successfully', [
@@ -176,54 +157,30 @@ class OrderController extends Controller
                 ]);
             }
 
-            // Log successful order creation
             Log::info('Order created successfully', [
                 'external_id' => $externalId,
                 'buyer_id' => $buyer->id,
-                'ticket_id' => $ticket->id,
                 'seat_number' => $seat->seat_number,
-                'email' => $buyer->email
             ]);
 
-            // Handle AJAX request
-            // if ($request->ajax()) {
-            //     return response()->json([
-            //         'success' => true,
-            //         'message' => 'Pesanan berhasil dibuat. Silakan lakukan pembayaran.',
-            //         'redirect_url' => route('payment.manual', ['external_id' => $externalId])
-            //     ]);
-            // }
-
-            // Redirect ke halaman pembayaran manual
             return redirect()->route('payment.manual', ['external_id' => $externalId])
                 ->with('success', 'Pesanan berhasil dibuat. Silakan lakukan pembayaran.');
         } catch (Exception $e) {
-            // Rollback transaction jika ada error
             DB::rollback();
 
             Log::error('Order Creation Failed', [
                 'error_message' => $e->getMessage(),
                 'external_id' => $externalId ?? 'not_generated',
-                'ticket_id' => $request->ticket_id ?? 'not_provided',
-                'selected_seat' => $request->selected_seat ?? 'not_provided',
-                'customer_email' => $request->email ?? 'not_provided',
-                'stack_trace' => $e->getTraceAsString()
+                'ticket_id' => $request->ticket_id,
+                'selected_seat' => $request->selected_seat,
+                'customer_email' => $request->email,
             ]);
-
-            // Handle AJAX request
-            // if ($request->ajax()) {
-            //     return response()->json([
-            //         'success' => false,
-            //         'message' => $e->getMessage()
-            //     ], 500);
-            // }
 
             return redirect()->route('order.create', ['ticket_id' => $request->ticket_id])
                 ->with('error', 'Gagal membuat pesanan: ' . $e->getMessage())
                 ->withInput();
         }
     }
-
     /**
      * Generate unique payment code (3 digit)
      */

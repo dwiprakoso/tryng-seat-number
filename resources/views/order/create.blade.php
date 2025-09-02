@@ -850,7 +850,7 @@
                                         <div class="invalid-feedback">Nomor HP harus valid (08xxxxxxxxx)</div>
                                     </div>
 
-                                    <div class="form-group">
+                                    {{-- <div class="form-group">
                                         <label for="alamat_lengkap" class="form-label">
                                             Alamat Domisili <span class="text-danger">*</span>
                                         </label>
@@ -858,9 +858,9 @@
                                             name="alamat_lengkap" required value="{{ old('alamat_lengkap') }}"
                                             placeholder="Masukkan alamat lengkap" />
                                         <div class="invalid-feedback">Alamat minimal 5 karakter</div>
-                                    </div>
+                                    </div> --}}
 
-                                    <div class="form-group">
+                                    {{-- <div class="form-group">
                                         <label for="identitas_number" class="form-label">
                                             Nomor Identitas (KTP/NIK/SIM) <span class="text-danger">*</span>
                                         </label>
@@ -868,9 +868,9 @@
                                             name="identitas_number" required value="{{ old('identitas_number') }}"
                                             placeholder="0000000000000000" pattern="^\d{12,20}$" />
                                         <div class="invalid-feedback">Nomor identitas harus 12-20 digit angka</div>
-                                    </div>
+                                    </div> --}}
 
-                                    <div class="form-group">
+                                    {{-- <div class="form-group">
                                         <label for="mewakili" class="form-label">
                                             Mewakili <span class="text-danger">*</span>
                                         </label>
@@ -878,7 +878,7 @@
                                             required value="{{ old('mewakili') }}"
                                             placeholder="Nama organisasi/perusahaan" />
                                         <div class="invalid-feedback">Mewakili minimal 3 karakter</div>
-                                    </div>
+                                    </div> --}}
 
                                     <div class="step-navigation">
                                         <div></div>
@@ -1159,21 +1159,6 @@
                         pattern: /^08\d{8,12}$/,
                         message: 'Nomor HP harus valid (08xxxxxxxxx)'
                     },
-                    {
-                        id: 'alamat_lengkap',
-                        minLength: 5,
-                        message: 'Alamat minimal 5 karakter'
-                    },
-                    {
-                        id: 'identitas_number',
-                        pattern: /^\d{12,20}$/,
-                        message: 'Nomor identitas harus 12-20 digit angka'
-                    },
-                    {
-                        id: 'mewakili',
-                        minLength: 3,
-                        message: 'Mewakili minimal 3 karakter'
-                    }
                 ];
 
                 fields.forEach(field => {
@@ -1220,20 +1205,13 @@
 
                 switch (element.id) {
                     case 'nama_lengkap':
-                    case 'mewakili':
-                        isValid = value.length >= 3;
-                        break;
-                    case 'alamat_lengkap':
-                        isValid = value.length >= 5;
+                        isValid = value.length >= 3; // Tambahkan ini yang hilang
                         break;
                     case 'email':
                         isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
                         break;
                     case 'no_handphone':
                         isValid = /^08\d{8,12}$/.test(value);
-                        break;
-                    case 'identitas_number':
-                        isValid = /^\d{12,20}$/.test(value);
                         break;
                 }
 
@@ -1267,78 +1245,13 @@
                 submitBtn.disabled = false;
 
                 // Update payment code in summary (simulate)
-                const paymentCode = Math.floor(Math.random() * 900) + 100;
-                const total = ticketPrice + paymentCode;
-                document.getElementById('paymentCodeDisplay').textContent =
-                    `+Rp ${paymentCode.toLocaleString('id-ID')}`;
-                document.getElementById('totalDisplay').innerHTML =
-                    `<strong>Rp ${total.toLocaleString('id-ID')}</strong>`;
+                // const paymentCode = Math.floor(Math.random() * 900) + 100;
+                // const total = ticketPrice + paymentCode;
+                // document.getElementById('paymentCodeDisplay').textContent =
+                //     `+Rp ${paymentCode.toLocaleString('id-ID')}`;
+                // document.getElementById('totalDisplay').innerHTML =
+                //     `<strong>Rp ${total.toLocaleString('id-ID')}</strong>`;
             }
-
-            // function handleFormSubmit() {
-            //     if (!selectedSeat) {
-            //         showToast('Silakan pilih kursi terlebih dahulu!', 'error');
-            //         return;
-            //     }
-
-            //     // Show loading state
-            //     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Memproses...';
-            //     submitBtn.disabled = true;
-
-            //     // Create form data
-            //     const formData = new FormData();
-            //     formData.append('_token', document.querySelector('input[name="_token"]').value);
-            //     formData.append('ticket_id', document.querySelector('input[name="ticket_id"]').value);
-            //     formData.append('nama_lengkap', document.getElementById('nama_lengkap').value);
-            //     formData.append('email', document.getElementById('email').value);
-            //     formData.append('no_handphone', document.getElementById('no_handphone').value);
-            //     formData.append('alamat_lengkap', document.getElementById('alamat_lengkap').value);
-            //     formData.append('identitas_number', document.getElementById('identitas_number').value);
-            //     formData.append('mewakili', document.getElementById('mewakili').value);
-
-            //     // Submit form
-            //     fetch('{{ route('order.store') }}', {
-            //             method: 'POST',
-            //             body: formData,
-            //             headers: {
-            //                 'X-Requested-With': 'XMLHttpRequest',
-            //                 'Accept': 'application/json'
-            //             }
-            //         })
-            //         .then(response => {
-            //             if (!response.ok) {
-            //                 return response.json().then(err => Promise.reject(err));
-            //             }
-            //             return response.json();
-            //         })
-            //         .then(data => {
-            //             if (data.success) {
-            //                 showToast('Pesanan berhasil dibuat!', 'success');
-            //                 setTimeout(() => {
-            //                     window.location.href = data.redirect_url;
-            //                 }, 1000);
-            //             } else {
-            //                 throw new Error(data.message || 'Terjadi kesalahan');
-            //             }
-            //         })
-            //         .catch(error => {
-            //             console.error('Error:', error);
-
-            //             let errorMessage = 'Terjadi kesalahan saat memproses pesanan';
-            //             if (error.errors) {
-            //                 const firstError = Object.values(error.errors)[0];
-            //                 errorMessage = Array.isArray(firstError) ? firstError[0] : firstError;
-            //             } else if (error.message) {
-            //                 errorMessage = error.message;
-            //             }
-
-            //             showToast(errorMessage, 'error');
-
-            //             // Reset button
-            //             submitBtn.innerHTML = '<i class="fas fa-credit-card"></i> Lanjut ke Pembayaran';
-            //             submitBtn.disabled = !selectedSeat;
-            //         });
-            // }
 
             function showToast(message, type = 'info') {
                 // Remove existing toast
