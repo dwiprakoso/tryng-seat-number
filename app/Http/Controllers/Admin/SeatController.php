@@ -23,8 +23,8 @@ class SeatController extends Controller
             $query->where('is_booked', $request->status);
         }
 
-        // Get paginated results
-        $seats = $query->latest()->paginate(15)->withQueryString();
+        // Order by booked status first (true first), then by latest
+        $seats = $query->orderBy('is_booked', 'desc')->latest()->paginate(15)->withQueryString();
 
         // Get statistics
         $totalSeats = Seat::count();

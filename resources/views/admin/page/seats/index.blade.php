@@ -33,7 +33,7 @@
                 </div>
                 <!--end::Page title-->
                 <!--begin::Actions-->
-                <div class="d-flex align-items-center gap-2 gap-lg-3">
+                {{-- <div class="d-flex align-items-center gap-2 gap-lg-3">
                     <button type="button" class="btn btn-light btn-sm" id="resetFilters">
                         <i class="ki-duotone ki-arrows-circle fs-2">
                             <span class="path1"></span>
@@ -48,7 +48,7 @@
                         </i>
                         Tambah Kursi
                     </button>
-                </div>
+                </div> --}}
                 <!--end::Actions-->
             </div>
             <!--end::Toolbar wrapper-->
@@ -206,16 +206,17 @@
                 <div class="card-header align-items-center py-5 gap-2 gap-md-5">
                     <!--begin::Card title-->
                     <div class="card-title">
-                        <!--begin::Search-->
-                        <div class="d-flex align-items-center position-relative my-1">
-                            <i class="ki-duotone ki-magnifier fs-3 position-absolute ms-4">
-                                <span class="path1"></span>
-                                <span class="path2"></span>
-                            </i>
-                            <input type="text" id="searchInput" data-kt-ecommerce-product-filter="search"
-                                class="form-control form-control-solid w-250px ps-12" placeholder="Cari nomor kursi..." />
-                        </div>
-                        <!--end::Search-->
+                        <form method="GET" action="{{ route('admin.seats.index') }}" id="searchForm">
+                            <div class="d-flex align-items-center position-relative my-1">
+                                <i class="ki-duotone ki-magnifier fs-3 position-absolute ms-4">
+                                    <span class="path1"></span>
+                                    <span class="path2"></span>
+                                </i>
+                                <input type="text" name="search" id="searchInput"
+                                    class="form-control form-control-solid w-250px ps-12" placeholder="Cari nomor kursi..."
+                                    value="{{ request('search') }}" />
+                            </div>
+                        </form>
                     </div>
                     <!--end::Card title-->
                     <!--begin::Card toolbar-->
@@ -276,7 +277,7 @@
                                     <th class="min-w-100px">Status</th>
                                     <th class="min-w-125px">Tanggal Dibuat</th>
                                     <th class="min-w-125px">Terakhir Update</th>
-                                    <th class="min-w-100px">Action</th>
+                                    {{-- <th class="min-w-100px">Action</th> --}}
                                 </tr>
                             </thead>
                             <!--end::Table head-->
@@ -313,7 +314,7 @@
                                                     class="text-muted fw-semibold fs-7">{{ $seat->updated_at->format('H:i') }}</span>
                                             </div>
                                         </td>
-                                        <td>
+                                        {{-- <td>
                                             <div class="d-flex gap-2">
                                                 <!-- Edit -->
                                                 <button type="button" class="btn btn-icon btn-sm btn-light edit-seat-btn"
@@ -338,7 +339,7 @@
                                                 </form>
                                             </div>
 
-                                        </td>
+                                        </td> --}}
                                     </tr>
                                 @empty
                                     <tr id="emptyState">
@@ -558,148 +559,73 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const searchInput = document.getElementById('searchInput');
-            const statusFilter = document.getElementById('statusFilter');
-            const resetFilters = document.getElementById('resetFilters');
-            const tableRows = document.querySelectorAll('#kt_seats_table tbody tr:not(#emptyState)');
-            const filterInfo = document.getElementById('filterInfo');
-            const filterText = document.getElementById('filterText');
-            const clearFilterInfo = document.getElementById('clearFilterInfo');
-            const noResults = document.getElementById('noResults');
-            const totalResults = document.getElementById('totalResults');
-            const filteredResults = document.getElementById('filteredResults');
-            const filteredCount = document.getElementById('filteredCount');
-            const paginationWrapper = document.getElementById('paginationWrapper');
+            const searchForm = document.getElementById('searchForm');
+            let searchTimeout;
 
-            function filterTable() {
-                const searchValue = searchInput.value.toLowerCase();
-                const statusValue = statusFilter.value;
-                let visibleCount = 0;
-                let hasFilter = false;
-                let filterTexts = [];
-
-                tableRows.forEach(row => {
-                    const searchData = row.getAttribute('data-search') || '';
-                    const statusData = row.getAttribute('data-status') || '';
-
-                    let showRow = true;
-
-                    // Search filter
-                    if (searchValue && !searchData.includes(searchValue)) {
-                        showRow = false;
-                    }
-
-                    // Status filter
-                    if (statusValue && statusData !== statusValue) {
-                        showRow = false;
-                    }
-
-                    if (showRow) {
-                        row.style.display = '';
-                        visibleCount++;
-                    } else {
-                        row.style.display = 'none';
-                    }
+            // Auto-submit form setelah user berhenti mengetik (debounce)
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    clearTimeout(searchTimeout);
+                    searchTimeout = setTimeout(function() {
+                        searchForm.submit();
+                    }, 500); // Submit setelah 500ms user berhenti mengetik
                 });
 
-                // Update filter info
-                if (searchValue) {
-                    filterTexts.push(`Pencarian: "${searchValue}"`);
-                    hasFilter = true;
-                }
-                if (statusValue) {
-                    const statusText = statusFilter.options[statusFilter.selectedIndex].text;
-                    filterTexts.push(`Status: ${statusText}`);
-                    hasFilter = true;
-                }
-
-                if (hasFilter) {
-                    filterText.textContent = filterTexts.join(', ');
-                    filterInfo.classList.remove('d-none');
-                    filteredResults.classList.remove('d-none');
-                    filteredCount.textContent = visibleCount;
-                } else {
-                    filterInfo.classList.add('d-none');
-                    filteredResults.classList.add('d-none');
-                }
-
-                // Show/hide no results message
-                if (visibleCount === 0 && tableRows.length > 0) {
-                    noResults.classList.remove('d-none');
-                } else {
-                    noResults.classList.add('d-none');
-                }
-
-                // Hide pagination when filtering
-                if (hasFilter && paginationWrapper) {
-                    paginationWrapper.style.display = 'none';
-                } else if (paginationWrapper) {
-                    paginationWrapper.style.display = '';
-                }
+                // Submit juga saat Enter ditekan
+                searchInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        clearTimeout(searchTimeout);
+                        searchForm.submit();
+                    }
+                });
             }
 
-            // Event listeners for filtering
-            searchInput.addEventListener('input', filterTable);
-            statusFilter.addEventListener('change', filterTable);
-
-            resetFilters.addEventListener('click', function() {
-                searchInput.value = '';
-                statusFilter.value = '';
-                filterTable();
-            });
-
-            clearFilterInfo.addEventListener('click', function() {
-                searchInput.value = '';
-                statusFilter.value = '';
-                filterTable();
-            });
-
-            // Handle edit seat modal
+            // Handle edit seat modal (tetap sama)
             document.querySelectorAll('.edit-seat-btn').forEach(button => {
                 button.addEventListener('click', function() {
                     const seatId = this.getAttribute('data-id');
                     const seatNumber = this.getAttribute('data-seat-number');
-                    const isBooked = this.getAttribute('data-is-booked');
 
-                    // Set form action
-                    document.getElementById('editSeatForm').action =
-                        '{{ route('admin.seats.update', ':id') }}'.replace(':id', seatId);
+                    const editForm = document.getElementById('editSeatForm');
+                    if (editForm) {
+                        editForm.action = '{{ route('admin.seats.update', ':id') }}'.replace(':id',
+                            seatId);
+                    }
 
-                    // Fill form fields
-                    document.getElementById('edit_seat_number').value = seatNumber;
-                    document.getElementById('edit_is_booked').checked = isBooked === '1';
+                    const editSeatNumberInput = document.getElementById('edit_seat_number');
+                    if (editSeatNumberInput) {
+                        editSeatNumberInput.value = seatNumber;
+                    }
                 });
             });
 
-            // Handle delete confirmation
+            // Handle delete confirmation (tetap sama)
             document.querySelectorAll('.delete-btn').forEach(button => {
                 button.addEventListener('click', function(e) {
                     e.preventDefault();
-
                     if (confirm('Apakah Anda yakin ingin menghapus kursi ini?')) {
                         this.closest('form').submit();
                     }
                 });
             });
 
-            // Show create modal if there are validation errors
+            // Modal handling (tetap sama)
             @if (session('showCreateModal') || $errors->any())
                 const createModal = new bootstrap.Modal(document.getElementById('createSeatModal'));
                 createModal.show();
             @endif
 
-            // Show edit modal if there are validation errors
             @if (session('showEditModal'))
                 const editModal = new bootstrap.Modal(document.getElementById('editSeatModal'));
                 editModal.show();
 
-                // If there's an edit seat ID in session, populate the form
                 @if (session('editSeatId'))
                     const editSeatId = {{ session('editSeatId') }};
-                    document.getElementById('editSeatForm').action = '{{ route('admin.seats.update', ':id') }}'
-                        .replace(':id', editSeatId);
-
-                    // You might want to fetch the seat data again or store it in session
-                    // For now, we'll just show the modal
+                    const editForm = document.getElementById('editSeatForm');
+                    if (editForm) {
+                        editForm.action = '{{ route('admin.seats.update', ':id') }}'.replace(':id', editSeatId);
+                    }
                 @endif
             @endif
         });
