@@ -301,12 +301,12 @@
                                         <td class="text-center">
                                             <span class="fw-bold text-gray-800">{{ $buyer->quantity }}</span>
                                         </td>
-                                        <td>
+                                        <td class="text-center">
                                             <div class="d-flex flex-column">
                                                 @if ($buyer->seats->count() > 0)
                                                     @foreach ($buyer->seats as $seat)
                                                         <span
-                                                            class="text-gray-800 fw-bold mb-1">{{ $seat->seat_number }}</span>
+                                                            class="text-primary fw-bold mb-1">{{ $seat->seat_number }}</span>
                                                     @endforeach
                                                 @else
                                                     <span class="text-muted fs-7">Belum dipilih</span>
