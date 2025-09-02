@@ -60,7 +60,7 @@ class BuyerController extends Controller
     public function showPaymentConfirmation($id)
     {
         try {
-            $buyer = Buyer::with(['ticket'])->findOrFail($id);
+            $buyer = Buyer::with(['ticket', 'seats'])->findOrFail($id);
 
             if (!in_array($buyer->payment_status, ['waiting_confirmation', 'pending'])) {
                 return redirect()->route('admin.buyer.index')

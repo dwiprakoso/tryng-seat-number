@@ -130,7 +130,7 @@
                                     <div class="fw-bold text-gray-800 fs-6">{{ $buyer->email }}</div>
                                 </div>
                             </div>
-                            <div class="row">
+                            <div class="row mb-7">
                                 <div class="col-md-6">
                                     <div class="fw-semibold text-gray-600 mb-2">No. Handphone:</div>
                                     <div class="fw-bold text-gray-800 fs-6">{{ $buyer->no_handphone }}</div>
@@ -138,6 +138,24 @@
                                 <div class="col-md-6">
                                     <div class="fw-semibold text-gray-600 mb-2">Kategori Tiket:</div>
                                     <div class="fw-bold text-gray-800 fs-6">{{ $buyer->ticket->name }}</div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="fw-semibold text-gray-600 mb-2">Jumlah Tiket:</div>
+                                    <div class="fw-bold text-gray-800 fs-6">{{ $buyer->quantity }}</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="fw-semibold text-gray-600 mb-2">No Kursi:</div>
+                                    <div class="fw-bold text-gray-800 fs-6">
+                                        @if ($buyer->seats->count() > 0)
+                                            @foreach ($buyer->seats as $seat)
+                                                <span class="=text-primary fw-bold me-1">{{ $seat->seat_number }}</span>
+                                            @endforeach
+                                        @else
+                                            <span class="text-muted">Belum dipilih</span>
+                                        @endif
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -161,20 +179,20 @@
                                                 {{ number_format($buyer->ticket_price / $buyer->quantity, 0, ',', '.') }}
                                             </td>
                                         </tr>
-                                        <tr>
+                                        {{-- <tr>
                                             <td class="fw-semibold text-muted">Quantity</td>
                                             <td class="text-end fw-bold">{{ $buyer->quantity }}</td>
-                                        </tr>
+                                        </tr> --}}
                                         <tr>
-                                            <td class="fw-semibold text-muted">Subtotal</td>
+                                            <td class="fw-semibold text-muted">Unique Code</td>
                                             <td class="text-end fw-bold">Rp
-                                                {{ number_format($buyer->ticket_price, 0, ',', '.') }}</td>
+                                                {{ number_format($buyer->payment_code, 0, ',', '.') }}</td>
                                         </tr>
-                                        <tr>
+                                        {{-- <tr>
                                             <td class="fw-semibold text-muted">Biaya Admin</td>
                                             <td class="text-end fw-bold">Rp
                                                 {{ number_format($buyer->admin_fee ?? 0, 0, ',', '.') }}</td>
-                                        </tr>
+                                        </tr> --}}
                                         <tr class="border-bottom-0">
                                             <td colspan="2">
                                                 <hr class="my-2">
@@ -182,9 +200,8 @@
                                         </tr>
                                         <tr>
                                             <td class="fw-bold text-dark fs-6">Total Pembayaran</td>
-                                            <td class="text-end fw-bold text-primary fs-6">Rp
-                                                {{ number_format($buyer->ticket_price + ($buyer->admin_fee ?? 0), 0, ',', '.') }}
-                                            </td>
+                                            <td class="text-end fw-bold">Rp
+                                                {{ number_format($buyer->total_amount, 0, ',', '.') }}</td>
                                         </tr>
                                     </tbody>
                                 </table>
