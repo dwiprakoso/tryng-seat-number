@@ -260,6 +260,7 @@
                                     <th class="min-w-100px">Kontak</th>
                                     <th class="min-w-100px">Kategori Tiket</th>
                                     <th class="min-w-70px">Qty</th>
+                                    <th class="min-w-100px">Kursi</th>
                                     <th class="min-w-100px">Status</th>
                                     <th class="min-w-100px">Tanggal</th>
                                     <th class="min-w-100px">Action</th>
@@ -301,6 +302,18 @@
                                             <span class="fw-bold text-gray-800">{{ $buyer->quantity }}</span>
                                         </td>
                                         <td>
+                                            <div class="d-flex flex-column">
+                                                @if ($buyer->seats->count() > 0)
+                                                    @foreach ($buyer->seats as $seat)
+                                                        <span
+                                                            class="badge badge-light-primary fw-bold mb-1">{{ $seat->seat_number }}</span>
+                                                    @endforeach
+                                                @else
+                                                    <span class="text-muted fs-7">Belum dipilih</span>
+                                                @endif
+                                            </div>
+                                        </td>
+                                        <td>
                                             @php
                                                 $statusColors = [
                                                     'confirmed' => 'success',
@@ -336,9 +349,10 @@
                                                 <span class="text-muted fs-7">-</span>
                                             @endif
                                         </td>
-                                    @empty
+                                    </tr>
+                                @empty
                                     <tr id="emptyState">
-                                        <td colspan="9" class="text-center py-10">
+                                        <td colspan="10" class="text-center py-10">
                                             <div class="d-flex flex-column align-items-center">
                                                 <i class="ki-duotone ki-file-deleted fs-3x text-muted mb-4">
                                                     <span class="path1"></span>

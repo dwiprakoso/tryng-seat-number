@@ -19,7 +19,7 @@ class BuyerController extends Controller
 {
     public function index()
     {
-        $buyers = Buyer::with(['ticket'])
+        $buyers = Buyer::with(['ticket', 'seats'])
             ->orderBy('created_at', 'desc')
             ->paginate(25);
 

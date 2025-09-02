@@ -123,4 +123,8 @@ class Buyer extends Model
             'payment_confirmed_at' => now()
         ]);
     }
+    public function seats()
+    {
+        return $this->belongsToMany(Seat::class, 'booking_seat', 'buyer_id', 'seat_id');
+    }
 }
