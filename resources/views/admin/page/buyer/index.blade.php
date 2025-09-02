@@ -306,7 +306,7 @@
                                                 @if ($buyer->seats->count() > 0)
                                                     @foreach ($buyer->seats as $seat)
                                                         <span
-                                                            class="badge badge-light-primary fw-bold mb-1">{{ $seat->seat_number }}</span>
+                                                            class="text-gray-800 fw-bold mb-1">{{ $seat->seat_number }}</span>
                                                     @endforeach
                                                 @else
                                                     <span class="text-muted fs-7">Belum dipilih</span>
