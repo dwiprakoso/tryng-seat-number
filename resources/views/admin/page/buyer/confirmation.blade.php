@@ -153,7 +153,7 @@
                                                 <span class="=text-primary fw-bold me-1">{{ $seat->seat_number }}</span>
                                             @endforeach
                                         @else
-                                            <span class="text-muted">Belum dipilih</span>
+                                            <span class="text-muted"> - </span>
                                         @endif
                                     </div>
                                 </div>
