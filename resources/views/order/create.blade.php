@@ -875,7 +875,7 @@
                                                 <i class="fas fa-plus"></i>
                                             </button>
                                         </div>
-                                        <small class="text-muted">Stok tersedia: <span
+                                        <small class="text-white">Jumlah Tiket Tersedia: <span
                                                 id="stockInfo">{{ $availableSeatsCount }}</span> tiket</small>
                                         <div class="invalid-feedback">Jumlah tiket melebihi stok yang tersedia</div>
                                     </div>
