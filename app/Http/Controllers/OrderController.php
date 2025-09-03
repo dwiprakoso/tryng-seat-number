@@ -43,13 +43,14 @@ class OrderController extends Controller
             $allSeats = Seat::where('ticket_id', $ticket_id)
                 ->orderByRaw('CAST(seat_number AS UNSIGNED) ASC')
                 ->get();
+
             // Check if there are available seats for this ticket
             $availableSeatsCount = $allSeats->where('is_booked', 0)->count();
             if ($availableSeatsCount == 0) {
                 return redirect()->route('order.index')->with('seats_full', true);
             }
 
-            return view('order.create', compact('product', 'ticket', 'allSeats'));
+            return view('order.create', compact('product', 'ticket', 'allSeats', 'availableSeatsCount'));
         } catch (Exception $e) {
             Log::error('Error loading order form', [
                 'ticket_id' => $ticket_id,
@@ -64,7 +65,7 @@ class OrderController extends Controller
         $request->validate([
             'ticket_id' => 'required|exists:tickets,id',
             'selected_seats' => 'required|json',
-            'quantity' => 'required|integer|min:1|max:5',
+            'quantity' => 'required|integer|min:1', // Hapus max:5
             'nama_lengkap' => 'required|string|min:3|max:255',
             'email' => 'required|email|max:255',
             'no_handphone' => 'required|string|max:20|regex:/^08\d{8,12}$/',
@@ -72,7 +73,6 @@ class OrderController extends Controller
             'selected_seats.required' => 'Silakan pilih kursi terlebih dahulu',
             'selected_seats.json' => 'Data kursi tidak valid',
             'quantity.min' => 'Jumlah tiket minimal 1',
-            'quantity.max' => 'Jumlah tiket maksimal 5',
             'nama_lengkap.min' => 'Nama lengkap minimal 3 karakter',
             'no_handphone.regex' => 'Nomor handphone harus dimulai dengan 08 dan berjumlah 10-14 digit',
         ]);

@@ -676,6 +676,17 @@
             margin-bottom: 1rem;
         }
 
+        .custom-toast-warning {
+            background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+            color: #212529;
+        }
+
+        /* Update button disabled state */
+        .btn:disabled {
+            cursor: not-allowed !important;
+            transition: all 0.3s ease;
+        }
+
         /* Responsive Design */
         @media (max-width: 768px) {
             .main-container {
@@ -857,17 +868,17 @@
                                                 <i class="fas fa-minus"></i>
                                             </button>
                                             <input type="number" class="form-control text-center" id="quantity"
-                                                name="quantity" value="1" min="1" max="5" readonly
+                                                name="quantity" value="1" min="1" readonly
                                                 style="background: white;" />
                                             <button type="button" class="btn btn-outline-secondary"
                                                 id="increaseQty">
                                                 <i class="fas fa-plus"></i>
                                             </button>
                                         </div>
-                                        <small class="text-muted">Maksimal 5 tiket per transaksi</small>
-                                        <div class="invalid-feedback">Jumlah tiket harus antara 1-5</div>
+                                        <small class="text-muted">Stok tersedia: <span
+                                                id="stockInfo">{{ $availableSeatsCount }}</span> tiket</small>
+                                        <div class="invalid-feedback">Jumlah tiket melebihi stok yang tersedia</div>
                                     </div>
-
                                     {{-- <div class="form-group">
                                         <label for="alamat_lengkap" class="form-label">
                                             Alamat Domisili <span class="text-danger">*</span>
@@ -1071,6 +1082,7 @@
             let currentStep = 1;
             let selectedSeats = [];
             let requiredQuantity = 1;
+            let availableStock = {{ $availableSeatsCount }};
             const ticketPrice = {{ $ticket->price }};
 
             // Form elements
@@ -1081,81 +1093,165 @@
             const quantityInput = document.getElementById('quantity');
             const decreaseBtn = document.getElementById('decreaseQty');
             const increaseBtn = document.getElementById('increaseQty');
+            const stockInfo = document.getElementById('stockInfo');
 
-            // Quantity controls
+            // Function to check current available stock
+            function checkCurrentStock() {
+                const availableSeats = document.querySelectorAll('.seat.available').length;
+                availableStock = availableSeats;
+                stockInfo.textContent = availableStock;
+                return availableStock;
+            }
+
+            // Function untuk show modal ketika mencapai limit
+            function showStockLimitModal(stockLimit) {
+                // Remove existing modal jika ada
+                const existingModal = document.getElementById('stockLimitModal');
+                if (existingModal) {
+                    existingModal.remove();
+                }
+
+                // Create modal HTML
+                const modalHTML = `
+            <div class="modal fade" id="stockLimitModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header bg-warning text-dark">
+                            <h5 class="modal-title">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                Stok Terbatas!
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body text-center py-4">
+                            <div class="mb-3">
+                                <i class="fas fa-ticket-alt text-warning" style="font-size: 3rem;"></i>
+                            </div>
+                            <h6 class="mb-3">Anda telah mencapai batas maksimal pemesanan</h6>
+                            <p class="mb-2">Stok tiket yang tersedia saat ini: <strong>${stockLimit} tiket</strong></p>
+                            <p class="text-muted mb-0">Silakan lanjutkan dengan jumlah tiket yang sudah dipilih atau hubungi customer service untuk informasi lebih lanjut.</p>
+                        </div>
+                        <div class="modal-footer justify-content-center">
+                            <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
+                                <i class="fas fa-check me-2"></i>Mengerti
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+                // Append modal ke body
+                document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+                // Show modal
+                const modal = new bootstrap.Modal(document.getElementById('stockLimitModal'));
+                modal.show();
+
+                // Remove modal dari DOM setelah ditutup
+                document.getElementById('stockLimitModal').addEventListener('hidden.bs.modal', function() {
+                    this.remove();
+                });
+            }
+
+            // Toast function
+            function showToast(message, type = 'info') {
+                // Remove existing toast
+                const existingToast = document.querySelector('.custom-toast');
+                if (existingToast) {
+                    existingToast.remove();
+                }
+
+                // Create toast
+                const toast = document.createElement('div');
+                let bgClass = 'custom-toast-info';
+                let icon = 'fa-info-circle';
+
+                switch (type) {
+                    case 'error':
+                        bgClass = 'custom-toast-error';
+                        icon = 'fa-exclamation-circle';
+                        break;
+                    case 'success':
+                        bgClass = 'custom-toast-success';
+                        icon = 'fa-check-circle';
+                        break;
+                    case 'warning':
+                        bgClass = 'custom-toast-warning';
+                        icon = 'fa-exclamation-triangle';
+                        break;
+                }
+
+                toast.className = `custom-toast ${bgClass}`;
+                toast.innerHTML = `
+            <div class="d-flex align-items-center">
+                <i class="fas ${icon} me-2"></i>
+                <span>${message}</span>
+            </div>
+        `;
+
+                document.body.appendChild(toast);
+
+                // Show toast
+                setTimeout(() => {
+                    toast.style.opacity = '1';
+                    toast.style.transform = 'translateX(0)';
+                }, 100);
+
+                // Hide toast
+                setTimeout(() => {
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateX(100%)';
+                    setTimeout(() => toast.remove(), 400);
+                }, 4000);
+            }
+
+            // Quantity controls - HANYA SATU DEFINISI
             decreaseBtn.addEventListener('click', function() {
                 if (requiredQuantity > 1) {
                     requiredQuantity--;
                     quantityInput.value = requiredQuantity;
                     updateQuantityDisplay();
                     clearExcessSeats();
+                    validateQuantityStock();
+
+                    // Re-enable increase button jika tidak di limit
+                    const currentStock = checkCurrentStock();
+                    if (requiredQuantity < currentStock) {
+                        increaseBtn.disabled = false;
+                        increaseBtn.style.opacity = '1';
+                    }
                 }
             });
 
             increaseBtn.addEventListener('click', function() {
-                if (requiredQuantity < 5) {
-                    requiredQuantity++;
-                    quantityInput.value = requiredQuantity;
-                    updateQuantityDisplay();
+                const currentStock = checkCurrentStock();
+
+                // Cek jika sudah mencapai batas maksimal
+                if (requiredQuantity >= currentStock) {
+                    // Disable button increase
+                    increaseBtn.disabled = true;
+                    increaseBtn.style.opacity = '0.5';
+
+                    // Show pop-up message
+                    showStockLimitModal(currentStock);
+                    return;
+                }
+
+                requiredQuantity++;
+                quantityInput.value = requiredQuantity;
+                updateQuantityDisplay();
+                validateQuantityStock();
+
+                // Cek jika setelah increment sudah mencapai limit
+                if (requiredQuantity >= currentStock) {
+                    increaseBtn.disabled = true;
+                    increaseBtn.style.opacity = '0.5';
+                    showToast(`Maksimal ${currentStock} tiket dapat dipesan (stok terbatas)`, 'warning');
                 }
             });
 
-            // Step navigation
-            nextBtn.addEventListener('click', function() {
-                if (validateStep1()) {
-                    showStep(2);
-                }
-            });
-
-            backBtn.addEventListener('click', function() {
-                showStep(1);
-            });
-
-            // Seat selection
-            document.querySelectorAll('.seat.available').forEach(seat => {
-                seat.addEventListener('click', function() {
-                    const seatNumber = this.dataset.seat;
-                    toggleSeat(seatNumber, this);
-                });
-            });
-
-            // Form submission
-            form.addEventListener('submit', function(e) {
-                if (selectedSeats.length !== requiredQuantity) {
-                    e.preventDefault();
-                    showToast(`Silakan pilih ${requiredQuantity} kursi sesuai jumlah tiket!`, 'error');
-                    return false;
-                }
-
-                // Set selected seats as JSON string
-                document.getElementById('selected_seats').value = JSON.stringify(selectedSeats);
-
-                // Set loading state
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Memproses...';
-                submitBtn.disabled = true;
-            });
-
-            // Real-time validation
-            document.querySelectorAll('.form-control').forEach(input => {
-                input.addEventListener('blur', () => validateField(input));
-                input.addEventListener('input', () => {
-                    if (input.classList.contains('is-invalid')) {
-                        input.classList.remove('is-invalid');
-                    }
-                });
-            });
-
-            function updateQuantityDisplay() {
-                document.getElementById('requiredCount').textContent = requiredQuantity;
-                document.getElementById('ticketQtyDisplay').textContent = requiredQuantity;
-
-                const subtotal = ticketPrice * requiredQuantity;
-                document.getElementById('subtotalDisplay').textContent = `Rp ${subtotal.toLocaleString('id-ID')}`;
-
-                updateSeatSelectionUI();
-                validateSeatSelection();
-            }
-
+            // Clear excess seats function
             function clearExcessSeats() {
                 if (selectedSeats.length > requiredQuantity) {
                     const excessSeats = selectedSeats.slice(requiredQuantity);
@@ -1170,6 +1266,14 @@
                     updateSeatSelectionUI();
                 }
             }
+
+            // Seat selection
+            document.querySelectorAll('.seat.available').forEach(seat => {
+                seat.addEventListener('click', function() {
+                    const seatNumber = this.dataset.seat;
+                    toggleSeat(seatNumber, this);
+                });
+            });
 
             function toggleSeat(seatNumber, seatElement) {
                 const seatIndex = selectedSeats.indexOf(seatNumber);
@@ -1221,6 +1325,73 @@
                     submitBtn.classList.add('btn-secondary');
                 }
             }
+
+            // Validasi quantity terhadap stok
+            function validateQuantityStock() {
+                const quantityField = document.getElementById('quantity');
+                const currentStock = checkCurrentStock();
+
+                if (requiredQuantity > currentStock) {
+                    quantityField.classList.add('is-invalid');
+                    quantityField.classList.remove('is-valid');
+
+                    // Reset ke stok maksimal yang tersedia
+                    requiredQuantity = Math.max(1, currentStock);
+                    quantityInput.value = requiredQuantity;
+                    updateQuantityDisplay();
+
+                    showToast(`Jumlah tiket melebihi stok! Maksimal ${currentStock} tiket tersedia`, 'error');
+                    return false;
+                } else {
+                    quantityField.classList.remove('is-invalid');
+                    if (requiredQuantity > 0) {
+                        quantityField.classList.add('is-valid');
+                    }
+                    return true;
+                }
+            }
+
+            function updateQuantityDisplay() {
+                document.getElementById('requiredCount').textContent = requiredQuantity;
+                document.getElementById('ticketQtyDisplay').textContent = requiredQuantity;
+
+                const subtotal = ticketPrice * requiredQuantity;
+                document.getElementById('subtotalDisplay').textContent = `Rp ${subtotal.toLocaleString('id-ID')}`;
+
+                // Update stock info
+                const currentStock = checkCurrentStock();
+
+                // Handle button states
+                if (requiredQuantity >= currentStock) {
+                    increaseBtn.disabled = true;
+                    increaseBtn.style.opacity = '0.5';
+                } else {
+                    increaseBtn.disabled = false;
+                    increaseBtn.style.opacity = '1';
+                }
+
+                if (requiredQuantity <= 1) {
+                    decreaseBtn.disabled = true;
+                    decreaseBtn.style.opacity = '0.5';
+                } else {
+                    decreaseBtn.disabled = false;
+                    decreaseBtn.style.opacity = '1';
+                }
+
+                updateSeatSelectionUI();
+                validateSeatSelection();
+            }
+
+            // Step navigation
+            nextBtn.addEventListener('click', function() {
+                if (validateStep1()) {
+                    showStep(2);
+                }
+            });
+
+            backBtn.addEventListener('click', function() {
+                showStep(1);
+            });
 
             function showStep(step) {
                 // Hide all content
@@ -1303,6 +1474,11 @@
                     }
                 });
 
+                // Validasi quantity stock sebelum lanjut ke step 2
+                if (!validateQuantityStock()) {
+                    isValid = false;
+                }
+
                 if (!isValid) {
                     const firstInvalid = document.querySelector('.form-control.is-invalid');
                     if (firstInvalid) {
@@ -1317,6 +1493,16 @@
 
                 return isValid;
             }
+
+            // Real-time validation
+            document.querySelectorAll('.form-control').forEach(input => {
+                input.addEventListener('blur', () => validateField(input));
+                input.addEventListener('input', () => {
+                    if (input.classList.contains('is-invalid')) {
+                        input.classList.remove('is-invalid');
+                    }
+                });
+            });
 
             function validateField(element) {
                 const value = element.value.trim();
@@ -1345,41 +1531,33 @@
                 }
             }
 
-            function showToast(message, type = 'info') {
-                // Remove existing toast
-                const existingToast = document.querySelector('.custom-toast');
-                if (existingToast) {
-                    existingToast.remove();
+            // Form submission dengan validasi final
+            form.addEventListener('submit', function(e) {
+                const currentStock = checkCurrentStock();
+
+                if (requiredQuantity > currentStock) {
+                    e.preventDefault();
+                    showToast(`Stok tidak mencukupi! Stok tersedia: ${currentStock} tiket`, 'error');
+                    return false;
                 }
 
-                // Create toast
-                const toast = document.createElement('div');
-                toast.className = `custom-toast custom-toast-${type}`;
-                toast.innerHTML = `
-            <div class="d-flex align-items-center">
-                <i class="fas ${type === 'error' ? 'fa-exclamation-circle' : type === 'success' ? 'fa-check-circle' : 'fa-info-circle'} me-2"></i>
-                <span>${message}</span>
-            </div>
-        `;
+                if (selectedSeats.length !== requiredQuantity) {
+                    e.preventDefault();
+                    showToast(`Silakan pilih ${requiredQuantity} kursi sesuai jumlah tiket!`, 'error');
+                    return false;
+                }
 
-                document.body.appendChild(toast);
+                // Set selected seats as JSON string
+                document.getElementById('selected_seats').value = JSON.stringify(selectedSeats);
 
-                // Show toast
-                setTimeout(() => {
-                    toast.style.opacity = '1';
-                    toast.style.transform = 'translateX(0)';
-                }, 100);
-
-                // Hide toast
-                setTimeout(() => {
-                    toast.style.opacity = '0';
-                    toast.style.transform = 'translateX(100%)';
-                    setTimeout(() => toast.remove(), 400);
-                }, 4000);
-            }
+                // Set loading state
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Memproses...';
+                submitBtn.disabled = true;
+            });
 
             // Initialize
             updateQuantityDisplay();
+            validateQuantityStock();
         });
     </script>
 </body>
