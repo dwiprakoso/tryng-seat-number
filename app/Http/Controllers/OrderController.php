@@ -7,15 +7,19 @@ use App\Models\Seat;
 use App\Models\Buyer;
 use App\Models\Ticket;
 use App\Models\Product;
+use Endroid\QrCode\QrCode;
 use App\Models\BookingSeat;
 use Illuminate\Http\Request;
 use App\Mail\OrderConfirmation;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Storage;
 use Endroid\QrCode\Builder\Builder;
+use Illuminate\Support\Facades\Log;
 use Endroid\QrCode\Writer\PngWriter;
+use Illuminate\Support\Facades\Mail;
+use Endroid\QrCode\Encoding\Encoding;
+use Illuminate\Support\Facades\Storage;
+use Endroid\QrCode\RoundBlockSizeMode\RoundBlockSizeModeMargin;
+use Endroid\QrCode\ErrorCorrectionLevel\ErrorCorrectionLevelHigh;
 
 class OrderController extends Controller
 {
@@ -80,6 +84,7 @@ class OrderController extends Controller
             return redirect()->back()->with('error', 'Terjadi kesalahan saat memuat form pemesanan.');
         }
     }
+
     public function store(Request $request)
     {
         $request->validate([
@@ -159,16 +164,8 @@ class OrderController extends Controller
             // Generate URL untuk verifikasi tiket
             $verifyUrl = url('/verify/' . $externalId);
 
-            // Generate QR Code - fallback ke Google Charts API (sementara)
-            $qrCodeUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' . urlencode($verifyUrl);
-
-            // Download image dari API dan convert ke base64
-            $qrCodeData = file_get_contents($qrCodeUrl);
-            if ($qrCodeData === false) {
-                throw new Exception('Gagal generate QR code dari API eksternal');
-            }
-
-            $qrCodeBase64 = base64_encode($qrCodeData);
+            // PERBAIKAN: Generate QR Code dan simpan sebagai file
+            $qrCodePath = $this->generateAndSaveQrCode($verifyUrl, $externalId);
 
             $buyer = Buyer::create([
                 'nama_lengkap' => $request->nama_lengkap,
@@ -180,7 +177,7 @@ class OrderController extends Controller
                 'payment_code' => $paymentCode,
                 'total_amount' => $totalAmount,
                 'external_id' => $externalId,
-                'qr_code' => $qrCodeBase64,
+                'qr_code' => $qrCodePath, // Sekarang menyimpan path file
                 'payment_status' => 'pending',
             ]);
 
@@ -227,12 +224,18 @@ class OrderController extends Controller
                 'quantity' => $quantity,
                 'ticket_stock_before' => $ticket->qty + $quantity,
                 'ticket_stock_after' => $ticket->qty,
+                'qr_code_path' => $qrCodePath,
             ]);
 
             return redirect()->route('payment.manual', ['external_id' => $externalId])
                 ->with('success', "Pesanan untuk {$quantity} tiket berhasil dibuat. Silakan lakukan pembayaran.");
         } catch (Exception $e) {
             DB::rollback();
+
+            // Hapus file QR code jika sudah dibuat tapi transaksi gagal
+            if (isset($qrCodePath) && $qrCodePath && Storage::disk('public')->exists($qrCodePath)) {
+                Storage::disk('public')->delete($qrCodePath);
+            }
 
             Log::error('Multi-ticket Order Creation Failed', [
                 'error_message' => $e->getMessage(),
@@ -246,6 +249,66 @@ class OrderController extends Controller
             return redirect()->route('order.create', ['ticket_id' => $request->ticket_id])
                 ->with('error', 'Gagal membuat pesanan: ' . $e->getMessage())
                 ->withInput();
+        }
+    }
+
+    /**
+     * Generate QR code menggunakan approach langsung untuk Endroid v6.0
+     */
+    private function generateAndSaveQrCode($data, $externalId)
+    {
+        try {
+            // Metode langsung tanpa Builder (alternatif untuk v6.0)
+            $qrCode = new QrCode($data);
+            $writer = new PngWriter();
+
+            // Generate hasil
+            $result = $writer->write($qrCode);
+
+            // Buat folder jika belum ada
+            $directory = 'qr-codes';
+            if (!Storage::disk('public')->exists($directory)) {
+                Storage::disk('public')->makeDirectory($directory);
+            }
+
+            // Generate nama file unique dengan external_id
+            $fileName = $directory . '/qr_' . $externalId . '_' . time() . '.png';
+
+            // Get binary data dari QR code
+            $qrCodeData = $result->getString();
+
+            // Validasi data QR code
+            if (empty($qrCodeData)) {
+                throw new Exception('QR code data is empty');
+            }
+
+            // Simpan file ke storage
+            $saved = Storage::disk('public')->put($fileName, $qrCodeData);
+
+            if (!$saved) {
+                throw new Exception('Gagal menyimpan QR code ke storage');
+            }
+
+            // Verifikasi file berhasil disimpan
+            if (!Storage::disk('public')->exists($fileName)) {
+                throw new Exception('QR code file tidak ditemukan setelah disimpan');
+            }
+
+            Log::info('QR Code generated and saved successfully (Direct method)', [
+                'external_id' => $externalId,
+                'file_path' => $fileName,
+                'file_size' => strlen($qrCodeData),
+                'storage_path' => storage_path('app/public/' . $fileName)
+            ]);
+
+            return $fileName; // Return relative path
+        } catch (Exception $e) {
+            Log::error('QR Code generation failed', [
+                'external_id' => $externalId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            throw new Exception('Gagal generate QR code: ' . $e->getMessage());
         }
     }
     /**
@@ -279,6 +342,7 @@ class OrderController extends Controller
 
         return $externalId;
     }
+
     /**
      * Halaman pembayaran manual
      */

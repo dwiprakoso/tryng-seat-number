@@ -213,15 +213,16 @@
 
                     <!-- QR Code dengan style inline untuk email compatibility -->
                     <div style="text-align: center; margin-bottom: 20px;">
-                        <img src="{{ $buyer->getQrCodeDataUrl() }}" alt="QR Code Tiket {{ $buyer->external_id }}"
+                        <img src="{{ asset('storage/' . $buyer->qr_code) }}"
+                            alt="QR Code Tiket {{ $buyer->external_id }}"
                             style="max-width: 200px !important; 
-                                    height: auto !important; 
-                                    display: block !important; 
-                                    margin: 0 auto !important;
-                                    border: 4px solid #28a745;
-                                    border-radius: 8px;
-                                    padding: 10px;
-                                    background-color: white;">
+                                height: auto !important; 
+                                display: block !important; 
+                                margin: 0 auto !important;
+                                border: 4px solid #28a745;
+                                border-radius: 8px;
+                                padding: 10px;
+                                background-color: white;">
                     </div>
 
                     <!-- Backup ID untuk fallback -->
