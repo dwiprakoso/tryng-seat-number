@@ -802,7 +802,7 @@
                         <form id="orderForm" method="POST" action="{{ route('order.store') }}" novalidate>
                             @csrf
                             <input type="hidden" name="ticket_id" value="{{ $ticket->id }}" />
-                            <input type="hidden" name="selected_seat" id="selected_seat" />
+                            <input type="hidden" name="selected_seats" id="selected_seats" />
 
                             <!-- Step Progress Bar -->
                             <div class="step-progress">
@@ -847,6 +847,25 @@
                                             required value="{{ old('no_handphone') }}" placeholder="08123456789"
                                             pattern="^08\d{8,12}$" />
                                         <div class="invalid-feedback">Nomor HP harus valid (08xxxxxxxxx)</div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="quantity" class="form-label">
+                                            Jumlah Tiket <span class="text-danger">*</span>
+                                        </label>
+                                        <div class="input-group">
+                                            <button type="button" class="btn btn-outline-secondary" id="decreaseQty">
+                                                <i class="fas fa-minus"></i>
+                                            </button>
+                                            <input type="number" class="form-control text-center" id="quantity"
+                                                name="quantity" value="1" min="1" max="5" readonly
+                                                style="background: white;" />
+                                            <button type="button" class="btn btn-outline-secondary"
+                                                id="increaseQty">
+                                                <i class="fas fa-plus"></i>
+                                            </button>
+                                        </div>
+                                        <small class="text-muted">Maksimal 5 tiket per transaksi</small>
+                                        <div class="invalid-feedback">Jumlah tiket harus antara 1-5</div>
                                     </div>
 
                                     {{-- <div class="form-group">
@@ -941,7 +960,9 @@
 
                                         <div id="selectedSeatInfo" class="selected-seat-info" style="display: none;">
                                             <i class="fas fa-chair"></i>
-                                            Kursi yang dipilih: <strong id="selectedSeatNumber"></strong>
+                                            <div>Kursi yang dipilih (<span id="selectedCount">0</span>/<span
+                                                    id="requiredCount">1</span>):</div>
+                                            <div id="selectedSeatsList" class="mt-2"></div>
                                         </div>
                                     </div>
 
@@ -985,19 +1006,19 @@
                     </div>
                 </div>
 
-                <!-- Order Summary -->
-                {{-- <div class="order-summary">
+                <div class="order-summary">
                     <h6>
                         <i class="fas fa-receipt"></i>
                         Ringkasan Pesanan
                     </h6>
                     <div class="summary-item">
                         <span>Tiket {{ $ticket->name }}</span>
-                        <span>Rp {{ number_format($ticket->price, 0, ',', '.') }}</span>
+                        <span>Rp {{ number_format($ticket->price, 0, ',', '.') }} x <span
+                                id="ticketQtyDisplay">1</span></span>
                     </div>
                     <div class="summary-item">
-                        <span>Jumlah</span>
-                        <span>1 tiket</span>
+                        <span>Subtotal</span>
+                        <span id="subtotalDisplay">Rp {{ number_format($ticket->price, 0, ',', '.') }}</span>
                     </div>
                     <div class="summary-item">
                         <span>Kode Pembayaran</span>
@@ -1008,7 +1029,7 @@
                         <span><strong id="totalDisplay">Rp
                                 {{ number_format($ticket->price, 0, ',', '.') }}</strong></span>
                     </div>
-                </div> --}}
+                </div>
             </div>
         </div>
     </div>
@@ -1048,7 +1069,8 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             let currentStep = 1;
-            let selectedSeat = null;
+            let selectedSeats = [];
+            let requiredQuantity = 1;
             const ticketPrice = {{ $ticket->price }};
 
             // Form elements
@@ -1056,6 +1078,27 @@
             const nextBtn = document.getElementById('nextToStep2');
             const backBtn = document.getElementById('backToStep1');
             const submitBtn = document.getElementById('submitOrder');
+            const quantityInput = document.getElementById('quantity');
+            const decreaseBtn = document.getElementById('decreaseQty');
+            const increaseBtn = document.getElementById('increaseQty');
+
+            // Quantity controls
+            decreaseBtn.addEventListener('click', function() {
+                if (requiredQuantity > 1) {
+                    requiredQuantity--;
+                    quantityInput.value = requiredQuantity;
+                    updateQuantityDisplay();
+                    clearExcessSeats();
+                }
+            });
+
+            increaseBtn.addEventListener('click', function() {
+                if (requiredQuantity < 5) {
+                    requiredQuantity++;
+                    quantityInput.value = requiredQuantity;
+                    updateQuantityDisplay();
+                }
+            });
 
             // Step navigation
             nextBtn.addEventListener('click', function() {
@@ -1072,24 +1115,24 @@
             document.querySelectorAll('.seat.available').forEach(seat => {
                 seat.addEventListener('click', function() {
                     const seatNumber = this.dataset.seat;
-                    selectSeat(seatNumber, this);
+                    toggleSeat(seatNumber, this);
                 });
             });
 
             // Form submission
-            // Form submission
             form.addEventListener('submit', function(e) {
-                if (!selectedSeat) {
+                if (selectedSeats.length !== requiredQuantity) {
                     e.preventDefault();
-                    showToast('Silakan pilih kursi terlebih dahulu!', 'error');
+                    showToast(`Silakan pilih ${requiredQuantity} kursi sesuai jumlah tiket!`, 'error');
                     return false;
                 }
+
+                // Set selected seats as JSON string
+                document.getElementById('selected_seats').value = JSON.stringify(selectedSeats);
 
                 // Set loading state
                 submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Memproses...';
                 submitBtn.disabled = true;
-
-                // Form akan submit secara normal ke backend
             });
 
             // Real-time validation
@@ -1101,6 +1144,83 @@
                     }
                 });
             });
+
+            function updateQuantityDisplay() {
+                document.getElementById('requiredCount').textContent = requiredQuantity;
+                document.getElementById('ticketQtyDisplay').textContent = requiredQuantity;
+
+                const subtotal = ticketPrice * requiredQuantity;
+                document.getElementById('subtotalDisplay').textContent = `Rp ${subtotal.toLocaleString('id-ID')}`;
+
+                updateSeatSelectionUI();
+                validateSeatSelection();
+            }
+
+            function clearExcessSeats() {
+                if (selectedSeats.length > requiredQuantity) {
+                    const excessSeats = selectedSeats.slice(requiredQuantity);
+                    excessSeats.forEach(seatNumber => {
+                        const seatElement = document.querySelector(`.seat[data-seat="${seatNumber}"]`);
+                        if (seatElement) {
+                            seatElement.classList.remove('selected');
+                            seatElement.classList.add('available');
+                        }
+                    });
+                    selectedSeats = selectedSeats.slice(0, requiredQuantity);
+                    updateSeatSelectionUI();
+                }
+            }
+
+            function toggleSeat(seatNumber, seatElement) {
+                const seatIndex = selectedSeats.indexOf(seatNumber);
+
+                if (seatIndex > -1) {
+                    // Remove seat
+                    selectedSeats.splice(seatIndex, 1);
+                    seatElement.classList.remove('selected');
+                    seatElement.classList.add('available');
+                } else {
+                    // Add seat
+                    if (selectedSeats.length < requiredQuantity) {
+                        selectedSeats.push(seatNumber);
+                        seatElement.classList.remove('available');
+                        seatElement.classList.add('selected');
+                    } else {
+                        showToast(`Maksimal ${requiredQuantity} kursi yang dapat dipilih!`, 'error');
+                        return;
+                    }
+                }
+
+                updateSeatSelectionUI();
+                validateSeatSelection();
+            }
+
+            function updateSeatSelectionUI() {
+                const selectedCount = selectedSeats.length;
+                document.getElementById('selectedCount').textContent = selectedCount;
+
+                if (selectedCount > 0) {
+                    document.getElementById('selectedSeatInfo').style.display = 'block';
+                    document.getElementById('selectedSeatsList').innerHTML =
+                        selectedSeats.sort((a, b) => parseInt(a) - parseInt(b))
+                        .map(seat => `<span class="badge bg-primary me-1 mb-1">${seat}</span>`).join('');
+                } else {
+                    document.getElementById('selectedSeatInfo').style.display = 'none';
+                }
+            }
+
+            function validateSeatSelection() {
+                const isComplete = selectedSeats.length === requiredQuantity;
+                submitBtn.disabled = !isComplete;
+
+                if (isComplete) {
+                    submitBtn.classList.remove('btn-secondary');
+                    submitBtn.classList.add('btn-primary');
+                } else {
+                    submitBtn.classList.remove('btn-primary');
+                    submitBtn.classList.add('btn-secondary');
+                }
+            }
 
             function showStep(step) {
                 // Hide all content
@@ -1204,7 +1324,7 @@
 
                 switch (element.id) {
                     case 'nama_lengkap':
-                        isValid = value.length >= 3; // Tambahkan ini yang hilang
+                        isValid = value.length >= 3;
                         break;
                     case 'email':
                         isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -1225,33 +1345,6 @@
                 }
             }
 
-            function selectSeat(seatNumber, seatElement) {
-                // Remove previous selection
-                document.querySelectorAll('.seat.selected').forEach(s => {
-                    s.classList.remove('selected');
-                    s.classList.add('available');
-                });
-
-                // Select new seat
-                seatElement.classList.remove('available');
-                seatElement.classList.add('selected');
-
-                selectedSeat = seatNumber;
-                document.getElementById('selected_seat').value = seatNumber;
-                document.getElementById('selectedSeatNumber').textContent = seatNumber;
-                document.getElementById('selectedSeatInfo').style.display = 'block';
-
-                submitBtn.disabled = false;
-
-                // Update payment code in summary (simulate)
-                // const paymentCode = Math.floor(Math.random() * 900) + 100;
-                // const total = ticketPrice + paymentCode;
-                // document.getElementById('paymentCodeDisplay').textContent =
-                //     `+Rp ${paymentCode.toLocaleString('id-ID')}`;
-                // document.getElementById('totalDisplay').innerHTML =
-                //     `<strong>Rp ${total.toLocaleString('id-ID')}</strong>`;
-            }
-
             function showToast(message, type = 'info') {
                 // Remove existing toast
                 const existingToast = document.querySelector('.custom-toast');
@@ -1263,11 +1356,11 @@
                 const toast = document.createElement('div');
                 toast.className = `custom-toast custom-toast-${type}`;
                 toast.innerHTML = `
-                    <div class="d-flex align-items-center">
-                        <i class="fas ${type === 'error' ? 'fa-exclamation-circle' : type === 'success' ? 'fa-check-circle' : 'fa-info-circle'} me-2"></i>
-                        <span>${message}</span>
-                    </div>
-                `;
+            <div class="d-flex align-items-center">
+                <i class="fas ${type === 'error' ? 'fa-exclamation-circle' : type === 'success' ? 'fa-check-circle' : 'fa-info-circle'} me-2"></i>
+                <span>${message}</span>
+            </div>
+        `;
 
                 document.body.appendChild(toast);
 
@@ -1285,15 +1378,8 @@
                 }, 4000);
             }
 
-            // Keyboard shortcuts
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter' && currentStep === 1 && !e.target.matches('textarea')) {
-                    e.preventDefault();
-                    if (validateStep1()) {
-                        showStep(2);
-                    }
-                }
-            });
+            // Initialize
+            updateQuantityDisplay();
         });
     </script>
 </body>

@@ -63,16 +63,28 @@ class OrderController extends Controller
     {
         $request->validate([
             'ticket_id' => 'required|exists:tickets,id',
-            'selected_seat' => 'required|exists:seats,seat_number',
+            'selected_seats' => 'required|json',
+            'quantity' => 'required|integer|min:1|max:5',
             'nama_lengkap' => 'required|string|min:3|max:255',
             'email' => 'required|email|max:255',
             'no_handphone' => 'required|string|max:20|regex:/^08\d{8,12}$/',
         ], [
-            'selected_seat.required' => 'Silakan pilih kursi terlebih dahulu',
-            'selected_seat.exists' => 'Kursi yang dipilih tidak valid',
+            'selected_seats.required' => 'Silakan pilih kursi terlebih dahulu',
+            'selected_seats.json' => 'Data kursi tidak valid',
+            'quantity.min' => 'Jumlah tiket minimal 1',
+            'quantity.max' => 'Jumlah tiket maksimal 5',
             'nama_lengkap.min' => 'Nama lengkap minimal 3 karakter',
             'no_handphone.regex' => 'Nomor handphone harus dimulai dengan 08 dan berjumlah 10-14 digit',
         ]);
+
+        // Parse selected seats
+        $selectedSeats = json_decode($request->selected_seats, true);
+
+        if (!is_array($selectedSeats) || count($selectedSeats) !== (int)$request->quantity) {
+            return redirect()->back()
+                ->with('error', 'Jumlah kursi yang dipilih tidak sesuai dengan quantity tiket')
+                ->withInput();
+        }
 
         // Pre-generate IDs untuk optimasi
         $paymentCode = $this->generateUniquePaymentCode();
@@ -81,42 +93,42 @@ class OrderController extends Controller
         DB::beginTransaction();
 
         try {
-            // 1. Cek dan update seat dalam satu query optimized
-            $seatUpdated = DB::table('seats')
-                ->where('seat_number', $request->selected_seat)
+            // 1. Cek dan update multiple seats dalam satu query optimized
+            $seatsUpdated = DB::table('seats')
+                ->whereIn('seat_number', $selectedSeats)
                 ->where('is_booked', 0)
                 ->update(['is_booked' => 1]);
 
-            if (!$seatUpdated) {
-                throw new Exception('Kursi yang dipilih sudah tidak tersedia.');
+            if ($seatsUpdated !== count($selectedSeats)) {
+                throw new Exception('Beberapa kursi yang dipilih sudah tidak tersedia.');
             }
 
-            // 2. Ambil seat ID setelah update
-            $seat = Seat::where('seat_number', $request->selected_seat)->first();
+            // 2. Ambil seat IDs setelah update
+            $seats = Seat::whereIn('seat_number', $selectedSeats)->get();
 
-            // 3. Ambil ticket dengan lock minimal
+            // 3. Ambil ticket dengan lock
             $ticket = Ticket::lockForUpdate()->find($request->ticket_id);
+            $quantity = (int)$request->quantity;
 
-            if (!$ticket || $ticket->qty < 1) {
+            if (!$ticket || $ticket->qty < $quantity) {
                 throw new Exception('Stok tiket tidak mencukupi.');
             }
 
-            // 4. Cek duplikasi email dengan query optimized
-            $existingOrder = DB::table('buyers')
-                ->where('email', $request->email)
-                ->where('ticket_id', $request->ticket_id)
-                ->whereIn('payment_status', ['pending', 'paid'])
-                ->exists();
+            // 4. Cek duplikasi email
+            // $existingOrder = DB::table('buyers')
+            //     ->where('email', $request->email)
+            //     ->where('ticket_id', $request->ticket_id)
+            //     ->whereIn('payment_status', ['pending', 'paid'])
+            //     ->exists();
 
-            if ($existingOrder) {
-                throw new Exception('Email ini sudah pernah digunakan untuk memesan tiket yang sama.');
-            }
+            // if ($existingOrder) {
+            //     throw new Exception('Email ini sudah pernah digunakan untuk memesan tiket yang sama.');
+            // }
 
-            $quantity = 1;
             $ticketPrice = $ticket->price * $quantity;
             $totalAmount = $ticketPrice + $paymentCode;
 
-            // 5. Bulk operations - kombinasi create dan update
+            // 5. Create buyer
             $buyer = Buyer::create([
                 'nama_lengkap' => $request->nama_lengkap,
                 'email' => $request->email,
@@ -130,24 +142,32 @@ class OrderController extends Controller
                 'payment_status' => 'pending',
             ]);
 
-            // 6. Create booking seat
-            BookingSeat::create([
-                'buyer_id' => $buyer->id,
-                'seat_id' => $seat->id,
-            ]);
+            // 6. Create multiple booking seats
+            $bookingSeats = [];
+            foreach ($seats as $seat) {
+                $bookingSeats[] = [
+                    'buyer_id' => $buyer->id,
+                    'seat_id' => $seat->id,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+            }
+
+            BookingSeat::insert($bookingSeats);
 
             // 7. Update ticket quantity
             $ticket->decrement('qty', $quantity);
 
             DB::commit();
 
-            // Kirim email konfirmasi (tetap synchronous seperti sebelumnya)
+            // Send email confirmation
             try {
                 Mail::to($buyer->email)->send(new OrderConfirmation($buyer, $ticket));
                 Log::info('Order confirmation email sent successfully', [
                     'external_id' => $externalId,
                     'email' => $buyer->email,
-                    'seat_number' => $seat->seat_number
+                    'seats' => $selectedSeats,
+                    'quantity' => $quantity
                 ]);
             } catch (Exception $emailException) {
                 Log::error('Failed to send order confirmation email', [
@@ -157,22 +177,24 @@ class OrderController extends Controller
                 ]);
             }
 
-            Log::info('Order created successfully', [
+            Log::info('Multi-ticket order created successfully', [
                 'external_id' => $externalId,
                 'buyer_id' => $buyer->id,
-                'seat_number' => $seat->seat_number,
+                'seats' => $selectedSeats,
+                'quantity' => $quantity,
             ]);
 
             return redirect()->route('payment.manual', ['external_id' => $externalId])
-                ->with('success', 'Pesanan berhasil dibuat. Silakan lakukan pembayaran.');
+                ->with('success', "Pesanan untuk {$quantity} tiket berhasil dibuat. Silakan lakukan pembayaran.");
         } catch (Exception $e) {
             DB::rollback();
 
-            Log::error('Order Creation Failed', [
+            Log::error('Multi-ticket Order Creation Failed', [
                 'error_message' => $e->getMessage(),
                 'external_id' => $externalId ?? 'not_generated',
                 'ticket_id' => $request->ticket_id,
-                'selected_seat' => $request->selected_seat,
+                'selected_seats' => $selectedSeats ?? [],
+                'quantity' => $request->quantity ?? 0,
                 'customer_email' => $request->email,
             ]);
 
