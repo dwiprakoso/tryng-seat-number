@@ -22,6 +22,7 @@ class Buyer extends Model
         'payment_code',                // ← DITAMBAHKAN (field yang hilang)
         'payment_proof',               // ← DITAMBAHKAN (field yang hilang)
         'external_id',
+        'qr_code',                    // field dari tabel
         'payment_confirmed_at',        // field dari tabel (timestamp)
 
         // Field datetime Laravel standar

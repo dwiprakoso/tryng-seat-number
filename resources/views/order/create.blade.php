@@ -868,15 +868,23 @@
                                                 <i class="fas fa-minus"></i>
                                             </button>
                                             <input type="number" class="form-control text-center" id="quantity"
-                                                name="quantity" value="1" min="1" readonly
-                                                style="background: white;" />
+                                                name="quantity" value="1" min="1" max="{{ $ticket->qty }}"
+                                                readonly style="background: white;" />
                                             <button type="button" class="btn btn-outline-secondary"
                                                 id="increaseQty">
                                                 <i class="fas fa-plus"></i>
                                             </button>
                                         </div>
-                                        <small class="text-white">Jumlah Tiket Tersedia: <span
-                                                id="stockInfo">{{ $availableSeatsCount }}</span> tiket</small>
+                                        <!-- PERBAIKAN: Tampilkan stok minimum dari ticket qty dan available seats -->
+                                        <small class="text-white">
+                                            Stok Tiket Tersedia: <span
+                                                id="stockInfo">{{ min($ticket->qty, $availableSeatsCount) }}</span>
+                                            tiket
+                                            <br>
+                                            {{-- <span class="text-xs text-gray-500">
+                                                (Tiket: {{ $ticket->qty }}, Kursi: {{ $availableSeatsCount }})
+                                            </span> --}}
+                                        </small>
                                         <div class="invalid-feedback">Jumlah tiket melebihi stok yang tersedia</div>
                                     </div>
                                     {{-- <div class="form-group">
@@ -1082,7 +1090,10 @@
             let currentStep = 1;
             let selectedSeats = [];
             let requiredQuantity = 1;
-            let availableStock = {{ $availableSeatsCount }};
+
+            // PERBAIKAN: Gunakan stok dari tabel tickets (qty), bukan dari seat count
+            let ticketStock = {{ $ticket->qty }}; // Stok aktual dari database
+            let maxAvailableSeats = {{ $availableSeatsCount }}; // Jumlah seat fisik yang tersedia
             const ticketPrice = {{ $ticket->price }};
 
             // Form elements
@@ -1095,23 +1106,22 @@
             const increaseBtn = document.getElementById('increaseQty');
             const stockInfo = document.getElementById('stockInfo');
 
-            // Function to check current available stock
+            // PERBAIKAN: Function untuk mengecek stok aktual 
+            // (minimum antara stok tiket dan seat yang tersedia)
             function checkCurrentStock() {
                 const availableSeats = document.querySelectorAll('.seat.available').length;
-                availableStock = availableSeats;
-                stockInfo.textContent = availableStock;
-                return availableStock;
+                const actualStock = Math.min(ticketStock, availableSeats);
+                stockInfo.textContent = actualStock;
+                return actualStock;
             }
 
             // Function untuk show modal ketika mencapai limit
             function showStockLimitModal(stockLimit) {
-                // Remove existing modal jika ada
                 const existingModal = document.getElementById('stockLimitModal');
                 if (existingModal) {
                     existingModal.remove();
                 }
 
-                // Create modal HTML
                 const modalHTML = `
             <div class="modal fade" id="stockLimitModal" tabindex="-1" aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered">
@@ -1141,14 +1151,10 @@
             </div>
         `;
 
-                // Append modal ke body
                 document.body.insertAdjacentHTML('beforeend', modalHTML);
-
-                // Show modal
                 const modal = new bootstrap.Modal(document.getElementById('stockLimitModal'));
                 modal.show();
 
-                // Remove modal dari DOM setelah ditutup
                 document.getElementById('stockLimitModal').addEventListener('hidden.bs.modal', function() {
                     this.remove();
                 });
@@ -1156,13 +1162,11 @@
 
             // Toast function
             function showToast(message, type = 'info') {
-                // Remove existing toast
                 const existingToast = document.querySelector('.custom-toast');
                 if (existingToast) {
                     existingToast.remove();
                 }
 
-                // Create toast
                 const toast = document.createElement('div');
                 let bgClass = 'custom-toast-info';
                 let icon = 'fa-info-circle';
@@ -1192,13 +1196,11 @@
 
                 document.body.appendChild(toast);
 
-                // Show toast
                 setTimeout(() => {
                     toast.style.opacity = '1';
                     toast.style.transform = 'translateX(0)';
                 }, 100);
 
-                // Hide toast
                 setTimeout(() => {
                     toast.style.opacity = '0';
                     toast.style.transform = 'translateX(100%)';
@@ -1206,7 +1208,7 @@
                 }, 4000);
             }
 
-            // Quantity controls - HANYA SATU DEFINISI
+            // PERBAIKAN: Quantity controls
             decreaseBtn.addEventListener('click', function() {
                 if (requiredQuantity > 1) {
                     requiredQuantity--;
@@ -1215,7 +1217,6 @@
                     clearExcessSeats();
                     validateQuantityStock();
 
-                    // Re-enable increase button jika tidak di limit
                     const currentStock = checkCurrentStock();
                     if (requiredQuantity < currentStock) {
                         increaseBtn.disabled = false;
@@ -1227,13 +1228,9 @@
             increaseBtn.addEventListener('click', function() {
                 const currentStock = checkCurrentStock();
 
-                // Cek jika sudah mencapai batas maksimal
                 if (requiredQuantity >= currentStock) {
-                    // Disable button increase
                     increaseBtn.disabled = true;
                     increaseBtn.style.opacity = '0.5';
-
-                    // Show pop-up message
                     showStockLimitModal(currentStock);
                     return;
                 }
@@ -1243,7 +1240,6 @@
                 updateQuantityDisplay();
                 validateQuantityStock();
 
-                // Cek jika setelah increment sudah mencapai limit
                 if (requiredQuantity >= currentStock) {
                     increaseBtn.disabled = true;
                     increaseBtn.style.opacity = '0.5';
@@ -1279,12 +1275,10 @@
                 const seatIndex = selectedSeats.indexOf(seatNumber);
 
                 if (seatIndex > -1) {
-                    // Remove seat
                     selectedSeats.splice(seatIndex, 1);
                     seatElement.classList.remove('selected');
                     seatElement.classList.add('available');
                 } else {
-                    // Add seat
                     if (selectedSeats.length < requiredQuantity) {
                         selectedSeats.push(seatNumber);
                         seatElement.classList.remove('available');
@@ -1326,7 +1320,7 @@
                 }
             }
 
-            // Validasi quantity terhadap stok
+            // PERBAIKAN: Validasi quantity terhadap stok
             function validateQuantityStock() {
                 const quantityField = document.getElementById('quantity');
                 const currentStock = checkCurrentStock();
@@ -1335,7 +1329,6 @@
                     quantityField.classList.add('is-invalid');
                     quantityField.classList.remove('is-valid');
 
-                    // Reset ke stok maksimal yang tersedia
                     requiredQuantity = Math.max(1, currentStock);
                     quantityInput.value = requiredQuantity;
                     updateQuantityDisplay();
@@ -1358,10 +1351,8 @@
                 const subtotal = ticketPrice * requiredQuantity;
                 document.getElementById('subtotalDisplay').textContent = `Rp ${subtotal.toLocaleString('id-ID')}`;
 
-                // Update stock info
                 const currentStock = checkCurrentStock();
 
-                // Handle button states
                 if (requiredQuantity >= currentStock) {
                     increaseBtn.disabled = true;
                     increaseBtn.style.opacity = '0.5';
@@ -1394,28 +1385,23 @@
             });
 
             function showStep(step) {
-                // Hide all content
                 document.querySelectorAll('.step-content').forEach(content => {
                     content.classList.remove('active');
                 });
 
-                // Reset step items
                 document.querySelectorAll('.step-item').forEach(item => {
                     item.classList.remove('active', 'completed');
                 });
 
-                // Remove progress line classes
                 const progressBar = document.querySelector('.step-progress');
                 progressBar.classList.remove('step-1-completed');
 
-                // Show current step
                 setTimeout(() => {
                     document.getElementById(`step${step}-content`).classList.add('active');
                 }, 100);
 
                 document.getElementById(`step${step}`).classList.add('active');
 
-                // Mark completed steps
                 for (let i = 1; i < step; i++) {
                     document.getElementById(`step${i}`).classList.add('completed');
                     if (i === 1 && step === 2) {
@@ -1425,7 +1411,6 @@
 
                 currentStep = step;
 
-                // Smooth scroll to top
                 document.querySelector('.card-title').scrollIntoView({
                     behavior: 'smooth',
                     block: 'start'
@@ -1474,7 +1459,6 @@
                     }
                 });
 
-                // Validasi quantity stock sebelum lanjut ke step 2
                 if (!validateQuantityStock()) {
                     isValid = false;
                 }
@@ -1531,10 +1515,25 @@
                 }
             }
 
-            // Form submission dengan validasi final
+            // PERBAIKAN: Form submission dengan validasi final
             form.addEventListener('submit', function(e) {
                 const currentStock = checkCurrentStock();
 
+                // Validasi stok tiket dari database
+                if (requiredQuantity > ticketStock) {
+                    e.preventDefault();
+                    showToast(`Stok tiket tidak mencukupi! Stok tiket: ${ticketStock}`, 'error');
+                    return false;
+                }
+
+                // Validasi seat yang tersedia
+                if (requiredQuantity > maxAvailableSeats) {
+                    e.preventDefault();
+                    showToast(`Seat tidak mencukupi! Seat tersedia: ${maxAvailableSeats}`, 'error');
+                    return false;
+                }
+
+                // Validasi kombinasi keduanya
                 if (requiredQuantity > currentStock) {
                     e.preventDefault();
                     showToast(`Stok tidak mencukupi! Stok tersedia: ${currentStock} tiket`, 'error');
@@ -1547,10 +1546,8 @@
                     return false;
                 }
 
-                // Set selected seats as JSON string
                 document.getElementById('selected_seats').value = JSON.stringify(selectedSeats);
 
-                // Set loading state
                 submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Memproses...';
                 submitBtn.disabled = true;
             });

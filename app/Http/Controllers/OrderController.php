@@ -14,7 +14,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
-use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use Endroid\QrCode\Builder\Builder;
+use Endroid\QrCode\Writer\PngWriter;
 
 class OrderController extends Controller
 {
@@ -34,9 +35,9 @@ class OrderController extends Controller
             $ticket = Ticket::findOrFail($ticket_id);
             $product = Product::first();
 
-            // Cek stok tiket
+            // Cek stok tiket berdasarkan qty di tabel tickets
             if ($ticket->qty <= 0) {
-                return redirect()->back()->with('error', 'Tiket sudah habis.');
+                return redirect()->route('order.index')->with('error', 'Tiket sudah habis.');
             }
 
             // Get seats berdasarkan ticket_id dengan pengurutan numerik
@@ -44,13 +45,32 @@ class OrderController extends Controller
                 ->orderByRaw('CAST(seat_number AS UNSIGNED) ASC')
                 ->get();
 
-            // Check if there are available seats for this ticket
+            // Hitung seat yang tersedia (untuk display saja)
             $availableSeatsCount = $allSeats->where('is_booked', 0)->count();
-            if ($availableSeatsCount == 0) {
+
+            // Validasi konsistensi: seat tersedia tidak boleh lebih dari qty tiket
+            if ($availableSeatsCount > $ticket->qty) {
+                Log::warning('Inconsistency detected: Available seats more than ticket qty', [
+                    'ticket_id' => $ticket_id,
+                    'ticket_qty' => $ticket->qty,
+                    'available_seats' => $availableSeatsCount
+                ]);
+            }
+
+            // Gunakan nilai minimum antara qty tiket dan available seats sebagai stok aktual
+            $actualAvailableStock = min($ticket->qty, $availableSeatsCount);
+
+            if ($actualAvailableStock == 0) {
                 return redirect()->route('order.index')->with('seats_full', true);
             }
 
-            return view('order.create', compact('product', 'ticket', 'allSeats', 'availableSeatsCount'));
+            return view('order.create', compact(
+                'product',
+                'ticket',
+                'allSeats',
+                'availableSeatsCount',
+                'actualAvailableStock'
+            ));
         } catch (Exception $e) {
             Log::error('Error loading order form', [
                 'ticket_id' => $ticket_id,
@@ -91,22 +111,46 @@ class OrderController extends Controller
         DB::beginTransaction();
 
         try {
-            $seatsUpdated = DB::table('seats')
-                ->whereIn('seat_number', $selectedSeats)
-                ->where('is_booked', 0)
-                ->update(['is_booked' => 1]);
-
-            if ($seatsUpdated !== count($selectedSeats)) {
-                throw new Exception('Beberapa kursi yang dipilih sudah tidak tersedia.');
-            }
-
-            $seats = Seat::whereIn('seat_number', $selectedSeats)->get();
-
-            $ticket = Ticket::lockForUpdate()->find($request->ticket_id);
             $quantity = (int)$request->quantity;
 
-            if (!$ticket || $ticket->qty < $quantity) {
-                throw new Exception('Stok tiket tidak mencukupi.');
+            // 1. PERBAIKAN: Lock ticket terlebih dahulu untuk mencegah race condition
+            $ticket = Ticket::lockForUpdate()->find($request->ticket_id);
+            if (!$ticket) {
+                throw new Exception('Tiket tidak ditemukan.');
+            }
+
+            // 2. PERBAIKAN: Validasi stok tiket dari database
+            if ($ticket->qty < $quantity) {
+                throw new Exception("Stok tiket tidak mencukupi. Tersedia: {$ticket->qty}, diminta: {$quantity}");
+            }
+
+            // 3. PERBAIKAN: Lock dan validasi seats secara atomic
+            $seats = Seat::where('ticket_id', $request->ticket_id)
+                ->whereIn('seat_number', $selectedSeats)
+                ->lockForUpdate()
+                ->get();
+
+            // Validasi semua seat ada dan sesuai ticket_id
+            if ($seats->count() !== count($selectedSeats)) {
+                throw new Exception('Beberapa kursi tidak ditemukan atau tidak sesuai dengan tiket ini.');
+            }
+
+            // Validasi tidak ada seat yang sudah booked
+            $bookedSeats = $seats->where('is_booked', 1);
+            if ($bookedSeats->count() > 0) {
+                $bookedSeatNumbers = $bookedSeats->pluck('seat_number')->toArray();
+                throw new Exception('Kursi ' . implode(', ', $bookedSeatNumbers) . ' sudah dipesan orang lain.');
+            }
+
+            // 4. PERBAIKAN: Validasi stok gabungan (minimum antara ticket qty dan available seats)
+            $availableSeatsCount = Seat::where('ticket_id', $request->ticket_id)
+                ->where('is_booked', 0)
+                ->count();
+
+            $actualAvailableStock = min($ticket->qty, $availableSeatsCount);
+
+            if ($quantity > $actualAvailableStock) {
+                throw new Exception("Stok tidak mencukupi. Stok aktual tersedia: {$actualAvailableStock} (tiket: {$ticket->qty}, seat: {$availableSeatsCount})");
             }
 
             $ticketPrice = $ticket->price * $quantity;
@@ -115,13 +159,16 @@ class OrderController extends Controller
             // Generate URL untuk verifikasi tiket
             $verifyUrl = url('/verify/' . $externalId);
 
-            // Generate QR Code dengan URL verifikasi sebagai base64
-            $qrCodeBase64 = base64_encode(
-                QrCode::format('png')
-                    ->size(300)
-                    ->margin(2)
-                    ->generate($verifyUrl)
-            );
+            // Generate QR Code - fallback ke Google Charts API (sementara)
+            $qrCodeUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' . urlencode($verifyUrl);
+
+            // Download image dari API dan convert ke base64
+            $qrCodeData = file_get_contents($qrCodeUrl);
+            if ($qrCodeData === false) {
+                throw new Exception('Gagal generate QR code dari API eksternal');
+            }
+
+            $qrCodeBase64 = base64_encode($qrCodeData);
 
             $buyer = Buyer::create([
                 'nama_lengkap' => $request->nama_lengkap,
@@ -149,6 +196,10 @@ class OrderController extends Controller
 
             BookingSeat::insert($bookingSeats);
 
+            // 5. PERBAIKAN: Update seat status dan ticket quantity secara atomic
+            Seat::whereIn('id', $seats->pluck('id'))
+                ->update(['is_booked' => 1]);
+
             $ticket->decrement('qty', $quantity);
 
             DB::commit();
@@ -174,6 +225,8 @@ class OrderController extends Controller
                 'buyer_id' => $buyer->id,
                 'seats' => $selectedSeats,
                 'quantity' => $quantity,
+                'ticket_stock_before' => $ticket->qty + $quantity,
+                'ticket_stock_after' => $ticket->qty,
             ]);
 
             return redirect()->route('payment.manual', ['external_id' => $externalId])
