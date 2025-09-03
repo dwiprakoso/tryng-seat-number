@@ -174,9 +174,10 @@
                                 <table class="table table-row-bordered table-row-gray-100 align-middle gs-0 gy-3">
                                     <tbody>
                                         <tr>
-                                            <td class="fw-semibold text-muted">Harga Tiket</td>
+                                            <td class="fw-semibold text-muted">Harga Tiket ({{ $buyer->quantity }} x
+                                                {{ $buyer->ticket_price }} )</td>
                                             <td class="text-end fw-bold">Rp
-                                                {{ number_format($buyer->ticket_price / $buyer->quantity, 0, ',', '.') }}
+                                                {{ number_format($buyer->ticket_price * $buyer->quantity, 0, ',', '.') }}
                                             </td>
                                         </tr>
                                         {{-- <tr>
