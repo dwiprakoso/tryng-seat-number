@@ -31,8 +31,7 @@ class PaymentConfirmed extends Mailable
      */
     public function build()
     {
-        // Load relasi yang dibutuhkan untuk email template
-        $this->buyer->load(['ticket', 'bookingSeats.seat']);
+        $this->buyer->load(['ticket', 'seats']);
 
         return $this->subject('Pembayaran Tiket Dikonfirmasi - ' . $this->buyer->external_id)
             ->view('emails.payment-confirmed')

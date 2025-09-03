@@ -191,13 +191,13 @@
                 </div>
             </div>
 
-            <!-- Seats Section -->
-            @if ($buyer->bookingSeats && $buyer->bookingSeats->count() > 0)
+            <!-- Seats Section - FIXED -->
+            @if ($buyer->seats && $buyer->seats->count() > 0)
                 <div class="seats-section">
                     <h4 style="margin: 0 0 10px 0; color: #007bff;">🪑 Nomor Kursi Anda:</h4>
                     <div class="seat-numbers">
-                        @foreach ($buyer->bookingSeats as $bookingSeat)
-                            <span class="seat-badge">{{ $bookingSeat->seat->seat_number }}</span>
+                        @foreach ($buyer->seats as $seat)
+                            <span class="seat-badge">{{ $seat->seat_number }}</span>
                         @endforeach
                     </div>
                 </div>
@@ -210,9 +210,33 @@
             @if ($buyer->qr_code)
                 <div class="qr-section">
                     <h3 style="color: #28a745; margin: 0 0 20px 0;">🎫 QR Code Tiket Anda</h3>
-                    <div class="qr-code">
-                        <img src="{{ $buyer->getQrCodeDataUrl() }}" alt="QR Code Tiket {{ $buyer->external_id }}">
+
+                    <!-- QR Code dengan style inline untuk email compatibility -->
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <img src="{{ $buyer->getQrCodeDataUrl() }}" alt="QR Code Tiket {{ $buyer->external_id }}"
+                            style="max-width: 200px !important; 
+                                    height: auto !important; 
+                                    display: block !important; 
+                                    margin: 0 auto !important;
+                                    border: 4px solid #28a745;
+                                    border-radius: 8px;
+                                    padding: 10px;
+                                    background-color: white;">
                     </div>
+
+                    <!-- Backup ID untuk fallback -->
+                    <div
+                        style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; border: 2px solid #28a745; margin-bottom: 15px;">
+                        <p
+                            style="margin: 0 0 5px 0; text-align: center; font-weight: bold; color: #28a745; font-size: 14px;">
+                            Jika QR Code tidak terlihat, tunjukkan ID ini:
+                        </p>
+                        <p
+                            style="margin: 0; font-family: 'Courier New', monospace; font-size: 16px; text-align: center; font-weight: bold; color: #333; background: white; padding: 8px; border-radius: 4px;">
+                            {{ $buyer->external_id }}
+                        </p>
+                    </div>
+
                     <div class="qr-instructions">
                         <strong style="color: #28a745;">Cara menggunakan QR Code:</strong><br>
                         • Tunjukkan QR Code ini saat masuk event<br>
