@@ -63,6 +63,53 @@
             font-weight: bold;
         }
 
+        .qr-section {
+            text-align: center;
+            background-color: #f8f9fa;
+            padding: 30px;
+            border-radius: 8px;
+            margin: 30px 0;
+            border: 2px dashed #28a745;
+        }
+
+        .qr-code img {
+            max-width: 200px;
+            height: auto;
+            border: 4px solid #28a745;
+            border-radius: 8px;
+            padding: 10px;
+            background-color: white;
+        }
+
+        .qr-instructions {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #666666;
+        }
+
+        .seats-section {
+            background-color: #e7f3ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+
+        .seat-numbers {
+            display: inline-flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .seat-badge {
+            background-color: #007bff;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
         .footer {
             text-align: center;
             margin-top: 30px;
@@ -80,6 +127,26 @@
             text-decoration: none;
             border-radius: 5px;
             margin: 20px 0;
+        }
+
+        .important-notice {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+
+        .important-notice h4 {
+            color: #856404;
+            margin: 0 0 10px 0;
+            font-size: 16px;
+        }
+
+        .important-notice p {
+            color: #856404;
+            margin: 5px 0;
+            font-size: 14px;
         }
     </style>
 </head>
@@ -112,7 +179,7 @@
                 </div>
                 <div class="order-row">
                     <span>Harga per Tiket:</span>
-                    <span>Rp {{ number_format($buyer->ticket_price, 0, ',', '.') }}</span>
+                    <span>Rp {{ number_format($buyer->ticket_price / $buyer->quantity, 0, ',', '.') }}</span>
                 </div>
                 <div class="order-row">
                     <span>Biaya Admin:</span>
@@ -124,8 +191,37 @@
                 </div>
             </div>
 
+            <!-- Seats Section -->
+            @if ($buyer->bookingSeats && $buyer->bookingSeats->count() > 0)
+                <div class="seats-section">
+                    <h4 style="margin: 0 0 10px 0; color: #007bff;">🪑 Nomor Kursi Anda:</h4>
+                    <div class="seat-numbers">
+                        @foreach ($buyer->bookingSeats as $bookingSeat)
+                            <span class="seat-badge">{{ $bookingSeat->seat->seat_number }}</span>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
             <p><strong>Status Pembayaran:</strong> <span style="color: #28a745;">DIKONFIRMASI</span></p>
             <p><strong>Tanggal Konfirmasi:</strong> {{ $buyer->payment_confirmed_at->format('d/m/Y H:i') }} WIB</p>
+
+            <!-- QR Code Section -->
+            @if ($buyer->qr_code)
+                <div class="qr-section">
+                    <h3 style="color: #28a745; margin: 0 0 20px 0;">🎫 QR Code Tiket Anda</h3>
+                    <div class="qr-code">
+                        <img src="{{ $buyer->getQrCodeDataUrl() }}" alt="QR Code Tiket {{ $buyer->external_id }}">
+                    </div>
+                    <div class="qr-instructions">
+                        <strong style="color: #28a745;">Cara menggunakan QR Code:</strong><br>
+                        • Tunjukkan QR Code ini saat masuk event<br>
+                        • Pastikan QR Code terlihat jelas dan tidak rusak<br>
+                        • Simpan email ini atau screenshot QR Code<br>
+                        • QR Code ini berlaku untuk {{ $buyer->quantity }} orang
+                    </div>
+                </div>
+            @endif
 
             <p>Tiket Anda telah aktif dan siap digunakan. Silakan simpan email ini sebagai bukti pembelian tiket.</p>
 
@@ -136,6 +232,7 @@
 
         <div class="footer">
             <p>Email ini dikirim secara otomatis, mohon untuk tidak membalas email ini.</p>
+            <p>Jika ada pertanyaan, silakan hubungi customer service kami.</p>
             <p>&copy; {{ date('Y') }} Ticketify ID. All rights reserved.</p>
         </div>
     </div>

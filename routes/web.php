@@ -47,7 +47,7 @@ Route::post('/payment/upload/{external_id}', [OrderController::class, 'uploadPay
 //     return view('payment.failed');
 // })->name('payment.failed');
 
-Route::get('/ticket/verify/{external_id}', [TicketController::class, 'verify'])->name('ticket.verify');
+Route::get('/verify/{external_id}', [TicketController::class, 'verify'])->name('ticket.verify');
 
 // Protected admin routes
 Route::middleware('auth')->group(function () {

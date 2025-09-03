@@ -65,7 +65,7 @@ class OrderController extends Controller
         $request->validate([
             'ticket_id' => 'required|exists:tickets,id',
             'selected_seats' => 'required|json',
-            'quantity' => 'required|integer|min:1', // Hapus max:5
+            'quantity' => 'required|integer|min:1',
             'nama_lengkap' => 'required|string|min:3|max:255',
             'email' => 'required|email|max:255',
             'no_handphone' => 'required|string|max:20|regex:/^08\d{8,12}$/',
@@ -77,7 +77,6 @@ class OrderController extends Controller
             'no_handphone.regex' => 'Nomor handphone harus dimulai dengan 08 dan berjumlah 10-14 digit',
         ]);
 
-        // Parse selected seats
         $selectedSeats = json_decode($request->selected_seats, true);
 
         if (!is_array($selectedSeats) || count($selectedSeats) !== (int)$request->quantity) {
@@ -86,14 +85,12 @@ class OrderController extends Controller
                 ->withInput();
         }
 
-        // Pre-generate IDs untuk optimasi
         $paymentCode = $this->generateUniquePaymentCode();
         $externalId = $this->generateUniqueExternalId();
 
         DB::beginTransaction();
 
         try {
-            // 1. Cek dan update multiple seats dalam satu query optimized
             $seatsUpdated = DB::table('seats')
                 ->whereIn('seat_number', $selectedSeats)
                 ->where('is_booked', 0)
@@ -103,10 +100,8 @@ class OrderController extends Controller
                 throw new Exception('Beberapa kursi yang dipilih sudah tidak tersedia.');
             }
 
-            // 2. Ambil seat IDs setelah update
             $seats = Seat::whereIn('seat_number', $selectedSeats)->get();
 
-            // 3. Ambil ticket dengan lock
             $ticket = Ticket::lockForUpdate()->find($request->ticket_id);
             $quantity = (int)$request->quantity;
 
@@ -114,21 +109,20 @@ class OrderController extends Controller
                 throw new Exception('Stok tiket tidak mencukupi.');
             }
 
-            // 4. Cek duplikasi email
-            // $existingOrder = DB::table('buyers')
-            //     ->where('email', $request->email)
-            //     ->where('ticket_id', $request->ticket_id)
-            //     ->whereIn('payment_status', ['pending', 'paid'])
-            //     ->exists();
-
-            // if ($existingOrder) {
-            //     throw new Exception('Email ini sudah pernah digunakan untuk memesan tiket yang sama.');
-            // }
-
             $ticketPrice = $ticket->price * $quantity;
             $totalAmount = $ticketPrice + $paymentCode;
 
-            // 5. Create buyer
+            // Generate URL untuk verifikasi tiket
+            $verifyUrl = url('/verify/' . $externalId);
+
+            // Generate QR Code dengan URL verifikasi sebagai base64
+            $qrCodeBase64 = base64_encode(
+                QrCode::format('png')
+                    ->size(300)
+                    ->margin(2)
+                    ->generate($verifyUrl)
+            );
+
             $buyer = Buyer::create([
                 'nama_lengkap' => $request->nama_lengkap,
                 'email' => $request->email,
@@ -139,10 +133,10 @@ class OrderController extends Controller
                 'payment_code' => $paymentCode,
                 'total_amount' => $totalAmount,
                 'external_id' => $externalId,
+                'qr_code' => $qrCodeBase64,
                 'payment_status' => 'pending',
             ]);
 
-            // 6. Create multiple booking seats
             $bookingSeats = [];
             foreach ($seats as $seat) {
                 $bookingSeats[] = [
@@ -155,12 +149,10 @@ class OrderController extends Controller
 
             BookingSeat::insert($bookingSeats);
 
-            // 7. Update ticket quantity
             $ticket->decrement('qty', $quantity);
 
             DB::commit();
 
-            // Send email confirmation
             try {
                 Mail::to($buyer->email)->send(new OrderConfirmation($buyer, $ticket));
                 Log::info('Order confirmation email sent successfully', [
@@ -234,22 +226,6 @@ class OrderController extends Controller
 
         return $externalId;
     }
-    /**
-     * Generate unique payment code 3 digit
-     */
-    // private function generateUniquePaymentCode()
-    // {
-    //     do {
-    //         // Generate random 3 digit number (100-999)
-    //         $payment_code = rand(100, 999);
-
-    //         // Cek apakah payment code sudah ada di database
-    //         $exists = Buyer::where('payment_code', $payment_code)->exists();
-    //     } while ($exists);
-
-    //     return $payment_code;
-    // }
-
     /**
      * Halaman pembayaran manual
      */

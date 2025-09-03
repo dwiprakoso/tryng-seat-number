@@ -127,4 +127,12 @@ class Buyer extends Model
     {
         return $this->belongsToMany(Seat::class, 'booking_seat', 'buyer_id', 'seat_id');
     }
+    public function getQrCodeDataUrl()
+    {
+        if (!$this->qr_code) {
+            return null;
+        }
+
+        return 'data:image/png;base64,' . $this->qr_code;
+    }
 }
