@@ -14,22 +14,28 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        User::create([
-            'name' => 'Admin',
-            'email' => 'admin@admin.com',
-            'password' => Hash::make('password123'),
-        ]);
+        User::updateOrCreate(
+            ['email' => 'admin@admin.com'],
+            [
+                'name' => 'Admin',
+                'password' => Hash::make('password123'),
+            ]
+        );
 
-        // You can add more users if needed
-        User::create([
-            'name' => 'Super Admin',
-            'email' => 'superadmin@admin.com',
-            'password' => Hash::make('password123'),
-        ]);
-        User::create([
-            'name' => 'Dhemit Admin',
-            'email' => 'dhemit@ticketify.com',
-            'password' => Hash::make('password123'),
-        ]);
+        User::updateOrCreate(
+            ['email' => 'superadmin@admin.com'],
+            [
+                'name' => 'Super Admin',
+                'password' => Hash::make('password123'),
+            ]
+        );
+
+        User::updateOrCreate(
+            ['email' => 'dhemit@ticketify.com'],
+            [
+                'name' => 'Dhemit Admin',
+                'password' => Hash::make('password123'),
+            ]
+        );
     }
 }
