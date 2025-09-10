@@ -46,9 +46,11 @@ class OrderController extends Controller
 
             // Get seats berdasarkan ticket_id dengan pengurutan numerik
             $allSeats = Seat::where('ticket_id', $ticket_id)
-                ->orderByRaw('CAST(seat_number AS UNSIGNED) ASC')
+                ->orderByRaw('
+                    SUBSTRING(seat_number, 1, 1) ASC,
+                    CAST(SUBSTRING(seat_number, 2) AS UNSIGNED) ASC
+                ')
                 ->get();
-
             // Hitung seat yang tersedia (untuk display saja)
             $availableSeatsCount = $allSeats->where('is_booked', 0)->count();
 

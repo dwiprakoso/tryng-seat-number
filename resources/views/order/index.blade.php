@@ -399,7 +399,12 @@
                                         </div>
                                     </div>
                                     <div class="text-end">
-                                        <div class="ticket-price">Rp {{ number_format($ticket->price, 0, ',', '.') }}
+                                        <div class="ticket-price">
+                                            @if ($ticket->price == 0)
+                                                Gratis
+                                            @else
+                                                Rp {{ number_format($ticket->price, 0, ',', '.') }}
+                                            @endif
                                         </div>
                                         <div class="price-label">per tiket</div>
                                         @if ($ticket->qty == 0)
