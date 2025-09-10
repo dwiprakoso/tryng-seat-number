@@ -56,7 +56,6 @@ class TicketController extends Controller
     }
     public function verify($external_id)
     {
-        // Redirect ke https://ticketify.id untuk testing
-        return redirect('https://ticketify.id');
+        return redirect()->route('payment.manual', ['external_id' => $external_id]);
     }
 }
