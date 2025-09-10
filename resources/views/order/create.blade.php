@@ -934,8 +934,8 @@
 
                                         <!-- Preview Image Section -->
                                         <div class="seat-preview">
-                                            <img src="{{ asset('assets/img/seat_update.png') }}" alt="Layout Kursi"
-                                                class="seat-layout-image" data-bs-toggle="modal"
+                                            <img src="{{ asset('assets/img/seat_update_size.png') }}"
+                                                alt="Layout Kursi" class="seat-layout-image" data-bs-toggle="modal"
                                                 data-bs-target="#seatPreviewModal">
                                             <small class="text-muted d-block mt-1">Klik untuk melihat gambar lebih
                                                 besar</small>
@@ -1076,7 +1076,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body text-center">
-                    <img src="{{ asset('assets/img/seat_update.png') }}" alt="Layout Kursi" class="img-fluid">
+                    <img src="{{ asset('assets/img/seat_update_size.png') }}" alt="Layout Kursi" class="img-fluid">
                 </div>
             </div>
         </div>
