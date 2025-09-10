@@ -233,7 +233,7 @@
                     <span class="customer-label">No. Handphone:</span>
                     <span>{{ $buyer->no_handphone }}</span>
                 </div>
-                <div class="customer-row">
+                {{-- <div class="customer-row">
                     <span class="customer-label">No. Identitas:</span>
                     <span>{{ $buyer->identitas_number }}</span>
                 </div>
@@ -244,7 +244,7 @@
                 <div class="customer-row">
                     <span class="customer-label">Mewakili:</span>
                     <span>{{ $buyer->mewakili }}</span>
-                </div>
+                </div> --}}
             </div>
 
             <div class="status-pending">
