@@ -246,6 +246,27 @@
             font-family: 'Courier New', monospace;
         }
 
+        /* Free Ticket Confirmation */
+        .free-ticket-card {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            border: 2px solid #28a745;
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            color: #155724;
+        }
+
+        .free-ticket-card .icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            color: #28a745;
+        }
+
+        .free-ticket-card h4 {
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
         /* Buttons */
         .btn-primary {
             background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
@@ -385,7 +406,7 @@
         @endif
 
         <div class="row">
-            <!-- Payment Instructions -->
+            <!-- Payment Instructions or Free Ticket Confirmation -->
             <div class="col-lg-8">
                 <!-- Order Status -->
                 <div class="card">
@@ -413,134 +434,191 @@
                             </span>
                         </div>
 
-                        <!-- Payment Timeline -->
-                        <div class="payment-timeline">
-                            <div
-                                class="timeline-item {{ $buyer->payment_status === 'pending' ? 'active' : 'completed' }}">
-                                <h6>Pesanan Dibuat</h6>
-                                <small class="text-muted">{{ $buyer->created_at->format('d M Y, H:i') }}</small>
+                        <!-- Payment Timeline for Paid Tickets -->
+                        @if ($buyer->total_amount > 0)
+                            <div class="payment-timeline">
+                                <div
+                                    class="timeline-item {{ $buyer->payment_status === 'pending' ? 'active' : 'completed' }}">
+                                    <h6>Pesanan Dibuat</h6>
+                                    <small class="text-muted">{{ $buyer->created_at->format('d M Y, H:i') }}</small>
+                                </div>
+                                <div
+                                    class="timeline-item {{ $buyer->payment_status === 'waiting_confirmation' ? 'active' : ($buyer->payment_status === 'confirmed' ? 'completed' : '') }}">
+                                    <h6>Upload Bukti Pembayaran</h6>
+                                    @if ($buyer->payment_proof)
+                                        <small class="text-muted">{{ $buyer->updated_at->format('d M Y, H:i') }}</small>
+                                    @else
+                                        <small class="text-muted">Belum diupload</small>
+                                    @endif
+                                </div>
+                                <div
+                                    class="timeline-item {{ $buyer->payment_status === 'confirmed' ? 'active completed' : '' }}">
+                                    <h6>Pembayaran Dikonfirmasi</h6>
+                                    @if ($buyer->payment_status === 'confirmed')
+                                        <small
+                                            class="text-muted">{{ $buyer->payment_confirmed_at ? $buyer->payment_confirmed_at->format('d M Y, H:i') : 'Sudah dikonfirmasi' }}</small>
+                                    @else
+                                        <small class="text-muted">Menunggu konfirmasi admin</small>
+                                    @endif
+                                </div>
                             </div>
-                            <div
-                                class="timeline-item {{ $buyer->payment_status === 'waiting_confirmation' ? 'active' : ($buyer->payment_status === 'confirmed' ? 'completed' : '') }}">
-                                <h6>Upload Bukti Pembayaran</h6>
-                                @if ($buyer->payment_proof)
-                                    <small class="text-muted">{{ $buyer->updated_at->format('d M Y, H:i') }}</small>
-                                @else
-                                    <small class="text-muted">Belum diupload</small>
-                                @endif
+                        @else
+                            <!-- Timeline for Free Tickets -->
+                            <div class="payment-timeline">
+                                <div class="timeline-item completed">
+                                    <h6>Pesanan Dibuat</h6>
+                                    <small class="text-muted">{{ $buyer->created_at->format('d M Y, H:i') }}</small>
+                                </div>
+                                <div
+                                    class="timeline-item {{ $buyer->payment_status === 'waiting_confirmation' ? 'active' : 'completed' }}">
+                                    <h6>Menunggu Konfirmasi Admin</h6>
+                                    @if ($buyer->payment_status === 'confirmed')
+                                        <small
+                                            class="text-muted">{{ $buyer->updated_at->format('d M Y, H:i') }}</small>
+                                    @else
+                                        <small class="text-muted">Sedang dalam proses verifikasi</small>
+                                    @endif
+                                </div>
+                                <div
+                                    class="timeline-item {{ $buyer->payment_status === 'confirmed' ? 'active completed' : '' }}">
+                                    <h6>Tiket Dikonfirmasi</h6>
+                                    @if ($buyer->payment_status === 'confirmed')
+                                        <small class="text-muted">Tiket sudah aktif</small>
+                                    @else
+                                        <small class="text-muted">Menunggu konfirmasi admin</small>
+                                    @endif
+                                </div>
                             </div>
-                            <div
-                                class="timeline-item {{ $buyer->payment_status === 'confirmed' ? 'active completed' : '' }}">
-                                <h6>Pembayaran Dikonfirmasi</h6>
-                                @if ($buyer->payment_status === 'confirmed')
-                                    <small
-                                        class="text-muted">{{ $buyer->payment_confirmed_at ? $buyer->payment_confirmed_at->format('d M Y, H:i') : 'Sudah dikonfirmasi' }}</small>
-                                @else
-                                    <small class="text-muted">Menunggu konfirmasi admin</small>
-                                @endif
-                            </div>
-                        </div>
+                        @endif
                     </div>
                 </div>
 
-                @if ($buyer->payment_status === 'pending' || $buyer->payment_status === 'waiting_confirmation')
-
-                    <!-- Bank Account Information -->
-                    <div class="card">
-                        <div class="card-header">
-                            <h4><i class="fas fa-university"></i>Informasi Rekening</h4>
+                <!-- Free Ticket Confirmation Card -->
+                @if ($buyer->total_amount == 0)
+                    <div class="free-ticket-card">
+                        <div class="icon">
+                            <i class="fas fa-gift"></i>
                         </div>
-                        <div class="card-body">
-                            <div class="alert alert-warning">
-                                <i class="fas fa-exclamation-triangle me-2"></i>
-                                <strong>Penting!</strong> Transfer tepat sesuai dengan total yang tertera <strong>(Rp
-                                    {{ number_format($buyer->total_amount, 0, ',', '.') }})</strong> dan simpan bukti
-                                transfer untuk diupload.
-                            </div>
-
-                            <!-- Bank BCA -->
-                            <div class="bank-card">
-                                <div class="row align-items-center">
-                                    <div class="col-md-2">
-                                        <div class="bank-logo d-flex align-items-center justify-content-center">
-                                            <strong style="color: #cbb539;">BNI</strong>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-8">
-                                        <div class="bank-info">
-                                            <h6>Bank BNI</h6>
-                                            <div class="account-number">1786814372</div>
-                                            <small class="text-muted">a.n. Dwi Anggraeni Suprojo
-                                            </small>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-2 text-end">
-                                        <button class="copy-btn" onclick="copyToClipboard('1786814372')">
-                                            <i class="fas fa-copy"></i> Copy
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
+                        <h4>Selamat! Tiket Anda Telah Dipesan</h4>
+                        <p class="mb-3">
+                            Pesanan tiket Anda sedang dalam proses verifikasi oleh admin.
+                            Anda akan mendapatkan notifikasi melalui email setelah tiket dikonfirmasi.
+                        </p>
+                        <div class="alert alert-info">
+                            <i class="fas fa-clock me-2"></i>
+                            <strong>Waktu Verifikasi:</strong> Maksimal 1x24 jam kerja
                         </div>
+
+                        @if ($buyer->payment_status === 'confirmed')
+                            <div class="mt-3">
+                                <a href="{{ route('ticket.show', $buyer->external_id) }}"
+                                    class="btn btn-success btn-lg">
+                                    <i class="fas fa-ticket-alt me-2"></i>Lihat Tiket
+                                </a>
+                            </div>
+                        @endif
                     </div>
+                @else
+                    <!-- Bank Account Information (Only for Paid Tickets) -->
+                    @if ($buyer->payment_status === 'pending' || $buyer->payment_status === 'waiting_confirmation')
+                        <div class="card">
+                            <div class="card-header">
+                                <h4><i class="fas fa-university"></i>Informasi Rekening</h4>
+                            </div>
+                            <div class="card-body">
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    <strong>Penting!</strong> Transfer tepat sesuai dengan total yang tertera
+                                    <strong>(Rp
+                                        {{ number_format($buyer->total_amount, 0, ',', '.') }})</strong> dan simpan
+                                    bukti
+                                    transfer untuk diupload.
+                                </div>
 
-                    <!-- Upload Payment Proof -->
-                    <div class="card">
-                        <div class="card-header">
-                            <h4><i class="fas fa-upload"></i>Upload Bukti Pembayaran</h4>
-                        </div>
-                        <div class="card-body">
-                            @if (
-                                $buyer->payment_proof &&
-                                    ($buyer->payment_status === 'waiting_confirmation' || $buyer->payment_status === 'confirmed'))
-                                <div class="alert alert-info">
-                                    <i class="fas fa-check-circle me-2"></i>
-                                    Bukti pembayaran sudah diupload dan sedang menunggu verifikasi admin. Proses
-                                    verifikasi maksimal 1x24 jam kerja.
-                                </div>
-                                <div class="text-center mb-3">
-                                    <img src="{{ asset('storage/' . $buyer->payment_proof) }}" alt="Bukti Pembayaran"
-                                        class="img-fluid" style="max-height: 300px; border-radius: 8px;">
-                                </div>
-                            @else
-                                <form action="{{ route('payment.upload', $buyer->external_id) }}" method="POST"
-                                    enctype="multipart/form-data">
-                                    @csrf
-                                    <div class="mb-3">
-                                        <label for="payment_proof" class="form-label">Bukti Pembayaran <span
-                                                class="text-danger">*</span></label>
-                                        <div class="upload-area" id="uploadArea">
-                                            <div class="upload-icon">
-                                                <i class="fas fa-cloud-upload-alt"></i>
+                                <!-- Bank BCA -->
+                                <div class="bank-card">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-2">
+                                            <div class="bank-logo d-flex align-items-center justify-content-center">
+                                                <strong style="color: #cbb539;">BNI</strong>
                                             </div>
-                                            <h6>Pilih atau Drop File Disini</h6>
-                                            <p class="text-muted mb-3">Format: JPG, PNG, JPEG (Max: 2MB)</p>
-                                            <input type="file" class="form-control" id="payment_proof"
-                                                name="payment_proof" accept="image/jpeg,image/png,image/jpg"
-                                                style="display: none;" required>
-                                            <button type="button" class="btn btn-primary"
-                                                onclick="document.getElementById('payment_proof').click()">
-                                                <i class="fas fa-folder-open me-2"></i>Pilih File
+                                        </div>
+                                        <div class="col-md-8">
+                                            <div class="bank-info">
+                                                <h6>Bank BNI</h6>
+                                                <div class="account-number">1786814372</div>
+                                                <small class="text-muted">a.n. Dwi Anggraeni Suprojo</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-2 text-end">
+                                            <button class="copy-btn" onclick="copyToClipboard('1786814372')">
+                                                <i class="fas fa-copy"></i> Copy
                                             </button>
                                         </div>
-                                        @error('payment_proof')
-                                            <div class="text-danger mt-2">{{ $message }}</div>
-                                        @enderror
                                     </div>
-
-                                    <div id="preview-container" class="mb-3" style="display: none;">
-                                        <img id="preview-image" src="" alt="Preview" class="img-fluid"
-                                            style="max-height: 200px; border-radius: 8px;">
-                                    </div>
-
-                                    <button type="submit" class="btn btn-primary btn-lg w-100" id="upload-btn"
-                                        disabled>
-                                        <i class="fas fa-upload me-2"></i>Upload Bukti Pembayaran
-                                    </button>
-                                </form>
-                            @endif
+                                </div>
+                            </div>
                         </div>
-                    </div>
+
+                        <!-- Upload Payment Proof (Only for Paid Tickets) -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h4><i class="fas fa-upload"></i>Upload Bukti Pembayaran</h4>
+                            </div>
+                            <div class="card-body">
+                                @if (
+                                    $buyer->payment_proof &&
+                                        ($buyer->payment_status === 'waiting_confirmation' || $buyer->payment_status === 'confirmed'))
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-check-circle me-2"></i>
+                                        Bukti pembayaran sudah diupload dan sedang menunggu verifikasi admin. Proses
+                                        verifikasi maksimal 1x24 jam kerja.
+                                    </div>
+                                    <div class="text-center mb-3">
+                                        <img src="{{ asset('storage/' . $buyer->payment_proof) }}"
+                                            alt="Bukti Pembayaran" class="img-fluid"
+                                            style="max-height: 300px; border-radius: 8px;">
+                                    </div>
+                                @else
+                                    <form action="{{ route('payment.upload', $buyer->external_id) }}" method="POST"
+                                        enctype="multipart/form-data">
+                                        @csrf
+                                        <div class="mb-3">
+                                            <label for="payment_proof" class="form-label">Bukti Pembayaran <span
+                                                    class="text-danger">*</span></label>
+                                            <div class="upload-area" id="uploadArea">
+                                                <div class="upload-icon">
+                                                    <i class="fas fa-cloud-upload-alt"></i>
+                                                </div>
+                                                <h6>Pilih atau Drop File Disini</h6>
+                                                <p class="text-muted mb-3">Format: JPG, PNG, JPEG (Max: 2MB)</p>
+                                                <input type="file" class="form-control" id="payment_proof"
+                                                    name="payment_proof" accept="image/jpeg,image/png,image/jpg"
+                                                    style="display: none;" required>
+                                                <button type="button" class="btn btn-primary"
+                                                    onclick="document.getElementById('payment_proof').click()">
+                                                    <i class="fas fa-folder-open me-2"></i>Pilih File
+                                                </button>
+                                            </div>
+                                            @error('payment_proof')
+                                                <div class="text-danger mt-2">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+
+                                        <div id="preview-container" class="mb-3" style="display: none;">
+                                            <img id="preview-image" src="" alt="Preview" class="img-fluid"
+                                                style="max-height: 200px; border-radius: 8px;">
+                                        </div>
+
+                                        <button type="submit" class="btn btn-primary btn-lg w-100" id="upload-btn"
+                                            disabled>
+                                            <i class="fas fa-upload me-2"></i>Upload Bukti Pembayaran
+                                        </button>
+                                    </form>
+                                @endif
+                            </div>
+                        </div>
+                    @endif
                 @endif
             </div>
 
@@ -580,28 +658,50 @@
                         </div>
                         <div class="order-item">
                             <span>Harga Tiket</span>
-                            <span>Rp {{ number_format($buyer->ticket_price, 0, ',', '.') }}</span>
+                            <span>
+                                @if ($buyer->ticket_price > 0)
+                                    Rp {{ number_format($buyer->ticket_price, 0, ',', '.') }}
+                                @else
+                                    <span class="text-success font-weight-bold">GRATIS</span>
+                                @endif
+                            </span>
                         </div>
-                        {{-- <div class="order-item">
-                            <span>Biaya Admin (5%)</span>
-                            <span>Rp {{ number_format($buyer->admin_fee, 0, ',', '.') }}</span>
-                        </div> --}}
-                        <div class="order-item">
-                            <span>Kode Unik</span>
-                            <span>Rp {{ number_format($buyer->payment_code, 0, ',', '.') }}</span>
-                        </div>
+
+                        @if ($buyer->total_amount > 0)
+                            <div class="order-item">
+                                <span>Kode Unik</span>
+                                <span>Rp {{ number_format($buyer->payment_code, 0, ',', '.') }}</span>
+                            </div>
+                        @endif
+
                         <div class="order-item">
                             <span><strong>Total Pembayaran</strong></span>
-                            <span><strong>Rp {{ number_format($buyer->total_amount, 0, ',', '.') }}</strong></span>
+                            <span>
+                                @if ($buyer->total_amount > 0)
+                                    <strong>Rp {{ number_format($buyer->total_amount, 0, ',', '.') }}</strong>
+                                @else
+                                    <strong class="text-success">GRATIS</strong>
+                                @endif
+                            </span>
                         </div>
 
                         @if ($buyer->payment_status === 'confirmed')
                             <div class="mt-3">
                                 <div class="alert alert-success text-center">
                                     <i class="fas fa-check-circle fa-2x mb-2"></i>
-                                    <h6>Pembayaran Berhasil!</h6>
+                                    <h6>
+                                        @if ($buyer->total_amount > 0)
+                                            Pembayaran Berhasil!
+                                        @else
+                                            Tiket Gratis Dikonfirmasi!
+                                        @endif
+                                    </h6>
                                     <small>Tiket Anda sudah aktif</small>
                                 </div>
+                                <a href="{{ route('ticket.show', $buyer->external_id) }}"
+                                    class="btn btn-success w-100">
+                                    <i class="fas fa-ticket-alt me-2"></i>Lihat Tiket
+                                </a>
                             </div>
                         @endif
                     </div>
@@ -641,7 +741,7 @@
             });
         }
 
-        // File upload handling
+        // File upload handling (only for paid tickets)
         document.addEventListener('DOMContentLoaded', function() {
             const uploadArea = document.getElementById('uploadArea');
             const fileInput = document.getElementById('payment_proof');
@@ -649,46 +749,45 @@
             const previewImage = document.getElementById('preview-image');
             const uploadBtn = document.getElementById('upload-btn');
 
+            // Only initialize if elements exist (paid tickets)
+            if (!uploadArea || !fileInput) return;
+
             // Handle file selection
-            if (fileInput) {
-                fileInput.addEventListener('change', function(e) {
-                    const file = e.target.files[0];
-                    if (file) {
-                        handleFilePreview(file);
-                    } else {
-                        resetPreview();
-                    }
-                });
-            }
+            fileInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    handleFilePreview(file);
+                } else {
+                    resetPreview();
+                }
+            });
 
             // Handle drag and drop
-            if (uploadArea) {
-                uploadArea.addEventListener('dragover', function(e) {
-                    e.preventDefault();
-                    uploadArea.classList.add('dragover');
-                });
+            uploadArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
 
-                uploadArea.addEventListener('dragleave', function(e) {
-                    e.preventDefault();
-                    uploadArea.classList.remove('dragover');
-                });
+            uploadArea.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+            });
 
-                uploadArea.addEventListener('drop', function(e) {
-                    e.preventDefault();
-                    uploadArea.classList.remove('dragover');
+            uploadArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
 
-                    const files = e.dataTransfer.files;
-                    if (files.length > 0) {
-                        const file = files[0];
-                        if (file.type.startsWith('image/')) {
-                            fileInput.files = files;
-                            handleFilePreview(file);
-                        } else {
-                            alert('Hanya file gambar yang diperbolehkan!');
-                        }
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    const file = files[0];
+                    if (file.type.startsWith('image/')) {
+                        fileInput.files = files;
+                        handleFilePreview(file);
+                    } else {
+                        alert('Hanya file gambar yang diperbolehkan!');
                     }
-                });
-            }
+                }
+            });
 
             function handleFilePreview(file) {
                 // Validate file size (2MB = 2 * 1024 * 1024 bytes)

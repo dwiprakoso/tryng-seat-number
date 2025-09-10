@@ -110,26 +110,26 @@ class OrderController extends Controller
                 ->withInput();
         }
 
-        $paymentCode = $this->generateUniquePaymentCode();
-        $externalId = $this->generateUniqueExternalId();
-
         DB::beginTransaction();
 
         try {
             $quantity = (int)$request->quantity;
 
-            // 1. PERBAIKAN: Lock ticket terlebih dahulu untuk mencegah race condition
+            // 1. Lock ticket terlebih dahulu untuk mencegah race condition
             $ticket = Ticket::lockForUpdate()->find($request->ticket_id);
             if (!$ticket) {
                 throw new Exception('Tiket tidak ditemukan.');
             }
 
-            // 2. PERBAIKAN: Validasi stok tiket dari database
+            // Cek apakah tiket gratis atau berbayar
+            $isFreeTicket = $ticket->price == 0;
+
+            // 2. Validasi stok tiket dari database
             if ($ticket->qty < $quantity) {
                 throw new Exception("Stok tiket tidak mencukupi. Tersedia: {$ticket->qty}, diminta: {$quantity}");
             }
 
-            // 3. PERBAIKAN: Lock dan validasi seats secara atomic
+            // 3. Lock dan validasi seats secara atomic
             $seats = Seat::where('ticket_id', $request->ticket_id)
                 ->whereIn('seat_number', $selectedSeats)
                 ->lockForUpdate()
@@ -147,7 +147,7 @@ class OrderController extends Controller
                 throw new Exception('Kursi ' . implode(', ', $bookedSeatNumbers) . ' sudah dipesan orang lain.');
             }
 
-            // 4. PERBAIKAN: Validasi stok gabungan (minimum antara ticket qty dan available seats)
+            // 4. Validasi stok gabungan (minimum antara ticket qty dan available seats)
             $availableSeatsCount = Seat::where('ticket_id', $request->ticket_id)
                 ->where('is_booked', 0)
                 ->count();
@@ -159,12 +159,23 @@ class OrderController extends Controller
             }
 
             $ticketPrice = $ticket->price * $quantity;
-            $totalAmount = $ticketPrice + $paymentCode;
+
+            if ($isFreeTicket) {
+                $paymentCode = 0;
+                $totalAmount = 0;
+                $paymentStatus = 'waiting_confirmation';
+            } else {
+                $paymentCode = $this->generateUniquePaymentCode();
+                $totalAmount = $ticketPrice + $paymentCode;
+                $paymentStatus = 'pending';
+            }
+
+            $externalId = $this->generateUniqueExternalId();
 
             // Generate URL untuk verifikasi tiket
             $verifyUrl = url('/verify/' . $externalId);
 
-            // PERBAIKAN: Generate QR Code dan simpan sebagai file
+            // Generate QR Code dan simpan sebagai file
             $qrCodePath = $this->generateAndSaveQrCode($verifyUrl, $externalId);
 
             $buyer = Buyer::create([
@@ -177,8 +188,8 @@ class OrderController extends Controller
                 'payment_code' => $paymentCode,
                 'total_amount' => $totalAmount,
                 'external_id' => $externalId,
-                'qr_code' => $qrCodePath, // Sekarang menyimpan path file
-                'payment_status' => 'pending',
+                'qr_code' => $qrCodePath,
+                'payment_status' => $paymentStatus,
             ]);
 
             $bookingSeats = [];
@@ -193,7 +204,6 @@ class OrderController extends Controller
 
             BookingSeat::insert($bookingSeats);
 
-            // 5. PERBAIKAN: Update seat status dan ticket quantity secara atomic
             Seat::whereIn('id', $seats->pluck('id'))
                 ->update(['is_booked' => 1]);
 
@@ -207,7 +217,8 @@ class OrderController extends Controller
                     'external_id' => $externalId,
                     'email' => $buyer->email,
                     'seats' => $selectedSeats,
-                    'quantity' => $quantity
+                    'quantity' => $quantity,
+                    'is_free_ticket' => $isFreeTicket
                 ]);
             } catch (Exception $emailException) {
                 Log::error('Failed to send order confirmation email', [
@@ -217,7 +228,7 @@ class OrderController extends Controller
                 ]);
             }
 
-            Log::info('Multi-ticket order created successfully', [
+            Log::info($isFreeTicket ? 'Free ticket order created successfully' : 'Multi-ticket order created successfully', [
                 'external_id' => $externalId,
                 'buyer_id' => $buyer->id,
                 'seats' => $selectedSeats,
@@ -225,19 +236,24 @@ class OrderController extends Controller
                 'ticket_stock_before' => $ticket->qty + $quantity,
                 'ticket_stock_after' => $ticket->qty,
                 'qr_code_path' => $qrCodePath,
+                'is_free_ticket' => $isFreeTicket,
             ]);
 
-            return redirect()->route('payment.manual', ['external_id' => $externalId])
-                ->with('success', "Pesanan untuk {$quantity} tiket berhasil dibuat. Silakan lakukan pembayaran.");
+            if ($isFreeTicket) {
+                return redirect()->route('payment.manual', ['external_id' => $externalId])
+                    ->with('success', "Pesanan untuk {$quantity} tiket gratis berhasil dibuat. Menunggu konfirmasi admin.");
+            } else {
+                return redirect()->route('payment.manual', ['external_id' => $externalId])
+                    ->with('success', "Pesanan untuk {$quantity} tiket berhasil dibuat. Silakan lakukan pembayaran.");
+            }
         } catch (Exception $e) {
             DB::rollback();
 
-            // Hapus file QR code jika sudah dibuat tapi transaksi gagal
             if (isset($qrCodePath) && $qrCodePath && Storage::disk('public')->exists($qrCodePath)) {
                 Storage::disk('public')->delete($qrCodePath);
             }
 
-            Log::error('Multi-ticket Order Creation Failed', [
+            Log::error('Order Creation Failed', [
                 'error_message' => $e->getMessage(),
                 'external_id' => $externalId ?? 'not_generated',
                 'ticket_id' => $request->ticket_id,
@@ -351,6 +367,13 @@ class OrderController extends Controller
         $buyer = Buyer::where('external_id', $external_id)->firstOrFail();
         $ticket = Ticket::find($buyer->ticket_id);
         $product = Product::first();
+
+        Log::info('Manual payment page accessed', [
+            'external_id' => $external_id,
+            'payment_status' => $buyer->payment_status,
+            'total_amount' => $buyer->total_amount,
+            'is_free_ticket' => $buyer->total_amount == 0
+        ]);
 
         return view('payment.manual', compact('buyer', 'ticket', 'product'));
     }
