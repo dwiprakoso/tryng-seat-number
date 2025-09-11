@@ -300,18 +300,22 @@
                                         </td>
                                         <td>
                                             <div class="d-flex flex-column">
-                                                <span
-                                                    class="fw-bold text-gray-800">{{ $seat->created_at->format('d/m/Y') ?? '-' }}</span>
-                                                <span
-                                                    class="text-muted fw-semibold fs-7">{{ $seat->created_at->format('H:i') ?? '-' }}</span>
+                                                <span class="fw-bold text-gray-800">
+                                                    {{ $seat->created_at ? $seat->created_at->format('d/m/Y') : '-' }}
+                                                </span>
+                                                <span class="text-muted fw-semibold fs-7">
+                                                    {{ $seat->created_at ? $seat->created_at->format('H:i') : '-' }}
+                                                </span>
                                             </div>
                                         </td>
                                         <td>
                                             <div class="d-flex flex-column">
-                                                <span
-                                                    class="fw-bold text-gray-800">{{ $seat->updated_at->format('d/m/Y') ?? '-' }}</span>
-                                                <span
-                                                    class="text-muted fw-semibold fs-7">{{ $seat->updated_at->format('H:i') ?? '-' }}</span>
+                                                <span class="fw-bold text-gray-800">
+                                                    {{ $seat->updated_at ? $seat->updated_at->format('d/m/Y') : '-' }}
+                                                </span>
+                                                <span class="text-muted fw-semibold fs-7">
+                                                    {{ $seat->updated_at ? $seat->updated_at->format('H:i') : '-' }}
+                                                </span>
                                             </div>
                                         </td>
                                         {{-- <td>
