@@ -875,18 +875,17 @@
                                                 <i class="fas fa-plus"></i>
                                             </button>
                                         </div>
-                                        <!-- PERBAIKAN: Tampilkan stok minimum dari ticket qty, available seats, dan maksimal 3 -->
+                                        <!-- PERBAIKAN: Tampilkan stok minimum dari ticket qty dan available seats -->
                                         <small class="text-white">
                                             Stok Tiket Tersedia: <span
-                                                id="stockInfo">{{ min($ticket->qty, $availableSeatsCount, 3) }}</span>
-                                            tiket (Maksimal 3 tiket per pembelian)
+                                                id="stockInfo">{{ min($ticket->qty, $availableSeatsCount) }}</span>
+                                            tiket
                                             <br>
                                             {{-- <span class="text-xs text-gray-500">
                                                 (Tiket: {{ $ticket->qty }}, Kursi: {{ $availableSeatsCount }})
                                             </span> --}}
                                         </small>
-                                        <div class="invalid-feedback">Jumlah tiket melebihi stok yang tersedia atau
-                                            maksimal 3 tiket per pembelian</div>
+                                        <div class="invalid-feedback">Jumlah tiket melebihi stok yang tersedia</div>
                                     </div>
                                     {{-- <div class="form-group">
                                         <label for="alamat_lengkap" class="form-label">
