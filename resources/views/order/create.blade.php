@@ -868,8 +868,8 @@
                                                 <i class="fas fa-minus"></i>
                                             </button>
                                             <input type="number" class="form-control text-center" id="quantity"
-                                                name="quantity" value="1" min="1" max="3" readonly
-                                                style="background: white;" />
+                                                name="quantity" value="1" min="1" max="{{ $ticket->qty }}"
+                                                readonly style="background: white;" />
                                             <button type="button" class="btn btn-outline-secondary"
                                                 id="increaseQty">
                                                 <i class="fas fa-plus"></i>
