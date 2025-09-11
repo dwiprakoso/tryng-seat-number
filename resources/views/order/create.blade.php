@@ -868,24 +868,25 @@
                                                 <i class="fas fa-minus"></i>
                                             </button>
                                             <input type="number" class="form-control text-center" id="quantity"
-                                                name="quantity" value="1" min="1" max="{{ $ticket->qty }}"
-                                                readonly style="background: white;" />
+                                                name="quantity" value="1" min="1" max="3" readonly
+                                                style="background: white;" />
                                             <button type="button" class="btn btn-outline-secondary"
                                                 id="increaseQty">
                                                 <i class="fas fa-plus"></i>
                                             </button>
                                         </div>
-                                        <!-- PERBAIKAN: Tampilkan stok minimum dari ticket qty dan available seats -->
+                                        <!-- PERBAIKAN: Tampilkan stok minimum dari ticket qty, available seats, dan maksimal 3 -->
                                         <small class="text-white">
                                             Stok Tiket Tersedia: <span
-                                                id="stockInfo">{{ min($ticket->qty, $availableSeatsCount) }}</span>
-                                            tiket
+                                                id="stockInfo">{{ min($ticket->qty, $availableSeatsCount, 3) }}</span>
+                                            tiket (Maksimal 3 tiket per pembelian)
                                             <br>
                                             {{-- <span class="text-xs text-gray-500">
                                                 (Tiket: {{ $ticket->qty }}, Kursi: {{ $availableSeatsCount }})
                                             </span> --}}
                                         </small>
-                                        <div class="invalid-feedback">Jumlah tiket melebihi stok yang tersedia</div>
+                                        <div class="invalid-feedback">Jumlah tiket melebihi stok yang tersedia atau
+                                            maksimal 3 tiket per pembelian</div>
                                     </div>
                                     {{-- <div class="form-group">
                                         <label for="alamat_lengkap" class="form-label">
