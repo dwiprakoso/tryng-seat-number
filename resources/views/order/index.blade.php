@@ -360,11 +360,14 @@
                             <span>{{ $product->location }}</span>
                         </div>
 
-                        {{-- <div class="event-description">
-                            <h5 style="font-weight: 600; color: var(--dark); margin-bottom: 0.75rem;">Deskripsi Event
-                            </h5>
-                            <p>{{ $product->product_description }}</p>
-                        </div> --}}
+                        @if ($product->product_description != null)
+                            <div class="event-description">
+                                <h5 style="font-weight: 600; color: var(--dark); margin-bottom: 0.75rem;">Deskripsi
+                                    Event
+                                </h5>
+                                <p>{{ $product->product_description }}</p>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>
