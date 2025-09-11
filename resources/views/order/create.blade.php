@@ -868,8 +868,8 @@
                                                 <i class="fas fa-minus"></i>
                                             </button>
                                             <input type="number" class="form-control text-center" id="quantity"
-                                                name="quantity" value="1" min="1" max="{{ $ticket->qty }}"
-                                                readonly style="background: white;" />
+                                                name="quantity" value="1" min="1" max="3" readonly
+                                                style="background: white;" />
                                             <button type="button" class="btn btn-outline-secondary"
                                                 id="increaseQty">
                                                 <i class="fas fa-plus"></i>
@@ -1086,6 +1086,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 
     <script>
+        // PERBAIKAN: Tambahkan konstanta untuk batas maksimal tiket per pembelian
+        const MAX_TICKETS_PER_ORDER = 3; // Batas maksimal tiket per pemesanan
+
         document.addEventListener('DOMContentLoaded', function() {
             let currentStep = 1;
             let selectedSeats = [];
@@ -1106,20 +1109,39 @@
             const increaseBtn = document.getElementById('increaseQty');
             const stockInfo = document.getElementById('stockInfo');
 
-            // PERBAIKAN: Function untuk mengecek stok aktual 
-            // (minimum antara stok tiket dan seat yang tersedia)
+            // PERBAIKAN: Function untuk mengecek stok aktual dengan mempertimbangkan limit maksimal
             function checkCurrentStock() {
                 const availableSeats = document.querySelectorAll('.seat.available').length;
-                const actualStock = Math.min(ticketStock, availableSeats);
+                const actualStock = Math.min(ticketStock, availableSeats, MAX_TICKETS_PER_ORDER);
                 stockInfo.textContent = actualStock;
                 return actualStock;
             }
 
+            // PERBAIKAN: Function untuk mendapatkan maksimal tiket yang bisa dipesan
+            function getMaxAllowedTickets() {
+                const availableSeats = document.querySelectorAll('.seat.available').length;
+                return Math.min(ticketStock, availableSeats, MAX_TICKETS_PER_ORDER);
+            }
+
             // Function untuk show modal ketika mencapai limit
-            function showStockLimitModal(stockLimit) {
+            function showStockLimitModal(stockLimit, isMaxLimitReached = false) {
                 const existingModal = document.getElementById('stockLimitModal');
                 if (existingModal) {
                     existingModal.remove();
+                }
+
+                let title, message, additionalInfo;
+
+                if (isMaxLimitReached) {
+                    title = "Batas Maksimal Pemesanan!";
+                    message = `Maksimal ${MAX_TICKETS_PER_ORDER} tiket per pemesanan`;
+                    additionalInfo =
+                        "Kebijakan ini berlaku untuk semua jenis tiket demi kemerataan kesempatan bagi semua pelanggan.";
+                } else {
+                    title = "Stok Terbatas!";
+                    message = `Stok tiket yang tersedia saat ini: ${stockLimit} tiket`;
+                    additionalInfo =
+                        "Silakan lanjutkan dengan jumlah tiket yang sudah dipilih atau hubungi customer service untuk informasi lebih lanjut.";
                 }
 
                 const modalHTML = `
@@ -1129,7 +1151,7 @@
                         <div class="modal-header bg-warning text-dark">
                             <h5 class="modal-title">
                                 <i class="fas fa-exclamation-triangle me-2"></i>
-                                Stok Terbatas!
+                                ${title}
                             </h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
@@ -1137,9 +1159,8 @@
                             <div class="mb-3">
                                 <i class="fas fa-ticket-alt text-warning" style="font-size: 3rem;"></i>
                             </div>
-                            <h6 class="mb-3">Anda telah mencapai batas maksimal pemesanan</h6>
-                            <p class="mb-2">Stok tiket yang tersedia saat ini: <strong>${stockLimit} tiket</strong></p>
-                            <p class="text-muted mb-0">Silakan lanjutkan dengan jumlah tiket yang sudah dipilih atau hubungi customer service untuk informasi lebih lanjut.</p>
+                            <h6 class="mb-3">${message}</h6>
+                            <p class="text-muted mb-0">${additionalInfo}</p>
                         </div>
                         <div class="modal-footer justify-content-center">
                             <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
@@ -1208,7 +1229,7 @@
                 }, 4000);
             }
 
-            // PERBAIKAN: Quantity controls
+            // PERBAIKAN: Quantity controls dengan validasi maksimal 3 tiket
             decreaseBtn.addEventListener('click', function() {
                 if (requiredQuantity > 1) {
                     requiredQuantity--;
@@ -1217,8 +1238,8 @@
                     clearExcessSeats();
                     validateQuantityStock();
 
-                    const currentStock = checkCurrentStock();
-                    if (requiredQuantity < currentStock) {
+                    const maxAllowed = getMaxAllowedTickets();
+                    if (requiredQuantity < maxAllowed) {
                         increaseBtn.disabled = false;
                         increaseBtn.style.opacity = '1';
                     }
@@ -1226,12 +1247,22 @@
             });
 
             increaseBtn.addEventListener('click', function() {
-                const currentStock = checkCurrentStock();
+                const maxAllowed = getMaxAllowedTickets();
 
-                if (requiredQuantity >= currentStock) {
+                // PERBAIKAN: Cek apakah mencapai batas maksimal 3 tiket
+                if (requiredQuantity >= MAX_TICKETS_PER_ORDER) {
                     increaseBtn.disabled = true;
                     increaseBtn.style.opacity = '0.5';
-                    showStockLimitModal(currentStock);
+                    showStockLimitModal(MAX_TICKETS_PER_ORDER, true);
+                    showToast(`Maksimal ${MAX_TICKETS_PER_ORDER} tiket per pemesanan!`, 'warning');
+                    return;
+                }
+
+                // Cek apakah mencapai batas stok
+                if (requiredQuantity >= maxAllowed) {
+                    increaseBtn.disabled = true;
+                    increaseBtn.style.opacity = '0.5';
+                    showStockLimitModal(maxAllowed, false);
                     return;
                 }
 
@@ -1240,10 +1271,16 @@
                 updateQuantityDisplay();
                 validateQuantityStock();
 
-                if (requiredQuantity >= currentStock) {
+                // Update button state berdasarkan limit yang tercapai
+                if (requiredQuantity >= MAX_TICKETS_PER_ORDER || requiredQuantity >= maxAllowed) {
                     increaseBtn.disabled = true;
                     increaseBtn.style.opacity = '0.5';
-                    showToast(`Maksimal ${currentStock} tiket dapat dipesan (stok terbatas)`, 'warning');
+
+                    if (requiredQuantity >= MAX_TICKETS_PER_ORDER) {
+                        showToast(`Maksimal ${MAX_TICKETS_PER_ORDER} tiket per pemesanan`, 'warning');
+                    } else {
+                        showToast(`Maksimal ${maxAllowed} tiket dapat dipesan (stok terbatas)`, 'warning');
+                    }
                 }
             });
 
@@ -1320,20 +1357,34 @@
                 }
             }
 
-            // PERBAIKAN: Validasi quantity terhadap stok
+            // PERBAIKAN: Validasi quantity dengan mempertimbangkan batas maksimal 3 tiket
             function validateQuantityStock() {
                 const quantityField = document.getElementById('quantity');
-                const currentStock = checkCurrentStock();
+                const maxAllowed = getMaxAllowedTickets();
 
-                if (requiredQuantity > currentStock) {
+                // Validasi batas maksimal 3 tiket terlebih dahulu
+                if (requiredQuantity > MAX_TICKETS_PER_ORDER) {
                     quantityField.classList.add('is-invalid');
                     quantityField.classList.remove('is-valid');
 
-                    requiredQuantity = Math.max(1, currentStock);
+                    requiredQuantity = MAX_TICKETS_PER_ORDER;
                     quantityInput.value = requiredQuantity;
                     updateQuantityDisplay();
 
-                    showToast(`Jumlah tiket melebihi stok! Maksimal ${currentStock} tiket tersedia`, 'error');
+                    showToast(`Maksimal ${MAX_TICKETS_PER_ORDER} tiket per pemesanan!`, 'error');
+                    return false;
+                }
+
+                // Kemudian validasi terhadap stok yang tersedia
+                if (requiredQuantity > maxAllowed) {
+                    quantityField.classList.add('is-invalid');
+                    quantityField.classList.remove('is-valid');
+
+                    requiredQuantity = Math.max(1, maxAllowed);
+                    quantityInput.value = requiredQuantity;
+                    updateQuantityDisplay();
+
+                    showToast(`Jumlah tiket melebihi stok! Maksimal ${maxAllowed} tiket tersedia`, 'error');
                     return false;
                 } else {
                     quantityField.classList.remove('is-invalid');
@@ -1351,9 +1402,10 @@
                 const subtotal = ticketPrice * requiredQuantity;
                 document.getElementById('subtotalDisplay').textContent = `Rp ${subtotal.toLocaleString('id-ID')}`;
 
-                const currentStock = checkCurrentStock();
+                const maxAllowed = getMaxAllowedTickets();
 
-                if (requiredQuantity >= currentStock) {
+                // PERBAIKAN: Update button state berdasarkan batas maksimal dan stok
+                if (requiredQuantity >= MAX_TICKETS_PER_ORDER || requiredQuantity >= maxAllowed) {
                     increaseBtn.disabled = true;
                     increaseBtn.style.opacity = '0.5';
                 } else {
@@ -1372,6 +1424,41 @@
                 updateSeatSelectionUI();
                 validateSeatSelection();
             }
+
+            // PERBAIKAN: Tambahkan validasi input manual pada quantity field
+            quantityInput.addEventListener('input', function() {
+                let value = parseInt(this.value) || 1;
+                const maxAllowed = getMaxAllowedTickets();
+
+                // Batasi nilai input
+                if (value < 1) value = 1;
+                if (value > MAX_TICKETS_PER_ORDER) {
+                    value = MAX_TICKETS_PER_ORDER;
+                    showToast(`Maksimal ${MAX_TICKETS_PER_ORDER} tiket per pemesanan!`, 'warning');
+                }
+                if (value > maxAllowed) {
+                    value = maxAllowed;
+                    showToast(`Maksimal ${maxAllowed} tiket tersedia!`, 'warning');
+                }
+
+                this.value = value;
+                requiredQuantity = value;
+                updateQuantityDisplay();
+                clearExcessSeats();
+                validateQuantityStock();
+            });
+
+            // Prevent manual typing of invalid values
+            quantityInput.addEventListener('keydown', function(e) {
+                // Allow only numbers, backspace, delete, tab, enter, arrows
+                if (!((e.keyCode >= 48 && e.keyCode <= 57) || // numbers
+                        (e.keyCode >= 96 && e.keyCode <= 105) || // numpad
+                        e.keyCode === 8 || e.keyCode === 46 || // backspace, delete
+                        e.keyCode === 9 || e.keyCode === 13 || // tab, enter
+                        (e.keyCode >= 37 && e.keyCode <= 40))) { // arrows
+                    e.preventDefault();
+                }
+            });
 
             // Step navigation
             nextBtn.addEventListener('click', function() {
@@ -1515,9 +1602,16 @@
                 }
             }
 
-            // PERBAIKAN: Form submission dengan validasi final
+            // PERBAIKAN: Form submission dengan validasi maksimal 3 tiket
             form.addEventListener('submit', function(e) {
-                const currentStock = checkCurrentStock();
+                const maxAllowed = getMaxAllowedTickets();
+
+                // Validasi batas maksimal 3 tiket per pemesanan
+                if (requiredQuantity > MAX_TICKETS_PER_ORDER) {
+                    e.preventDefault();
+                    showToast(`Maksimal ${MAX_TICKETS_PER_ORDER} tiket per pemesanan!`, 'error');
+                    return false;
+                }
 
                 // Validasi stok tiket dari database
                 if (requiredQuantity > ticketStock) {
@@ -1533,10 +1627,10 @@
                     return false;
                 }
 
-                // Validasi kombinasi keduanya
-                if (requiredQuantity > currentStock) {
+                // Validasi kombinasi semua batasan
+                if (requiredQuantity > maxAllowed) {
                     e.preventDefault();
-                    showToast(`Stok tidak mencukupi! Stok tersedia: ${currentStock} tiket`, 'error');
+                    showToast(`Stok tidak mencukupi! Stok tersedia: ${maxAllowed} tiket`, 'error');
                     return false;
                 }
 
