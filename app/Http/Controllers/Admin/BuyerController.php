@@ -181,12 +181,16 @@ class BuyerController extends Controller
                     'quantity_restored' => $buyer->quantity,
                     'new_stock' => $buyer->ticket->fresh()->qty
                 ]);
+
                 // Kembalikan seat dan hapus booking record
                 $bookingSeat = BookingSeat::where('buyer_id', $buyer->id)->first();
                 if ($bookingSeat) {
+                    // Simpan seat_id dulu sebelum delete
+                    $seatId = $bookingSeat->seat_id;
+
                     Log::info('Releasing seat booking', [
                         'booking_seat_id' => $bookingSeat->id,
-                        'seat_id' => $bookingSeat->seat_id,
+                        'seat_id' => $seatId,
                         'buyer_id' => $buyer->id
                     ]);
 
@@ -197,7 +201,7 @@ class BuyerController extends Controller
                     $bookingSeat->delete();
 
                     Log::info('Seat released successfully', [
-                        'seat_id' => $bookingSeat->seat_id
+                        'seat_id' => $seatId
                     ]);
                 } else {
                     Log::warning('No booking seat record found for buyer', ['buyer_id' => $buyer->id]);
