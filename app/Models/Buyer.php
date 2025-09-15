@@ -136,4 +136,8 @@ class Buyer extends Model
 
         return 'data:image/png;base64,' . $this->qr_code;
     }
+    public function bookingSeats()
+    {
+        return $this->hasMany(BookingSeat::class, 'buyer_id');
+    }
 }

@@ -44,7 +44,6 @@
             <!--begin::OTS Sales-->
             <div class="card card-flush">
                 <!--begin::Card header-->
-                <!--begin::Card header-->
                 <div class="card-header align-items-center py-5 gap-2 gap-md-5">
                     <!--begin::Card toolbar-->
                     <div class="card-toolbar flex-row-fluid justify-content-end gap-5">
@@ -78,10 +77,11 @@
                     <table class="table align-middle table-row-dashed fs-6 gy-5" id="kt_ots_sales_table">
                         <thead>
                             <tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0">
-                                <th class="min-w-150px">Customer</th>
+                                <th class="min-w-150px">Name</th>
                                 <th class="min-w-100px">Phone</th>
                                 <th class="min-w-150px">Ticket</th>
                                 <th class="text-center min-w-70px">Qty</th>
+                                <th class="text-end min-w-100px">Seats</th>
                                 <th class="text-end min-w-100px">Total</th>
                                 <th class="text-center min-w-100px">Payment</th>
                                 <th class="text-center min-w-100px">Date</th>
@@ -92,7 +92,10 @@
                             @foreach ($otsSales as $sale)
                                 <tr>
                                     <td>
-                                        <span class="text-gray-800 fs-6 fw-bold">{{ $sale->nama_lengkap }}</span>
+                                        <div class="d-flex flex-column">
+                                            <span class="text-gray-800 fs-6 fw-bold">{{ $sale->nama_lengkap }}</span>
+                                            <span class="text-muted fs-7">{{ $sale->external_id }}</span>
+                                        </div>
                                     </td>
                                     <td>
                                         <span class="fw-bold">{{ $sale->no_handphone }}</span>
@@ -104,8 +107,22 @@
                                         <span class="fw-bold">{{ $sale->quantity }}</span>
                                     </td>
                                     <td class="text-end pe-0">
-                                        <span class="fw-bold">Rp
-                                            {{ number_format($sale->total_amount, 0, ',', '.') }}</span>
+                                        <div class="d-flex flex-wrap gap-1 justify-content-end">
+                                            @foreach ($sale->bookingSeats as $booking)
+                                                <span
+                                                    class="badge badge-light-info fs-8">{{ $booking->seat->seat_number }}</span>
+                                            @endforeach
+                                        </div>
+                                    </td>
+                                    <td class="text-end pe-0">
+                                        <div class="d-flex flex-column align-items-end">
+                                            <span class="fw-bold">Rp
+                                                {{ number_format($sale->total_amount, 0, ',', '.') }}</span>
+                                            @if ($sale->admin_fee > 0)
+                                                <span class="text-muted fs-8">(+Rp
+                                                    {{ number_format($sale->admin_fee, 0, ',', '.') }} fee)</span>
+                                            @endif
+                                        </div>
                                     </td>
                                     <td class="text-center">
                                         <span
@@ -125,10 +142,10 @@
                                         <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg-light-primary fw-semibold fs-7 w-125px py-4"
                                             data-kt-menu="true">
                                             <!--begin::Menu item-->
-                                            <div class="menu-item px-3">
-                                                <a href="{{ route('admin.ots-sales.receipt', $sale->id) }}"
-                                                    class="menu-link px-3" target="_blank">Print Receipt</a>
-                                            </div>
+                                            {{-- <div class="menu-item px-3">
+                                                <a href="{{ route('verify', $sale->external_id) }}" class="menu-link px-3"
+                                                    target="_blank">View Ticket</a>
+                                            </div> --}}
                                             <!--end::Menu item-->
                                             <!--begin::Menu item-->
                                             <div class="menu-item px-3">
@@ -161,7 +178,7 @@
     <!--begin::Modal - Add Sale-->
     <div class="modal fade" id="kt_modal_add_sale" tabindex="-1" aria-hidden="true">
         <!--begin::Modal dialog-->
-        <div class="modal-dialog modal-dialog-centered mw-650px">
+        <div class="modal-dialog modal-dialog-centered mw-800px">
             <!--begin::Modal content-->
             <div class="modal-content">
                 <!--begin::Modal header-->
@@ -209,6 +226,17 @@
                             <!--begin::Input group-->
                             <div class="fv-row mb-7">
                                 <!--begin::Label-->
+                                <label class="fs-6 fw-semibold mb-2">Email (Opsional)</label>
+                                <!--end::Label-->
+                                <!--begin::Input-->
+                                <input type="email" class="form-control form-control-solid"
+                                    placeholder="email@example.com" name="email" />
+                                <!--end::Input-->
+                            </div>
+                            <!--end::Input group-->
+                            <!--begin::Input group-->
+                            <div class="fv-row mb-7">
+                                <!--begin::Label-->
                                 <label class="required fs-6 fw-semibold mb-2">Ticket</label>
                                 <!--end::Label-->
                                 <!--begin::Input-->
@@ -239,6 +267,31 @@
                                 <!--end::Input-->
                             </div>
                             <!--end::Input group-->
+
+                            <!--begin::Seat Selection-->
+                            <div class="fv-row mb-7" id="seat_selection_area" style="display: none;">
+                                <label class="fs-6 fw-semibold mb-2">Pilih Kursi</label>
+                                <div class="card bg-light-secondary">
+                                    <div class="card-body p-5">
+                                        <div id="seats_container" class="d-flex flex-wrap gap-2">
+                                            <!-- Seats akan di-load via AJAX -->
+                                        </div>
+                                        <div class="mt-3">
+                                            <small class="text-muted">
+                                                <span class="badge badge-light-success me-2">●</span> Available
+                                                <span class="badge badge-light-danger me-2 ms-3">●</span> Booked
+                                                <span class="badge badge-primary me-2 ms-3">●</span> Selected
+                                            </small>
+                                        </div>
+                                        <div class="mt-3" id="selected_seats_info" style="display: none;">
+                                            <strong>Kursi terpilih:</strong>
+                                            <span id="selected_seats_display"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!--end::Seat Selection-->
+
                             <!--begin::Input group-->
                             <div class="fv-row mb-7">
                                 <!--begin::Label-->
@@ -254,6 +307,10 @@
                                 <!--end::Input-->
                             </div>
                             <!--end::Input group-->
+
+                            <!-- Hidden input untuk selected seats -->
+                            <input type="hidden" name="selected_seats" id="selected_seats_input" />
+
                             <!--begin::Summary-->
                             <div class="fv-row mb-15" id="price_summary" style="display: none;">
                                 <div class="card bg-light-primary">
@@ -282,7 +339,7 @@
                         <div class="text-center pt-15">
                             <button type="reset" class="btn btn-light me-3"
                                 data-kt-sales-modal-action="cancel">Discard</button>
-                            <button type="submit" class="btn btn-primary">
+                            <button type="submit" class="btn btn-primary" id="submit_button" disabled>
                                 <span class="indicator-label">Submit</span>
                             </button>
                         </div>
@@ -308,7 +365,139 @@
             const adminFeeDisplay = document.getElementById('admin_fee_display');
             const adminFeeRow = document.getElementById('admin_fee_row');
             const totalDisplay = document.getElementById('total_display');
+            const seatSelectionArea = document.getElementById('seat_selection_area');
+            const seatsContainer = document.getElementById('seats_container');
+            const selectedSeatsInput = document.getElementById('selected_seats_input');
+            const selectedSeatsInfo = document.getElementById('selected_seats_info');
+            const selectedSeatsDisplay = document.getElementById('selected_seats_display');
+            const submitButton = document.getElementById('submit_button');
 
+            let selectedSeats = [];
+            let availableSeats = [];
+
+            // Load seats when ticket is selected
+            ticketSelect.addEventListener('change', function() {
+                const ticketId = this.value;
+                if (ticketId) {
+                    loadSeats(ticketId);
+                    seatSelectionArea.style.display = 'block';
+                } else {
+                    seatSelectionArea.style.display = 'none';
+                    selectedSeats = [];
+                    updateSelectedSeatsDisplay();
+                }
+                calculateTotal();
+            });
+
+            // Load seats via AJAX
+            function loadSeats(ticketId) {
+                fetch(`/admin/ots-sales/seats/${ticketId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            availableSeats = data.seats;
+                            renderSeats();
+                            resetSeatSelection();
+                        } else {
+                            seatsContainer.innerHTML = '<p class="text-danger">Error loading seats</p>';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        seatsContainer.innerHTML = '<p class="text-danger">Error loading seats</p>';
+                    });
+            }
+
+            // Render seats
+            function renderSeats() {
+                seatsContainer.innerHTML = '';
+
+                availableSeats.forEach(seat => {
+                    const seatBtn = document.createElement('button');
+                    seatBtn.type = 'button';
+                    seatBtn.className = 'btn btn-sm seat-btn';
+                    seatBtn.textContent = seat.seat_number;
+                    seatBtn.dataset.seatNumber = seat.seat_number;
+
+                    if (seat.is_booked) {
+                        seatBtn.className += ' btn-light-danger';
+                        seatBtn.disabled = true;
+                    } else {
+                        seatBtn.className += ' btn-light-success';
+                        seatBtn.addEventListener('click', () => toggleSeat(seat.seat_number));
+                    }
+
+                    seatsContainer.appendChild(seatBtn);
+                });
+            }
+
+            // Toggle seat selection
+            function toggleSeat(seatNumber) {
+                const quantity = parseInt(quantityInput.value) || 0;
+                const seatIndex = selectedSeats.indexOf(seatNumber);
+
+                if (seatIndex > -1) {
+                    // Remove seat
+                    selectedSeats.splice(seatIndex, 1);
+                } else {
+                    // Add seat if not exceeding quantity
+                    if (selectedSeats.length < quantity) {
+                        selectedSeats.push(seatNumber);
+                    } else {
+                        alert(`Maksimal ${quantity} kursi sesuai dengan quantity tiket`);
+                        return;
+                    }
+                }
+
+                updateSeatButtons();
+                updateSelectedSeatsDisplay();
+                validateForm();
+            }
+
+            // Update seat button styles
+            function updateSeatButtons() {
+                document.querySelectorAll('.seat-btn').forEach(btn => {
+                    const seatNumber = btn.dataset.seatNumber;
+                    const isSelected = selectedSeats.includes(seatNumber);
+
+                    if (!btn.disabled) {
+                        if (isSelected) {
+                            btn.className = 'btn btn-sm seat-btn btn-primary';
+                        } else {
+                            btn.className = 'btn btn-sm seat-btn btn-light-success';
+                        }
+                    }
+                });
+            }
+
+            // Update selected seats display
+            function updateSelectedSeatsDisplay() {
+                if (selectedSeats.length > 0) {
+                    selectedSeatsDisplay.textContent = selectedSeats.sort().join(', ');
+                    selectedSeatsInfo.style.display = 'block';
+                } else {
+                    selectedSeatsInfo.style.display = 'none';
+                }
+
+                selectedSeatsInput.value = JSON.stringify(selectedSeats);
+            }
+
+            // Reset seat selection
+            function resetSeatSelection() {
+                selectedSeats = [];
+                updateSeatButtons();
+                updateSelectedSeatsDisplay();
+                validateForm();
+            }
+
+            // Validate form
+            function validateForm() {
+                const quantity = parseInt(quantityInput.value) || 0;
+                const isValid = selectedSeats.length === quantity && quantity > 0;
+                submitButton.disabled = !isValid;
+            }
+
+            // Calculate total
             function calculateTotal() {
                 const selectedOption = ticketSelect.options[ticketSelect.selectedIndex];
                 const quantity = parseInt(quantityInput.value) || 0;
@@ -336,6 +525,7 @@
                 }
             }
 
+            // Event listeners
             ticketSelect.addEventListener('change', function() {
                 const selectedOption = this.options[this.selectedIndex];
                 if (selectedOption && selectedOption.value) {
@@ -343,11 +533,37 @@
                     quantityInput.setAttribute('max', maxQty);
                     quantityInput.value = Math.min(parseInt(quantityInput.value) || 1, maxQty);
                 }
+                resetSeatSelection();
                 calculateTotal();
             });
 
-            quantityInput.addEventListener('input', calculateTotal);
+            quantityInput.addEventListener('input', function() {
+                // Reset seat selection when quantity changes
+                if (selectedSeats.length > parseInt(this.value)) {
+                    resetSeatSelection();
+                }
+                calculateTotal();
+                validateForm();
+            });
+
             paymentMethod.addEventListener('change', calculateTotal);
+
+            // Form submission validation
+            document.getElementById('kt_modal_add_sale_form').addEventListener('submit', function(e) {
+                const quantity = parseInt(quantityInput.value) || 0;
+
+                if (selectedSeats.length !== quantity) {
+                    e.preventDefault();
+                    alert(`Silakan pilih ${quantity} kursi sesuai dengan quantity tiket`);
+                    return false;
+                }
+
+                if (selectedSeats.length === 0) {
+                    e.preventDefault();
+                    alert('Silakan pilih kursi terlebih dahulu');
+                    return false;
+                }
+            });
 
             // Close modal handlers
             document.querySelectorAll('[data-kt-sales-modal-action="close"], [data-kt-sales-modal-action="cancel"]')
@@ -356,8 +572,44 @@
                         var modal = bootstrap.Modal.getInstance(document.getElementById(
                             'kt_modal_add_sale'));
                         modal.hide();
+
+                        // Reset form when modal is closed
+                        document.getElementById('kt_modal_add_sale_form').reset();
+                        seatSelectionArea.style.display = 'none';
+                        priceSummary.style.display = 'none';
+                        selectedSeats = [];
+                        updateSelectedSeatsDisplay();
+                        submitButton.disabled = true;
                     });
                 });
+
+            // Reset form on modal reset
+            document.querySelector('button[type="reset"]').addEventListener('click', function() {
+                seatSelectionArea.style.display = 'none';
+                priceSummary.style.display = 'none';
+                selectedSeats = [];
+                updateSelectedSeatsDisplay();
+                submitButton.disabled = true;
+            });
         });
     </script>
+
+    <style>
+        .seat-btn {
+            min-width: 50px;
+            margin: 2px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .seat-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        #seats_container {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
 @endsection
