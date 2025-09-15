@@ -114,7 +114,7 @@
                 <!--end:Menu item-->
 
                 <!--begin:Menu item - OTS (On The Spot Sales)-->
-                {{-- <div class="menu-item">
+                <div class="menu-item">
                     <a class="menu-link {{ Request::routeIs('admin.ots-sales.*') ? 'active' : '' }}"
                         href="{{ route('admin.ots-sales.index') }}">
                         <span class="menu-icon">
@@ -122,7 +122,7 @@
                         </span>
                         <span class="menu-title">OTS</span>
                     </a>
-                </div> --}}
+                </div>
                 <!--end:Menu item-->
 
             </div>
