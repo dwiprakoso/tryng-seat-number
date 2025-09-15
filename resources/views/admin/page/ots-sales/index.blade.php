@@ -292,19 +292,20 @@
                             </div>
                             <!--end::Seat Selection-->
 
-                            <!--begin::Input group-->
+                            <!--begin::Input group - Payment Method (DISABLED)-->
                             <div class="fv-row mb-7">
                                 <!--begin::Label-->
-                                <label class="required fs-6 fw-semibold mb-2">Payment Method</label>
+                                <label class="fs-6 fw-semibold mb-2 text-muted">Payment Method</label>
                                 <!--end::Label-->
                                 <!--begin::Input-->
                                 <select name="payment_method" class="form-select form-select-solid" id="payment_method"
-                                    required>
-                                    <option value="">Choose Payment Method</option>
-                                    <option value="cash">Cash</option>
-                                    <option value="cashless">Cashless (+5% admin fee)</option>
+                                    disabled>
+                                    <option value="cash" selected>Cash (Default)</option>
                                 </select>
+                                <!-- Hidden input to ensure cash value is sent -->
+                                <input type="hidden" name="payment_method" value="cash" />
                                 <!--end::Input-->
+                                <small class="form-text text-muted mt-1">Payment method is set to Cash by default</small>
                             </div>
                             <!--end::Input group-->
 
@@ -318,11 +319,6 @@
                                         <div class="d-flex justify-content-between mb-2">
                                             <span>Subtotal:</span>
                                             <span id="subtotal_display">Rp 0</span>
-                                        </div>
-                                        <div class="d-flex justify-content-between mb-2" id="admin_fee_row"
-                                            style="display: none;">
-                                            <span>Admin Fee (5%):</span>
-                                            <span id="admin_fee_display">Rp 0</span>
                                         </div>
                                         <div class="separator my-3"></div>
                                         <div class="d-flex justify-content-between fw-bold">
@@ -359,11 +355,8 @@
         document.addEventListener('DOMContentLoaded', function() {
             const ticketSelect = document.getElementById('ticket_select');
             const quantityInput = document.getElementById('quantity_input');
-            const paymentMethod = document.getElementById('payment_method');
             const priceSummary = document.getElementById('price_summary');
             const subtotalDisplay = document.getElementById('subtotal_display');
-            const adminFeeDisplay = document.getElementById('admin_fee_display');
-            const adminFeeRow = document.getElementById('admin_fee_row');
             const totalDisplay = document.getElementById('total_display');
             const seatSelectionArea = document.getElementById('seat_selection_area');
             const seatsContainer = document.getElementById('seats_container');
@@ -500,37 +493,28 @@
             function validateForm() {
                 const quantity = parseInt(quantityInput.value) || 0;
                 const ticketId = ticketSelect.value;
-                const paymentMethodValue = paymentMethod.value;
                 const namaLengkap = document.querySelector('input[name="nama_lengkap"]').value.trim();
                 const noHandphone = document.querySelector('input[name="no_handphone"]').value.trim();
 
+                // Payment method is always 'cash' since it's disabled, so we don't need to check it
                 const isValid = ticketId && quantity > 0 && selectedSeats.length === quantity &&
-                    paymentMethodValue && namaLengkap && noHandphone;
+                    namaLengkap && noHandphone;
 
                 submitButton.disabled = !isValid;
             }
 
-            // Calculate total
+            // Calculate total (simplified since payment is always cash)
             function calculateTotal() {
                 const ticketId = ticketSelect.value;
                 const quantity = parseInt(quantityInput.value) || 0;
-                const paymentMethodValue = paymentMethod.value;
 
                 if (ticketId && ticketsData[ticketId] && quantity > 0) {
                     const price = ticketsData[ticketId].price;
                     const subtotal = price * quantity;
-                    const adminFee = paymentMethodValue === 'cashless' ? subtotal * 0.05 : 0;
-                    const total = subtotal + adminFee;
+                    const total = subtotal; // No admin fee since payment is always cash
 
                     subtotalDisplay.textContent = 'Rp ' + subtotal.toLocaleString('id-ID');
-                    adminFeeDisplay.textContent = 'Rp ' + adminFee.toLocaleString('id-ID');
                     totalDisplay.textContent = 'Rp ' + total.toLocaleString('id-ID');
-
-                    if (paymentMethodValue === 'cashless') {
-                        adminFeeRow.style.display = 'flex';
-                    } else {
-                        adminFeeRow.style.display = 'none';
-                    }
 
                     priceSummary.style.display = 'block';
                 } else {
@@ -568,10 +552,6 @@
 
             document.querySelector('input[name="nama_lengkap"]').addEventListener('input', validateForm);
             document.querySelector('input[name="no_handphone"]').addEventListener('input', validateForm);
-            paymentMethod.addEventListener('change', function() {
-                calculateTotal();
-                validateForm();
-            });
 
             // Form submission validation
             document.getElementById('kt_modal_add_sale_form').addEventListener('submit', function(e) {

@@ -38,120 +38,140 @@ class OtsSalesController extends Controller
 
     public function store(Request $request)
     {
+        // Validate input data
         $request->validate([
             'nama_lengkap' => 'required|string|min:3|max:255',
             'no_handphone' => 'required|string|max:20|regex:/^08\d{8,12}$/',
             'email' => 'nullable|email|max:255',
             'ticket_id' => 'required|exists:tickets,id',
-            'quantity' => 'required|integer|min:1',
-            'payment_method' => 'required|in:cash,cashless',
+            'quantity' => 'required|integer|min:1|max:50', // Add reasonable max limit
+            // 'payment_method' => 'required|in:cash,cashless',
             'selected_seats' => 'required|json',
         ], [
             'nama_lengkap.min' => 'Nama lengkap minimal 3 karakter',
+            'nama_lengkap.max' => 'Nama lengkap maksimal 255 karakter',
             'no_handphone.regex' => 'Nomor handphone harus dimulai dengan 08 dan berjumlah 10-14 digit',
+            'quantity.max' => 'Maksimal 50 tiket per transaksi',
             'selected_seats.required' => 'Silakan pilih kursi terlebih dahulu',
             'selected_seats.json' => 'Data kursi tidak valid',
         ]);
 
+        // Parse and validate selected seats
         $selectedSeats = json_decode($request->selected_seats, true);
+        $quantity = (int)$request->quantity;
 
-        if (!is_array($selectedSeats) || count($selectedSeats) !== (int)$request->quantity) {
+        if (!is_array($selectedSeats) || count($selectedSeats) !== $quantity) {
             return redirect()->back()
                 ->with('error', 'Jumlah kursi yang dipilih tidak sesuai dengan quantity tiket')
                 ->withInput();
         }
 
+        // Validate seat IDs are integers
+        foreach ($selectedSeats as $seatId) {
+            if (!is_numeric($seatId) || (int)$seatId <= 0) {
+                return redirect()->back()
+                    ->with('error', 'Data kursi tidak valid')
+                    ->withInput();
+            }
+        }
+
         DB::beginTransaction();
 
         try {
-            $quantity = (int)$request->quantity;
-
-            // 1. Lock ticket untuk mencegah race condition
+            // 1. Lock and validate ticket
             $ticket = Ticket::lockForUpdate()->find($request->ticket_id);
             if (!$ticket) {
                 throw new Exception('Tiket tidak ditemukan.');
             }
 
-            // 2. Validasi stok tiket
+            // 2. Check ticket stock
             if ($ticket->qty < $quantity) {
                 throw new Exception("Stok tiket tidak mencukupi. Tersedia: {$ticket->qty}, diminta: {$quantity}");
             }
 
-            // 3. Lock dan validasi seats
+            // 3. Lock and validate seats
             $seats = DB::table('seats')
                 ->where('ticket_id', $request->ticket_id)
-                ->whereIn('seat_number', $selectedSeats)
+                ->whereIn('id', $selectedSeats) // Use seat IDs instead of seat_number
                 ->lockForUpdate()
                 ->get();
 
-            // Validasi semua seat ada
+            // Validate all seats exist and belong to the ticket
             if ($seats->count() !== count($selectedSeats)) {
-                throw new Exception('Beberapa kursi tidak ditemukan atau tidak sesuai dengan tiket ini.');
+                $foundSeatIds = $seats->pluck('id')->toArray();
+                $missingSeatIds = array_diff($selectedSeats, $foundSeatIds);
+                throw new Exception('Kursi dengan ID: ' . implode(', ', $missingSeatIds) . ' tidak ditemukan atau tidak sesuai dengan tiket ini.');
             }
 
-            // Validasi tidak ada seat yang sudah booked
+            // Check for already booked seats
             $bookedSeats = $seats->where('is_booked', 1);
             if ($bookedSeats->count() > 0) {
                 $bookedSeatNumbers = $bookedSeats->pluck('seat_number')->toArray();
                 throw new Exception('Kursi ' . implode(', ', $bookedSeatNumbers) . ' sudah dipesan orang lain.');
             }
 
-            // 4. Calculate amounts
+            // 4. Calculate pricing (no admin fee since payment is cash)
             $ticketPrice = $ticket->price * $quantity;
-            $adminFee = $request->payment_method === 'cashless' ? $ticketPrice * 0.05 : 0;
+            $adminFee = 0; // Always 0 for cash payment
             $totalAmount = $ticketPrice + $adminFee;
 
-            // Generate external ID
+            // Generate unique external ID
             $externalId = $this->generateUniqueExternalId();
 
-            // Generate URL untuk verifikasi tiket
-            $verifyUrl = url('/verify/' . $externalId);
-
-            // Generate QR Code dan simpan sebagai file
-            $qrCodePath = $this->generateAndSaveQrCode($verifyUrl, $externalId);
-
-            // 5. Create buyer (OTS Sale)
-            $buyer = Buyer::create([
-                'nama_lengkap' => $request->nama_lengkap,
-                'email' => $request->email ?? 'noemail@otssales.local',
+            // 5. Create buyer record with waiting_confirmation status
+            $buyerData = [
+                'nama_lengkap' => trim($request->nama_lengkap),
+                'email' => $request->email ?: 'noemail@otssales.local',
                 'no_handphone' => $request->no_handphone,
                 'quantity' => $quantity,
                 'ticket_id' => $request->ticket_id,
                 'ticket_price' => $ticketPrice,
                 'admin_fee' => $adminFee,
-                'payment_code' => null, // OTS sales tidak perlu payment code
+                'payment_code' => null,
                 'total_amount' => $totalAmount,
                 'external_id' => $externalId,
-                'qr_code' => $qrCodePath,
-                'payment_status' => 'confirmed', // Langsung confirmed untuk OTS
-                'payment_method' => $request->payment_method,
-                'created_by_admin' => auth()->user()->id, // Flag untuk OTS sales
-            ]);
+                'payment_status' => 'waiting_confirmation', // Changed from 'confirmed'
+                'created_by_admin' => auth()->user()->id,
+            ];
 
-            // 6. Book the seats in booking_seat table
-            $bookingSeats = [];
-            foreach ($seats as $seat) {
-                $bookingSeats[] = [
+            // Generate QR code and verification URL
+            try {
+                $verifyUrl = url('/verify/' . $externalId);
+                $qrCodePath = $this->generateAndSaveQrCode($verifyUrl, $externalId);
+                $buyerData['qr_code'] = $qrCodePath;
+            } catch (Exception $qrException) {
+                Log::warning('QR Code generation failed, continuing without QR', [
+                    'external_id' => $externalId,
+                    'error' => $qrException->getMessage()
+                ]);
+                $buyerData['qr_code'] = null;
+            }
+
+            $buyer = Buyer::create($buyerData);
+
+            // 6. Create booking seat records
+            $bookingSeats = $seats->map(function ($seat) use ($buyer) {
+                return [
                     'buyer_id' => $buyer->id,
                     'seat_id' => $seat->id,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ];
-            }
+            })->toArray();
 
             DB::table('booking_seat')->insert($bookingSeats);
 
-            // 7. Update seat status
+            // 7. Update seat status to booked
             DB::table('seats')
                 ->whereIn('id', $seats->pluck('id'))
-                ->update(['is_booked' => 1]);
+                ->update(['is_booked' => 1, 'updated_at' => now()]);
 
-            // 8. Update ticket quantity
+            // 8. Decrement ticket quantity
             $ticket->decrement('qty', $quantity);
 
             DB::commit();
 
-            // 9. Send email if email provided (optional untuk OTS)
+            // 9. Send email notification (optional) - only if email is provided
             if ($request->filled('email') && filter_var($request->email, FILTER_VALIDATE_EMAIL)) {
                 try {
                     Mail::to($request->email)->send(new OrderConfirmation($buyer, $ticket));
@@ -162,38 +182,54 @@ class OtsSalesController extends Controller
                 } catch (Exception $emailException) {
                     Log::error('Failed to send OTS sale email', [
                         'external_id' => $externalId,
+                        'email' => $request->email,
                         'error' => $emailException->getMessage()
                     ]);
                 }
             }
 
+            // Log successful transaction
             Log::info('OTS Sale created successfully', [
                 'external_id' => $externalId,
                 'buyer_id' => $buyer->id,
-                'seats' => $selectedSeats,
+                'ticket_id' => $request->ticket_id,
+                'seat_ids' => $selectedSeats,
+                'seat_numbers' => $seats->pluck('seat_number')->toArray(),
                 'quantity' => $quantity,
-                'payment_method' => $request->payment_method,
+                'payment_method' => 'cash',
+                'ticket_price' => $ticketPrice,
                 'admin_fee' => $adminFee,
+                'total_amount' => $totalAmount,
                 'created_by' => auth()->user()->id,
             ]);
 
             return redirect()->route('admin.ots-sales.index')
-                ->with('success', "Penjualan OTS untuk {$quantity} tiket berhasil dibuat. External ID: {$externalId}");
+                ->with('success', "Penjualan OTS untuk {$quantity} tiket berhasil dibuat dengan status menunggu konfirmasi. External ID: {$externalId}");
         } catch (Exception $e) {
             DB::rollback();
 
-            // Cleanup QR code jika ada error
+            // Cleanup QR code file if it was created
             if (isset($qrCodePath) && $qrCodePath && Storage::disk('public')->exists($qrCodePath)) {
-                Storage::disk('public')->delete($qrCodePath);
+                try {
+                    Storage::disk('public')->delete($qrCodePath);
+                } catch (Exception $cleanupException) {
+                    Log::error('Failed to cleanup QR code file', [
+                        'file_path' => $qrCodePath,
+                        'error' => $cleanupException->getMessage()
+                    ]);
+                }
             }
 
+            // Log error details
             Log::error('OTS Sale Creation Failed', [
                 'error_message' => $e->getMessage(),
+                'error_trace' => $e->getTraceAsString(),
                 'external_id' => $externalId ?? 'not_generated',
                 'ticket_id' => $request->ticket_id,
                 'selected_seats' => $selectedSeats ?? [],
-                'quantity' => $request->quantity ?? 0,
+                'quantity' => $quantity,
                 'admin_id' => auth()->user()->id,
+                'request_data' => $request->except(['_token', '_method']),
             ]);
 
             return redirect()->back()
@@ -201,7 +237,6 @@ class OtsSalesController extends Controller
                 ->withInput();
         }
     }
-
     // Method helper yang sama seperti sebelumnya
     private function generateAndSaveQrCode($data, $externalId)
     {
