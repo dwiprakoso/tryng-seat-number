@@ -108,17 +108,17 @@
                                         </div>
                                     </td>
                                     <td class="text-end">
-                                        <a href="#"
+                                        <button type="button"
                                             class="btn btn-sm btn-light btn-flex btn-center btn-active-light-primary"
                                             data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end">Actions
-                                            <i class="ki-outline ki-down fs-5 ms-1"></i></a>
+                                            <i class="ki-outline ki-down fs-5 ms-1"></i></button>
                                         <!--begin::Menu-->
                                         <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg-light-primary fw-semibold fs-7 w-125px py-4"
                                             data-kt-menu="true">
                                             <!--begin::Menu item-->
                                             <div class="menu-item px-3">
-                                                <a href="#" class="menu-link px-3"
-                                                    onclick="editTicket({{ $ticket->id }}, '{{ $ticket->name }}', {{ $ticket->qty }}, {{ $ticket->price }}, '{{ $ticket->status }}')">Edit</a>
+                                                <button type="button" class="menu-link px-3 border-0 bg-transparent"
+                                                    onclick="editTicket({{ $ticket->id }}, '{{ $ticket->name }}', {{ $ticket->qty }}, {{ $ticket->price }}, '{{ $ticket->status }}')">Edit</button>
                                             </div>
                                             <!--end::Menu item-->
                                             <!--begin::Menu item-->
@@ -350,6 +350,10 @@
 
     <script>
         function editTicket(id, name, qty, price, status) {
+            // Prevent any default behavior
+            event.preventDefault();
+            
+            // Populate the form fields
             document.getElementById('edit_name').value = name;
             document.getElementById('edit_qty').value = qty;
             document.getElementById('edit_price').value = price;
@@ -358,6 +362,7 @@
             // Set the form action to match the update route
             document.getElementById('kt_modal_edit_ticket_form').action = '{{ route('admin.tickets.update', '') }}/' + id;
 
+            // Show the modal
             var editModal = new bootstrap.Modal(document.getElementById('kt_modal_edit_ticket'));
             editModal.show();
         }
