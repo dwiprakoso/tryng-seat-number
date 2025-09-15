@@ -373,50 +373,52 @@
             const submitButton = document.getElementById('submit_button');
 
             let selectedSeats = [];
-            let availableSeats = [];
 
-            // Load seats when ticket is selected
-            ticketSelect.addEventListener('change', function() {
-                const ticketId = this.value;
-                if (ticketId) {
-                    loadSeats(ticketId);
-                    seatSelectionArea.style.display = 'block';
-                } else {
-                    seatSelectionArea.style.display = 'none';
-                    selectedSeats = [];
-                    updateSelectedSeatsDisplay();
-                }
-                calculateTotal();
+            // Data tickets - cara yang lebih aman
+            const ticketsRawData = {!! json_encode(
+                $tickets->map(function ($ticket) {
+                    return [
+                        'id' => $ticket->id,
+                        'name' => $ticket->name,
+                        'price' => $ticket->price,
+                        'qty' => $ticket->qty,
+                        'seats' => $ticket->seats
+                            ? $ticket->seats->map(function ($seat) {
+                                return [
+                                    'id' => $seat->id,
+                                    'seat_number' => $seat->seat_number,
+                                    'is_booked' => $seat->is_booked ?? false,
+                                ];
+                            })
+                            : [],
+                    ];
+                }),
+            ) !!};
+
+            // Convert array to object dengan ticket ID sebagai key
+            const ticketsData = {};
+            ticketsRawData.forEach(ticket => {
+                ticketsData[ticket.id] = ticket;
             });
 
-            // Load seats via AJAX
+            // Load seats (tanpa AJAX)
             function loadSeats(ticketId) {
-                fetch(`/admin/ots-sales/seats/${ticketId}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            availableSeats = data.seats;
-                            renderSeats();
-                            resetSeatSelection();
-                        } else {
-                            seatsContainer.innerHTML = '<p class="text-danger">Error loading seats</p>';
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        seatsContainer.innerHTML = '<p class="text-danger">Error loading seats</p>';
-                    });
-            }
+                const ticketData = ticketsData[ticketId];
 
-            // Render seats
-            function renderSeats() {
+                if (!ticketData || !ticketData.seats || ticketData.seats.length === 0) {
+                    seatsContainer.innerHTML = '<p class="text-danger">No seats available for this ticket.</p>';
+                    return;
+                }
+
+                const seats = ticketData.seats;
                 seatsContainer.innerHTML = '';
 
-                availableSeats.forEach(seat => {
+                seats.forEach(seat => {
                     const seatBtn = document.createElement('button');
                     seatBtn.type = 'button';
                     seatBtn.className = 'btn btn-sm seat-btn';
                     seatBtn.textContent = seat.seat_number;
+                    seatBtn.dataset.seatId = seat.id;
                     seatBtn.dataset.seatNumber = seat.seat_number;
 
                     if (seat.is_booked) {
@@ -424,25 +426,26 @@
                         seatBtn.disabled = true;
                     } else {
                         seatBtn.className += ' btn-light-success';
-                        seatBtn.addEventListener('click', () => toggleSeat(seat.seat_number));
+                        seatBtn.addEventListener('click', () => toggleSeat(seat.seat_number, seat.id));
                     }
 
                     seatsContainer.appendChild(seatBtn);
                 });
+
+                resetSeatSelection();
             }
 
             // Toggle seat selection
-            function toggleSeat(seatNumber) {
+            function toggleSeat(seatNumber, seatId) {
                 const quantity = parseInt(quantityInput.value) || 0;
-                const seatIndex = selectedSeats.indexOf(seatNumber);
+                const seatData = `${seatId}:${seatNumber}`;
+                const seatIndex = selectedSeats.indexOf(seatData);
 
                 if (seatIndex > -1) {
-                    // Remove seat
                     selectedSeats.splice(seatIndex, 1);
                 } else {
-                    // Add seat if not exceeding quantity
                     if (selectedSeats.length < quantity) {
-                        selectedSeats.push(seatNumber);
+                        selectedSeats.push(seatData);
                     } else {
                         alert(`Maksimal ${quantity} kursi sesuai dengan quantity tiket`);
                         return;
@@ -457,8 +460,8 @@
             // Update seat button styles
             function updateSeatButtons() {
                 document.querySelectorAll('.seat-btn').forEach(btn => {
-                    const seatNumber = btn.dataset.seatNumber;
-                    const isSelected = selectedSeats.includes(seatNumber);
+                    const seatData = `${btn.dataset.seatId}:${btn.dataset.seatNumber}`;
+                    const isSelected = selectedSeats.includes(seatData);
 
                     if (!btn.disabled) {
                         if (isSelected) {
@@ -473,13 +476,16 @@
             // Update selected seats display
             function updateSelectedSeatsDisplay() {
                 if (selectedSeats.length > 0) {
-                    selectedSeatsDisplay.textContent = selectedSeats.sort().join(', ');
+                    const seatNumbers = selectedSeats.map(seat => seat.split(':')[1]);
+                    selectedSeatsDisplay.textContent = seatNumbers.sort().join(', ');
                     selectedSeatsInfo.style.display = 'block';
                 } else {
                     selectedSeatsInfo.style.display = 'none';
                 }
 
-                selectedSeatsInput.value = JSON.stringify(selectedSeats);
+                // Kirim data seat IDs ke form
+                const seatIds = selectedSeats.map(seat => seat.split(':')[0]);
+                selectedSeatsInput.value = JSON.stringify(seatIds);
             }
 
             // Reset seat selection
@@ -493,18 +499,25 @@
             // Validate form
             function validateForm() {
                 const quantity = parseInt(quantityInput.value) || 0;
-                const isValid = selectedSeats.length === quantity && quantity > 0;
+                const ticketId = ticketSelect.value;
+                const paymentMethodValue = paymentMethod.value;
+                const namaLengkap = document.querySelector('input[name="nama_lengkap"]').value.trim();
+                const noHandphone = document.querySelector('input[name="no_handphone"]').value.trim();
+
+                const isValid = ticketId && quantity > 0 && selectedSeats.length === quantity &&
+                    paymentMethodValue && namaLengkap && noHandphone;
+
                 submitButton.disabled = !isValid;
             }
 
             // Calculate total
             function calculateTotal() {
-                const selectedOption = ticketSelect.options[ticketSelect.selectedIndex];
+                const ticketId = ticketSelect.value;
                 const quantity = parseInt(quantityInput.value) || 0;
                 const paymentMethodValue = paymentMethod.value;
 
-                if (selectedOption && selectedOption.value && quantity > 0) {
-                    const price = parseFloat(selectedOption.dataset.price) || 0;
+                if (ticketId && ticketsData[ticketId] && quantity > 0) {
+                    const price = ticketsData[ticketId].price;
                     const subtotal = price * quantity;
                     const adminFee = paymentMethodValue === 'cashless' ? subtotal * 0.05 : 0;
                     const total = subtotal + adminFee;
@@ -527,18 +540,25 @@
 
             // Event listeners
             ticketSelect.addEventListener('change', function() {
-                const selectedOption = this.options[this.selectedIndex];
-                if (selectedOption && selectedOption.value) {
-                    const maxQty = parseInt(selectedOption.dataset.qty) || 0;
+                const ticketId = this.value;
+
+                if (ticketId && ticketsData[ticketId]) {
+                    const maxQty = ticketsData[ticketId].qty;
                     quantityInput.setAttribute('max', maxQty);
                     quantityInput.value = Math.min(parseInt(quantityInput.value) || 1, maxQty);
+
+                    loadSeats(ticketId);
+                    seatSelectionArea.style.display = 'block';
+                } else {
+                    seatSelectionArea.style.display = 'none';
+                    selectedSeats = [];
+                    updateSelectedSeatsDisplay();
                 }
-                resetSeatSelection();
+
                 calculateTotal();
             });
 
             quantityInput.addEventListener('input', function() {
-                // Reset seat selection when quantity changes
                 if (selectedSeats.length > parseInt(this.value)) {
                     resetSeatSelection();
                 }
@@ -546,11 +566,23 @@
                 validateForm();
             });
 
-            paymentMethod.addEventListener('change', calculateTotal);
+            document.querySelector('input[name="nama_lengkap"]').addEventListener('input', validateForm);
+            document.querySelector('input[name="no_handphone"]').addEventListener('input', validateForm);
+            paymentMethod.addEventListener('change', function() {
+                calculateTotal();
+                validateForm();
+            });
 
             // Form submission validation
             document.getElementById('kt_modal_add_sale_form').addEventListener('submit', function(e) {
                 const quantity = parseInt(quantityInput.value) || 0;
+                const ticketId = ticketSelect.value;
+
+                if (!ticketId) {
+                    e.preventDefault();
+                    alert('Silakan pilih tiket terlebih dahulu');
+                    return false;
+                }
 
                 if (selectedSeats.length !== quantity) {
                     e.preventDefault();
@@ -558,39 +590,29 @@
                     return false;
                 }
 
-                if (selectedSeats.length === 0) {
-                    e.preventDefault();
-                    alert('Silakan pilih kursi terlebih dahulu');
-                    return false;
-                }
+                submitButton.innerHTML =
+                    '<span class="spinner-border spinner-border-sm" role="status"></span> Processing...';
+                submitButton.disabled = true;
             });
 
-            // Close modal handlers
+            // Modal reset handlers
             document.querySelectorAll('[data-kt-sales-modal-action="close"], [data-kt-sales-modal-action="cancel"]')
                 .forEach(function(element) {
-                    element.addEventListener('click', function() {
-                        var modal = bootstrap.Modal.getInstance(document.getElementById(
-                            'kt_modal_add_sale'));
-                        modal.hide();
-
-                        // Reset form when modal is closed
-                        document.getElementById('kt_modal_add_sale_form').reset();
-                        seatSelectionArea.style.display = 'none';
-                        priceSummary.style.display = 'none';
-                        selectedSeats = [];
-                        updateSelectedSeatsDisplay();
-                        submitButton.disabled = true;
-                    });
+                    element.addEventListener('click', resetModal);
                 });
 
-            // Reset form on modal reset
-            document.querySelector('button[type="reset"]').addEventListener('click', function() {
+            document.querySelector('button[type="reset"]').addEventListener('click', resetModal);
+
+            function resetModal() {
+                document.getElementById('kt_modal_add_sale_form').reset();
                 seatSelectionArea.style.display = 'none';
                 priceSummary.style.display = 'none';
                 selectedSeats = [];
                 updateSelectedSeatsDisplay();
                 submitButton.disabled = true;
-            });
+                submitButton.innerHTML = '<span class="indicator-label">Submit</span>';
+                quantityInput.removeAttribute('max');
+            }
         });
     </script>
 

@@ -24,9 +24,6 @@ class BookingSeat extends Model
         return $this->belongsTo(Buyer::class);
     }
 
-    /**
-     * Relationship with Seat
-     */
     public function seat()
     {
         return $this->belongsTo(Seat::class);

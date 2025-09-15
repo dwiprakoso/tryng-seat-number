@@ -28,7 +28,10 @@ class OtsSalesController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        $tickets = Ticket::where('status', 'published')->where('qty', '>', 0)->get();
+        $tickets = Ticket::where('status', 'scheduled')
+            ->where('qty', '>', 0)
+            ->with('seats')
+            ->get();
 
         return view('admin.page.ots-sales.index', compact('otsSales', 'tickets'));
     }

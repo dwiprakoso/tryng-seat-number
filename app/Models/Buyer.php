@@ -138,6 +138,6 @@ class Buyer extends Model
     }
     public function bookingSeats()
     {
-        return $this->hasMany(BookingSeat::class, 'buyer_id');
+        return $this->hasMany(BookingSeat::class);
     }
 }

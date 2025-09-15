@@ -11,6 +11,7 @@ class Seat extends Model
     use HasFactory;
 
     protected $fillable = [
+        'ticket_id',        // Add this field
         'seat_number',
         'is_booked'
     ];
@@ -43,5 +44,15 @@ class Seat extends Model
     public function getStatusColorAttribute()
     {
         return $this->is_booked ? 'danger' : 'success';
+    }
+
+    public function ticket()
+    {
+        return $this->belongsTo(Ticket::class);
+    }
+
+    public function bookingSeats()
+    {
+        return $this->hasMany(BookingSeat::class);
     }
 }

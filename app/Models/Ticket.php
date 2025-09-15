@@ -24,4 +24,8 @@ class Ticket extends Model
     {
         return $this->belongsTo(Product::class);
     }
+    public function seats()
+    {
+        return $this->hasMany(Seat::class);
+    }
 }
