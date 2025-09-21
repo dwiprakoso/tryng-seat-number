@@ -1109,18 +1109,20 @@
             const increaseBtn = document.getElementById('increaseQty');
             const stockInfo = document.getElementById('stockInfo');
 
-            // PERBAIKAN: Function untuk mengecek stok aktual dengan mempertimbangkan limit maksimal
+            // PERBAIKAN: Function untuk mengecek stok aktual tanpa menghitung selected seats
             function checkCurrentStock() {
-                const availableSeats = document.querySelectorAll('.seat.available').length;
-                const actualStock = Math.min(ticketStock, availableSeats, MAX_TICKETS_PER_ORDER);
+                // Hitung available seats TIDAK termasuk yang sedang di-select user ini
+                const totalAvailableSeats = document.querySelectorAll('.seat.available, .seat.selected').length;
+                const actualStock = Math.min(ticketStock, totalAvailableSeats);
                 stockInfo.textContent = actualStock;
                 return actualStock;
             }
 
             // PERBAIKAN: Function untuk mendapatkan maksimal tiket yang bisa dipesan
             function getMaxAllowedTickets() {
-                const availableSeats = document.querySelectorAll('.seat.available').length;
-                return Math.min(ticketStock, availableSeats, MAX_TICKETS_PER_ORDER);
+                // Hitung total seats yang bisa dipilih (available + selected)
+                const selectableSeats = document.querySelectorAll('.seat.available, .seat.selected').length;
+                return Math.min(ticketStock, selectableSeats, MAX_TICKETS_PER_ORDER);
             }
 
             // Function untuk show modal ketika mencapai limit
@@ -1239,7 +1241,7 @@
                     validateQuantityStock();
 
                     const maxAllowed = getMaxAllowedTickets();
-                    if (requiredQuantity < maxAllowed) {
+                    if (requiredQuantity < maxAllowed && requiredQuantity < MAX_TICKETS_PER_ORDER) {
                         increaseBtn.disabled = false;
                         increaseBtn.style.opacity = '1';
                     }
@@ -1300,7 +1302,7 @@
                 }
             }
 
-            // Seat selection
+            // PERBAIKAN: Seat selection dengan event listener yang benar
             document.querySelectorAll('.seat.available').forEach(seat => {
                 seat.addEventListener('click', function() {
                     const seatNumber = this.dataset.seat;
@@ -1312,22 +1314,32 @@
                 const seatIndex = selectedSeats.indexOf(seatNumber);
 
                 if (seatIndex > -1) {
+                    // Unselect seat
                     selectedSeats.splice(seatIndex, 1);
                     seatElement.classList.remove('selected');
                     seatElement.classList.add('available');
+                    console.log(`Unselected seat: ${seatNumber}`);
                 } else {
+                    // Select seat
                     if (selectedSeats.length < requiredQuantity) {
                         selectedSeats.push(seatNumber);
                         seatElement.classList.remove('available');
                         seatElement.classList.add('selected');
+                        console.log(`Selected seat: ${seatNumber}`);
                     } else {
                         showToast(`Maksimal ${requiredQuantity} kursi yang dapat dipilih!`, 'error');
                         return;
                     }
                 }
 
+                // Update UI dan validasi
                 updateSeatSelectionUI();
                 validateSeatSelection();
+
+                // Force trigger validation setelah seat selection
+                setTimeout(() => {
+                    validateSeatSelection();
+                }, 100);
             }
 
             function updateSeatSelectionUI() {
@@ -1344,17 +1356,42 @@
                 }
             }
 
+            // PERBAIKAN: Function validateSeatSelection yang diperbaiki
             function validateSeatSelection() {
+                const currentStock = getMaxAllowedTickets();
                 const isComplete = selectedSeats.length === requiredQuantity;
-                submitBtn.disabled = !isComplete;
 
-                if (isComplete) {
+                // PERBAIKAN: Jangan hitung stok berdasarkan available seats saja, 
+                // tapi berdasarkan total seats yang bisa dipilih (available + selected)
+                const totalSelectableSeats = document.querySelectorAll('.seat.available, .seat.selected').length;
+                const hasEnoughStock = requiredQuantity <= Math.min(ticketStock, totalSelectableSeats);
+
+                // Enable submit button hanya jika seat selection complete DAN stock mencukupi
+                const canSubmit = isComplete && hasEnoughStock;
+
+                // Force update button state
+                submitBtn.disabled = !canSubmit;
+
+                if (canSubmit) {
                     submitBtn.classList.remove('btn-secondary');
                     submitBtn.classList.add('btn-primary');
+                    submitBtn.style.opacity = '1';
+                    submitBtn.style.pointerEvents = 'auto';
                 } else {
-                    submitBtn.classList.remove('btn-primary');
                     submitBtn.classList.add('btn-secondary');
+                    submitBtn.classList.remove('btn-primary');
+                    submitBtn.style.opacity = '0.6';
+                    submitBtn.style.pointerEvents = 'none';
                 }
+
+                // Debug log untuk troubleshooting
+                console.log(
+                    `Selected: ${selectedSeats.length}, Required: ${requiredQuantity}, Stock: ${currentStock}, Total Selectable: ${totalSelectableSeats}, Has Stock: ${hasEnoughStock}, Can Submit: ${canSubmit}`
+                    );
+                console.log(`Selected Seats:`, selectedSeats);
+                console.log(
+                    `Ticket Stock: ${ticketStock}, Available: ${document.querySelectorAll('.seat.available').length}, Selected: ${document.querySelectorAll('.seat.selected').length}`
+                    );
             }
 
             // PERBAIKAN: Validasi quantity dengan mempertimbangkan batas maksimal 3 tiket
@@ -1380,11 +1417,8 @@
                     quantityField.classList.add('is-invalid');
                     quantityField.classList.remove('is-valid');
 
-                    requiredQuantity = Math.max(1, maxAllowed);
-                    quantityInput.value = requiredQuantity;
-                    updateQuantityDisplay();
-
-                    showToast(`Jumlah tiket melebihi stok! Maksimal ${maxAllowed} tiket tersedia`, 'error');
+                    // PERBAIKAN: Jangan auto-ubah quantity jika user belum submit
+                    showToast(`Stok tidak mencukupi! Maksimal ${maxAllowed} tiket tersedia`, 'error');
                     return false;
                 } else {
                     quantityField.classList.remove('is-invalid');
@@ -1402,9 +1436,11 @@
                 const subtotal = ticketPrice * requiredQuantity;
                 document.getElementById('subtotalDisplay').textContent = `Rp ${subtotal.toLocaleString('id-ID')}`;
 
-                const maxAllowed = getMaxAllowedTickets();
+                // PERBAIKAN: Gunakan stok yang benar (tidak terpengaruh selected seats)
+                const totalSelectableSeats = document.querySelectorAll('.seat.available, .seat.selected').length;
+                const maxAllowed = Math.min(ticketStock, totalSelectableSeats, MAX_TICKETS_PER_ORDER);
 
-                // PERBAIKAN: Update button state berdasarkan batas maksimal dan stok
+                // Update button state berdasarkan batas maksimal dan stok
                 if (requiredQuantity >= MAX_TICKETS_PER_ORDER || requiredQuantity >= maxAllowed) {
                     increaseBtn.disabled = true;
                     increaseBtn.style.opacity = '0.5';
@@ -1646,9 +1682,54 @@
                 submitBtn.disabled = true;
             });
 
+            // PERBAIKAN: Initialize function yang dipanggil saat page load
+            function initializeOrderForm() {
+                // Update stok info saat halaman dimuat
+                checkCurrentStock();
+                updateQuantityDisplay();
+
+                // Validasi initial state
+                const maxAllowed = getMaxAllowedTickets();
+                console.log(
+                    `Initial Stock Check: Ticket Stock: ${ticketStock}, Available Seats: ${document.querySelectorAll('.seat.available').length}, Max Allowed: ${maxAllowed}`
+                    );
+
+                if (maxAllowed < 1) {
+                    // Jika tidak ada stok sama sekali
+                    increaseBtn.disabled = true;
+                    decreaseBtn.disabled = true;
+                    quantityInput.disabled = true;
+                    nextBtn.disabled = true;
+                    showToast('Maaf, tiket sudah habis!', 'error');
+                }
+
+                validateQuantityStock();
+
+                // Force initial validation
+                setTimeout(() => {
+                    validateSeatSelection();
+                }, 500);
+            }
+
+            // TAMBAHKAN: Debug function untuk testing (hapus setelah fix)
+            function forceEnableSubmit() {
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('btn-secondary');
+                submitBtn.classList.add('btn-primary');
+                console.log('Submit button force enabled for testing');
+            }
+
+            // Expose ke window untuk testing via console
+            window.debugOrderForm = {
+                checkStock: checkCurrentStock,
+                validateSeats: validateSeatSelection,
+                forceEnable: forceEnableSubmit,
+                getSelectedSeats: () => selectedSeats,
+                getRequiredQuantity: () => requiredQuantity
+            };
+
             // Initialize
-            updateQuantityDisplay();
-            validateQuantityStock();
+            initializeOrderForm();
         });
     </script>
 </body>
