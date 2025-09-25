@@ -6,6 +6,7 @@ use App\Models\Buyer;
 use App\Models\BuyerCheckin;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 class BuyerCheckinController extends Controller
@@ -18,29 +19,164 @@ class BuyerCheckinController extends Controller
     public function processCheckin(Request $request)
     {
         $request->validate([
-            'external_id_number' => 'required|numeric|digits:6'
+            'external_id_number' => 'required|string|min:6'
         ]);
 
-        // Build full external_id dengan prefix
-        $fullExternalId = 'SAMPOOKONG-' . $request->external_id_number;
+        // Ambil input external_id_number
+        $externalIdNumber = $request->external_id_number;
+
+        // Log input untuk debugging
+        Log::info('Check-in attempt', [
+            'input' => $externalIdNumber,
+            'input_length' => strlen($externalIdNumber)
+        ]);
 
         try {
             DB::beginTransaction();
 
-            // Cari buyer berdasarkan external_id dengan join ke tabel tickets
-            $buyer = Buyer::with('ticket')
-                ->where('external_id', $fullExternalId)
-                ->first();
+            $buyer = null;
 
-            if (!$buyer) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'External ID tidak ditemukan!'
-                ], 404);
+            // Jika input hanya 6 digit angka
+            if (preg_match('/^\d{6}$/', $externalIdNumber)) {
+                Log::info('Processing 6-digit input', ['input' => $externalIdNumber]);
+
+                // Debug: Cek semua external_id yang ada
+                $allExternalIds = Buyer::select('external_id')->pluck('external_id')->toArray();
+                Log::info('All external IDs in database', $allExternalIds);
+
+                // Method 1: LIKE query (yang sekarang)
+                $buyer = Buyer::with('ticket')
+                    ->where('external_id', 'LIKE', '%-' . $externalIdNumber)
+                    ->first();
+
+                Log::info('LIKE query result', [
+                    'pattern' => '%-' . $externalIdNumber,
+                    'found' => $buyer ? 'YES' : 'NO',
+                    'buyer_id' => $buyer ? $buyer->id : null,
+                    'external_id' => $buyer ? $buyer->external_id : null
+                ]);
+
+                // Method 2: Fallback dengan SUBSTRING
+                if (!$buyer) {
+                    Log::info('Trying SUBSTRING method');
+                    $buyer = Buyer::with('ticket')
+                        ->whereRaw('RIGHT(external_id, 6) = ?', [$externalIdNumber])
+                        ->first();
+
+                    Log::info('SUBSTRING query result', [
+                        'found' => $buyer ? 'YES' : 'NO',
+                        'buyer_id' => $buyer ? $buyer->id : null,
+                        'external_id' => $buyer ? $buyer->external_id : null
+                    ]);
+                }
+
+                // Method 3: Manual check dengan PHP (untuk debug)
+                if (!$buyer) {
+                    Log::info('Trying manual PHP check');
+                    $allBuyers = Buyer::with('ticket')->get();
+                    foreach ($allBuyers as $b) {
+                        if (substr($b->external_id, -6) === $externalIdNumber) {
+                            $buyer = $b;
+                            Log::info('Found with PHP method', [
+                                'buyer_id' => $buyer->id,
+                                'external_id' => $buyer->external_id
+                            ]);
+                            break;
+                        }
+                    }
+                }
+
+                if (!$buyer) {
+                    // Debug: Cari yang mirip
+                    $similarBuyers = Buyer::where('external_id', 'LIKE', '%' . $externalIdNumber . '%')->get();
+                    Log::info('Similar external IDs found', [
+                        'count' => $similarBuyers->count(),
+                        'similar_ids' => $similarBuyers->pluck('external_id')->toArray()
+                    ]);
+
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'External ID tidak ditemukan! Format: ORDER-YYYYMMDD-XXXXXX atau 6 digit terakhir',
+                        'debug' => [
+                            'input' => $externalIdNumber,
+                            'pattern_used' => '%-' . $externalIdNumber,
+                            'total_buyers' => Buyer::count(),
+                            'similar_count' => $similarBuyers->count(),
+                            'similar_ids' => $similarBuyers->pluck('external_id')->toArray()
+                        ]
+                    ], 404);
+                }
+
+                return $this->processCheckinForBuyer($buyer);
             }
 
+            // Handle format lainnya
+            $fullExternalId = null;
+
+            // Jika input sudah dalam format ORDER-YYYYMMDD-XXXXXX
+            if (preg_match('/^ORDER-\d{8}-\d{6}$/', $externalIdNumber)) {
+                $fullExternalId = $externalIdNumber;
+            }
+            // Jika input hanya YYYYMMDD-XXXXXX, tambahkan prefix ORDER-
+            elseif (preg_match('/^\d{8}-\d{6}$/', $externalIdNumber)) {
+                $fullExternalId = 'ORDER-' . $externalIdNumber;
+            }
+            // Format lama (6 digit dengan prefix ORDER-)
+            elseif (preg_match('/^\d{6}$/', $externalIdNumber)) {
+                $fullExternalId = 'ORDER-' . $externalIdNumber;
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Format External ID tidak valid! Gunakan: ORDER-YYYYMMDD-XXXXXX, YYYYMMDD-XXXXXX, atau 6 digit terakhir'
+                ], 400);
+            }
+
+            if ($fullExternalId) {
+                Log::info('Processing full external ID', ['full_id' => $fullExternalId]);
+
+                $buyer = Buyer::with('ticket')
+                    ->where('external_id', $fullExternalId)
+                    ->first();
+
+                if (!$buyer) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'External ID tidak ditemukan!',
+                        'debug' => [
+                            'searched_id' => $fullExternalId,
+                            'total_buyers' => Buyer::count()
+                        ]
+                    ], 404);
+                }
+            }
+
+            return $this->processCheckinForBuyer($buyer);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Check-in error', [
+                'input' => $externalIdNumber,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    private function processCheckinForBuyer($buyer)
+    {
+        try {
+            Log::info('Processing check-in for buyer', [
+                'buyer_id' => $buyer->id,
+                'external_id' => $buyer->external_id,
+                'payment_status' => $buyer->payment_status
+            ]);
+
             // Validasi payment status
-            if ($buyer->payment_status !== 'paid') {
+            if ($buyer->payment_status !== 'paid' && $buyer->payment_status !== 'confirmed') {
                 return response()->json([
                     'success' => false,
                     'message' => 'Pembayaran belum lunas! Status: ' . ucfirst($buyer->payment_status)
@@ -65,12 +201,18 @@ class BuyerCheckinController extends Controller
 
             DB::commit();
 
+            Log::info('Check-in successful', [
+                'checkin_id' => $checkin->id,
+                'buyer_id' => $buyer->id,
+                'external_id' => $buyer->external_id
+            ]);
+
             // Return data untuk print sesuai format thermal receipt
             return response()->json([
                 'success' => true,
                 'message' => 'Check-in berhasil!',
                 'data' => [
-                    'checkin_id' => $checkin->id, // Untuk redirect ke receipt
+                    'checkin_id' => $checkin->id,
                     'external_id' => $buyer->external_id,
                     'nama_lengkap' => $buyer->nama_lengkap,
                     'email' => $buyer->email,
@@ -83,12 +225,37 @@ class BuyerCheckinController extends Controller
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error('Check-in processing error', [
+                'buyer_id' => $buyer->id,
+                'error' => $e->getMessage()
+            ]);
 
             return response()->json([
                 'success' => false,
                 'message' => 'Terjadi kesalahan: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    // Method untuk debug - cek data di database
+    public function debugExternalIds()
+    {
+        $buyers = Buyer::select('id', 'external_id', 'payment_status', 'nama_lengkap')
+            ->orderBy('external_id')
+            ->get();
+
+        return response()->json([
+            'total_buyers' => $buyers->count(),
+            'buyers' => $buyers->map(function ($buyer) {
+                return [
+                    'id' => $buyer->id,
+                    'external_id' => $buyer->external_id,
+                    'last_6_digits' => substr($buyer->external_id, -6),
+                    'payment_status' => $buyer->payment_status,
+                    'nama_lengkap' => $buyer->nama_lengkap
+                ];
+            })
+        ]);
     }
 
     public function getCheckinHistory()
@@ -106,11 +273,11 @@ class BuyerCheckinController extends Controller
     public function getCheckinStats()
     {
         // Hitung total tiket yang sudah dibayar dari buyers
-        $totalPaidTicketsBuyers = Buyer::where('payment_status', 'paid')->sum('quantity');
+        $totalPaidTicketsBuyers = Buyer::whereIn('payment_status', ['paid', 'confirmed'])->sum('quantity');
 
         // Hitung total tiket yang sudah checkin dari buyers
         $totalCheckedInBuyers = BuyerCheckin::join('buyers', 'buyer_checkins.buyer_id', '=', 'buyers.id')
-            ->where('buyers.payment_status', 'paid')
+            ->whereIn('buyers.payment_status', ['paid', 'confirmed'])
             ->sum('buyer_checkins.qty');
 
         // Hitung statistik
@@ -131,8 +298,12 @@ class BuyerCheckinController extends Controller
     // Method untuk print individual receipt (opsional)
     public function printReceipt($checkinId)
     {
-        $checkin = BuyerCheckin::with(['buyer', 'buyer.ticket'])
-            ->findOrFail($checkinId);
+        $checkin = BuyerCheckin::with([
+            'buyer',
+            'buyer.ticket',
+            'buyer.bookingSeats',
+            'buyer.bookingSeats.seat'
+        ])->findOrFail($checkinId);
 
         return view('check-in.receipt', compact('checkin'));
     }
