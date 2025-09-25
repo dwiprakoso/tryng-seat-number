@@ -102,7 +102,7 @@
                 <!--end::Col-->
 
                 <!--begin::Col - Online Booking Stats-->
-                <div class="col-xl-4">
+                {{-- <div class="col-xl-4">
                     <!--begin::Statistics Widget-->
                     <div class="card card-xl-stretch mb-xl-8">
                         <!--begin::Header-->
@@ -146,11 +146,11 @@
                         <!--end::Body-->
                     </div>
                     <!--end::Statistics Widget-->
-                </div>
+                </div> --}}
                 <!--end::Col-->
 
                 <!--begin::Col - OTS Stats-->
-                <div class="col-xl-4">
+                {{-- <div class="col-xl-4">
                     <!--begin::Statistics Widget-->
                     <div class="card card-xl-stretch mb-xl-8">
                         <!--begin::Header-->
@@ -193,7 +193,7 @@
                         <!--end::Body-->
                     </div>
                     <!--end::Statistics Widget-->
-                </div>
+                </div> --}}
                 <!--end::Col-->
             </div>
             <!--end::Stats Cards-->
@@ -216,7 +216,7 @@
                                     Semua Data
                                 </a>
                             </li>
-                            <li class="nav-item">
+                            {{-- <li class="nav-item">
                                 <a class="nav-link {{ $filterType == 'buyers' ? 'active' : '' }}"
                                     href="{{ route('admin.checkin.index', ['type' => 'buyers']) }}">
                                     <i class="ki-duotone ki-tablet fs-2 me-2">
@@ -238,7 +238,7 @@
                                     </i>
                                     On The Spot
                                 </a>
-                            </li>
+                            </li> --}}
                         </ul>
                         <!--end::Filter Tabs-->
                     </div>
